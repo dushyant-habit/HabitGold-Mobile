@@ -4,7 +4,7 @@ import ComposeApp
 
 struct ComposeView: UIViewControllerRepresentable {
     init() {
-        KoinBootstrapKt.startKoinIfNeeded()
+        IosBootstrapKt.startKoinForIos()
     }
 
     func makeUIViewController(context: Context) -> UIViewController {
