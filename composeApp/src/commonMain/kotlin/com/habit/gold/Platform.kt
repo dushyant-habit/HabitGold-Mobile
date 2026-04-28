@@ -1,7 +1,12 @@
 package com.habit.gold
 
-interface Platform {
-    val name: String
-}
+import kotlinx.serialization.Serializable
 
-expect fun getPlatform(): Platform
+@Serializable
+data class PlatformInfo(
+    val name: String,
+    val version: String,
+    val isDebugBinary: Boolean,
+)
+
+expect fun getPlatformInfo(): PlatformInfo

@@ -2,8 +2,8 @@ package com.habit.gold
 
 import android.os.Build
 
-class AndroidPlatform : Platform {
-    override val name: String = "Android ${Build.VERSION.SDK_INT}"
-}
-
-actual fun getPlatform(): Platform = AndroidPlatform()
+actual fun getPlatformInfo(): PlatformInfo = PlatformInfo(
+    name = "Android",
+    version = "API ${Build.VERSION.SDK_INT}",
+    isDebugBinary = BuildConfig.DEBUG,
+)

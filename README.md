@@ -1,35 +1,50 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+## HabitGold Mobile
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+This repository is set up as a production-grade Kotlin Multiplatform starter for Android and iOS.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+### What is included
 
-### Build and Run Android Application
+- Shared Compose UI in `composeApp/src/commonMain`
+- Common app configuration contract for both platforms
+- Koin-based dependency bootstrap
+- Ktor HTTP client with Android and iOS engines
+- Android release hardening with shrinking, backup restrictions, and HTTPS-only network policy
+- iOS SwiftUI host that initializes the shared dependency graph before rendering Compose
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+### Project structure
 
-### Build and Run iOS Application
+- `composeApp/src/commonMain/kotlin/com/habit/gold/core`
+  Shared config, DI, networking, and utilities
+- `composeApp/src/commonMain/kotlin/com/habit/gold/feature`
+  Shared feature presentation logic
+- `composeApp/src/androidMain`
+  Android application bootstrap, manifest, and platform config
+- `composeApp/src/iosMain`
+  iOS platform config and Darwin HTTP engine binding
+- `iosApp/iosApp`
+  SwiftUI container that renders the shared Compose UI
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+### Build Android
 
----
+```shell
+./gradlew :composeApp:assembleDebug
+```
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…# HabitGold-Mobile
+### Build iOS framework
+
+```shell
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+```
+
+### Configuration
+
+Android build values live in `gradle.properties`:
+
+- `APP_NAME`
+- `ANDROID_APP_ID`
+- `ANDROID_APP_ENV_DEBUG`
+- `ANDROID_APP_ENV_RELEASE`
+- `ANDROID_API_BASE_URL_DEBUG`
+- `ANDROID_API_BASE_URL_RELEASE`
+
+The iOS default config lives in `composeApp/src/iosMain/kotlin/com/habit/gold/core/config/PlatformConfig.ios.kt`.
