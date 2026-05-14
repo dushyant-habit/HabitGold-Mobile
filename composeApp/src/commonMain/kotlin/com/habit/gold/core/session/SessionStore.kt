@@ -19,6 +19,9 @@ class SessionStore(
     private val _state = MutableStateFlow(AuthSession())
     val state: StateFlow<AuthSession> = _state.asStateFlow()
 
+    /**
+     * Rehydrates the shared session snapshot before app-shell routing decides which flow to show.
+     */
     suspend fun restore(): AuthSession {
         val restoredSession = SessionSnapshot(
             tokens = authTokenStorage.readTokens(),
@@ -36,6 +39,9 @@ class SessionStore(
         )
     }
 
+    /**
+     * Persists the authenticated session atomically so both Android and iOS see the same auth state.
+     */
     suspend fun saveAuthenticatedUser(
         accessToken: String,
         refreshToken: String,
@@ -75,6 +81,9 @@ class SessionStore(
         }
     }
 
+    /**
+     * Clears every persisted auth artifact when logout or session expiry invalidates the account.
+     */
     suspend fun clear() {
         authTokenStorage.clearTokens()
         userProfileStorage.clearUser()

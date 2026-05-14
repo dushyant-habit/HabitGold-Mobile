@@ -27,6 +27,9 @@ class AuthRepositoryImpl(
         }
     }
 
+    /**
+     * Verifies OTP, restores the best available user snapshot, and falls back to profile completion when needed.
+     */
     override suspend fun verifyOtp(phoneNumber: String, otp: String): ApiResult<VerifyOtpResult> {
         return when (val result = remoteDataSource.verifyOtp(phoneNumber, otp)) {
             is ApiResult.Failure -> result

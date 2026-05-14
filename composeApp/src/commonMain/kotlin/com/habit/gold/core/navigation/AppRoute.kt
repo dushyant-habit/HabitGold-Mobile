@@ -8,10 +8,8 @@ sealed interface AppRoute {
     ) : AppRoute
 }
 
-enum class MainTab(
-    val label: String,
-) {
-    Home("Home"),
-    Transactions("Transactions"),
-    Profile("Profile"),
+enum class MainTab {
+    Home,
+    Transactions,
+    Profile,
 }

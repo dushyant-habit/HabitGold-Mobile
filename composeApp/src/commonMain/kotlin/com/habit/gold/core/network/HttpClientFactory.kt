@@ -47,6 +47,9 @@ fun createHttpClient(
     }
 }
 
+/**
+ * Applies the single shared Ktor policy for serialization, auth headers, timeouts, logging, and 401 handling.
+ */
 fun HttpClientConfig<*>.applyHabitGoldHttpClientConfig(
     appConfig: AppConfig,
     authTokenProvider: AuthTokenProvider,

@@ -17,6 +17,9 @@ class AppRootViewModel(
 
     private var hasStarted = false
 
+    /**
+     * Restores persisted session state exactly once so the shared app shell can route consistently.
+     */
     fun start() {
         if (hasStarted) return
         hasStarted = true
