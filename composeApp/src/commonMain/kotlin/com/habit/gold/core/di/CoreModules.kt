@@ -2,6 +2,8 @@ package com.habit.gold.core.di
 
 import com.habit.gold.PlatformInfo
 import com.habit.gold.core.config.AppConfig
+import com.habit.gold.core.localization.AppStrings
+import com.habit.gold.core.localization.EnglishAppStrings
 import com.habit.gold.core.network.AuthTokenProvider
 import com.habit.gold.core.network.SessionExpiryHandler
 import com.habit.gold.core.network.TokenRefreshHandler
@@ -28,6 +30,7 @@ fun coreModule(
 ) = module {
     single { appConfig }
     single { platformInfo }
+    single<AppStrings> { EnglishAppStrings }
     single { AppDispatchers() }
     single<SecureStorage> { InMemorySecureStorage() }
     single<AuthTokenStorage> { SecureAuthTokenStorage(get()) }

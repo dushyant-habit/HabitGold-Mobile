@@ -76,6 +76,7 @@ composeApp/src/commonMain/kotlin/com/habit/gold/
   app/
   core/
     config/
+    localization/
     di/
     network/
     navigation/
@@ -217,15 +218,16 @@ Localization is now an explicit build rule.
 Rules:
 
 - user-facing strings must move through a shared string-resource or string-provider strategy
+- migrated screens and viewmodels must use the shared `AppStrings` boundary instead of hardcoding copy
 - completed migrated screens should not leave important UI copy hardcoded
 - avoid fragile string concatenation
 - support placeholders and plural-friendly formatting
 - date, number, and currency formatting must be locale-aware
 - layouts must tolerate longer translated strings
 
-Current known follow-up:
+Current implementation rule:
 
-- auth and app-shell strings still need extraction into the shared localization approach
+- when a feature introduces new user-facing copy, update the shared localization boundary in the same task
 
 ## 9. Security And Production Standard
 

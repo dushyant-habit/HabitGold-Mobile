@@ -158,7 +158,7 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Create shared loading, empty, and error views
 - [x] Define compact/medium/expanded layout groundwork
 - [x] Add previews for core components
-- [ ] Add shared string-resource/localization strategy and extract current shell/auth strings
+- [x] Add shared string-resource/localization strategy and extract current shell/auth strings
 
 ### Phase 4: App Shell And Navigation
 
@@ -172,16 +172,16 @@ These are tracked explicitly so major product flows do not get lost inside broad
 
 ### Phase 5: Auth
 
-- [ ] Create `feature/auth` structure
-- [ ] Port auth DTOs needed for request/verify/profile flow
-- [ ] Create auth repository contract and implementation
+- [x] Create `feature/auth` structure
+- [x] Port auth DTOs needed for request/verify/profile flow
+- [x] Create auth repository contract and implementation
 - [ ] Create auth use cases
-- [ ] Create auth MVI state/contracts
-- [ ] Extract auth user-facing copy into the shared localization approach
-- [ ] Rebuild login screen using shared design system
-- [ ] Rebuild OTP screen using shared design system
-- [ ] Rebuild basic-details onboarding screen
-- [ ] Add tests for auth reducers/viewmodels/repositories
+- [x] Create auth MVI state/contracts
+- [x] Extract auth user-facing copy into the shared localization approach
+- [x] Rebuild login screen using shared design system
+- [x] Rebuild OTP screen using shared design system
+- [x] Rebuild basic-details onboarding screen
+- [x] Add tests for auth reducers/viewmodels/repositories
 
 ### Phase 6: Home And Portfolio
 
