@@ -15,7 +15,7 @@ class AppConfigTest {
             enableNetworkLogs = false,
         )
 
-        assertEquals("https://api.habitgold.com/v1", config.normalizedBaseUrl)
+        assertEquals("https://api.habitgold.com/v1/", config.normalizedBaseUrl)
     }
 
     @Test
