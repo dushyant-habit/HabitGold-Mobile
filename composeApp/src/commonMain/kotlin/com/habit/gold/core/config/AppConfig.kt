@@ -36,7 +36,7 @@ data class AppConfig(
 }
 
 fun normalizeBaseUrl(rawValue: String): String {
-    return rawValue.trim().removeSuffix("/")
+    return rawValue.trim().removeSuffix("/") + "/"
 }
 
 expect fun platformAppConfig(): AppConfig
