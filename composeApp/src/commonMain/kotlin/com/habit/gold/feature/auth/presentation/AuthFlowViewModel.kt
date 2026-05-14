@@ -1,63 +1,35 @@
 package com.habit.gold.feature.auth.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.habit.gold.PlatformInfo
 import com.habit.gold.core.config.AppConfig
+import com.habit.gold.core.localization.AppStrings
 import com.habit.gold.core.network.ApiResult
+import com.habit.gold.core.presentation.mvi.MviViewModel
+import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.auth.domain.AuthRepository
 import com.habit.gold.feature.auth.domain.AuthValidators
-import com.habit.gold.feature.auth.domain.AuthenticatedUser
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-enum class AuthStep {
-    Login,
-    Otp,
-    BasicInfo,
-}
-
-data class AuthFlowUiState(
-    val appName: String = "",
-    val platformLabel: String = "",
-    val environmentLabel: String = "",
-    val screen: AuthStep = AuthStep.Login,
-    val phoneNumber: String = "",
-    val otpCode: String = "",
-    val otpRefId: String = "",
-    val name: String = "",
-    val email: String = "",
-    val pinCode: String = "",
-    val user: AuthenticatedUser? = null,
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val resendSecondsRemaining: Int = 0,
-) {
-    val canResendOtp: Boolean = resendSecondsRemaining == 0 && !isLoading
-}
 
 class AuthFlowViewModel(
     appConfig: AppConfig,
     platformInfo: PlatformInfo,
+    private val appStrings: AppStrings,
     private val authRepository: AuthRepository,
     private val sessionStore: SessionStore,
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(
-        AuthFlowUiState(
-            appName = appConfig.appName,
-            platformLabel = "${platformInfo.name} ${platformInfo.version}",
-            environmentLabel = appConfig.environment.name,
-        )
+) : MviViewModel<AuthFlowUiState, AuthIntent, AuthEffect>(
+    initialState = AuthFlowUiState(
+        appName = appConfig.appName,
+        platformLabel = "${platformInfo.name} ${platformInfo.version}",
+        environmentLabel = appConfig.environment.name,
     )
-    val uiState: StateFlow<AuthFlowUiState> = _uiState.asStateFlow()
+) {
+    val uiState: StateFlow<AuthFlowUiState> = state
 
     private var resendTimerJob: Job? = null
 
@@ -67,8 +39,23 @@ class AuthFlowViewModel(
         }
     }
 
-    fun onPhoneChanged(rawValue: String) {
-        _uiState.update {
+    override fun onIntent(intent: AuthIntent) {
+        when (intent) {
+            is AuthIntent.UpdatePhoneNumber -> onPhoneChanged(intent.rawValue)
+            is AuthIntent.UpdateOtp -> onOtpChanged(intent.rawValue)
+            is AuthIntent.UpdateName -> onNameChanged(intent.rawValue)
+            is AuthIntent.UpdateEmail -> onEmailChanged(intent.rawValue)
+            is AuthIntent.UpdatePinCode -> onPinCodeChanged(intent.rawValue)
+            AuthIntent.RequestOtp -> requestOtp()
+            AuthIntent.VerifyOtp -> verifyOtp()
+            AuthIntent.ResendOtp -> resendOtp()
+            AuthIntent.ReturnToLogin -> returnToLogin()
+            AuthIntent.SubmitBasicInfo -> submitBasicInfo()
+        }
+    }
+
+    private fun onPhoneChanged(rawValue: String) {
+        updateState {
             it.copy(
                 phoneNumber = AuthValidators.normalizePhone(rawValue),
                 errorMessage = null,
@@ -76,8 +63,8 @@ class AuthFlowViewModel(
         }
     }
 
-    fun onOtpChanged(rawValue: String) {
-        _uiState.update {
+    private fun onOtpChanged(rawValue: String) {
+        updateState {
             it.copy(
                 otpCode = AuthValidators.normalizeOtp(rawValue),
                 errorMessage = null,
@@ -85,16 +72,16 @@ class AuthFlowViewModel(
         }
     }
 
-    fun onNameChanged(rawValue: String) {
-        _uiState.update { it.copy(name = rawValue, errorMessage = null) }
+    private fun onNameChanged(rawValue: String) {
+        updateState { it.copy(name = rawValue, errorMessage = null) }
     }
 
-    fun onEmailChanged(rawValue: String) {
-        _uiState.update { it.copy(email = rawValue, errorMessage = null) }
+    private fun onEmailChanged(rawValue: String) {
+        updateState { it.copy(email = rawValue, errorMessage = null) }
     }
 
-    fun onPinCodeChanged(rawValue: String) {
-        _uiState.update {
+    private fun onPinCodeChanged(rawValue: String) {
+        updateState {
             it.copy(
                 pinCode = AuthValidators.normalizePinCode(rawValue),
                 errorMessage = null,
@@ -102,10 +89,10 @@ class AuthFlowViewModel(
         }
     }
 
-    fun requestOtp() {
-        val phoneNumber = uiState.value.phoneNumber
+    private fun requestOtp() {
+        val phoneNumber = state.value.phoneNumber
         if (!AuthValidators.isPhoneValid(phoneNumber)) {
-            showError("Enter a valid 10-digit mobile number.")
+            showError(appStrings.authInvalidPhoneError)
             return
         }
 
@@ -113,7 +100,7 @@ class AuthFlowViewModel(
             setLoading(true)
             when (val result = authRepository.requestOtp(phoneNumber)) {
                 is ApiResult.Success -> {
-                    _uiState.update {
+                    updateState {
                         it.copy(
                             screen = AuthStep.Otp,
                             otpCode = "",
@@ -132,27 +119,25 @@ class AuthFlowViewModel(
         }
     }
 
-    fun verifyOtp() {
-        val state = uiState.value
-        if (!AuthValidators.isOtpValid(state.otpCode)) {
-            showError("Enter the 6-digit OTP sent to your mobile number.")
+    private fun verifyOtp() {
+        val currentState = state.value
+        if (!AuthValidators.isOtpValid(currentState.otpCode)) {
+            showError(appStrings.authInvalidOtpError)
             return
         }
 
         viewModelScope.launch {
             setLoading(true)
-            when (val result = authRepository.verifyOtp(state.phoneNumber, state.otpCode)) {
+            when (val result = authRepository.verifyOtp(currentState.phoneNumber, currentState.otpCode)) {
                 is ApiResult.Success -> {
                     resendTimerJob?.cancel()
-                    val user = result.value.user
-                    _uiState.update {
+                    updateState {
                         it.copy(
-                            screen = if (result.value.requiresBasicInfo) AuthStep.BasicInfo else AuthStep.Otp,
-                            user = user,
-                            name = user.name,
-                            email = user.email,
-                            pinCode = user.pinCode,
-                            otpCode = "",
+                            screen = if (result.value.requiresBasicInfo) AuthStep.BasicInfo else AuthStep.Handoff,
+                            user = result.value.user,
+                            name = result.value.user.name,
+                            email = result.value.user.email,
+                            pinCode = result.value.user.pinCode,
                             isLoading = false,
                             errorMessage = null,
                             resendSecondsRemaining = 0,
@@ -164,14 +149,14 @@ class AuthFlowViewModel(
         }
     }
 
-    fun resendOtp() {
-        if (!uiState.value.canResendOtp) return
+    private fun resendOtp() {
+        if (!state.value.canResendOtp) return
         requestOtp()
     }
 
-    fun returnToLogin() {
+    private fun returnToLogin() {
         resendTimerJob?.cancel()
-        _uiState.update {
+        updateState {
             it.copy(
                 screen = AuthStep.Login,
                 otpCode = "",
@@ -183,23 +168,23 @@ class AuthFlowViewModel(
         }
     }
 
-    fun submitBasicInfo() {
-        val state = uiState.value
-        val trimmedName = state.name.trim()
-        val trimmedEmail = state.email.trim()
-        val trimmedPinCode = state.pinCode.trim()
+    private fun submitBasicInfo() {
+        val currentState = state.value
+        val trimmedName = currentState.name.trim()
+        val trimmedEmail = currentState.email.trim()
+        val trimmedPinCode = currentState.pinCode.trim()
 
         when {
             trimmedName.isBlank() -> {
-                showError("Enter your full name.")
+                showError(appStrings.authBlankNameError)
                 return
             }
             !AuthValidators.isEmailValid(trimmedEmail) -> {
-                showError("Enter a valid email address.")
+                showError(appStrings.authInvalidEmailError)
                 return
             }
             !AuthValidators.isPinCodeValid(trimmedPinCode) -> {
-                showError("Enter a valid 6-digit pin code.")
+                showError(appStrings.authInvalidPinCodeError)
                 return
             }
         }
@@ -208,9 +193,9 @@ class AuthFlowViewModel(
             setLoading(true)
             when (val result = authRepository.submitBasicInfo(trimmedName, trimmedEmail, trimmedPinCode)) {
                 is ApiResult.Success -> {
-                    _uiState.update {
+                    updateState {
                         it.copy(
-                            screen = AuthStep.BasicInfo,
+                            screen = AuthStep.Handoff,
                             user = result.value,
                             name = result.value.name,
                             email = result.value.email,
@@ -225,14 +210,17 @@ class AuthFlowViewModel(
         }
     }
 
+    /**
+     * Keeps resend timing fully inside shared auth state so Android and iOS behave identically.
+     */
     private fun startResendCountdown() {
         resendTimerJob?.cancel()
         resendTimerJob = viewModelScope.launch {
-            while (uiState.value.resendSecondsRemaining > 0) {
+            while (state.value.resendSecondsRemaining > 0) {
                 delay(1_000)
-                _uiState.update { state ->
-                    state.copy(
-                        resendSecondsRemaining = (state.resendSecondsRemaining - 1).coerceAtLeast(0),
+                updateState { currentState ->
+                    currentState.copy(
+                        resendSecondsRemaining = (currentState.resendSecondsRemaining - 1).coerceAtLeast(0),
                     )
                 }
             }
@@ -240,17 +228,17 @@ class AuthFlowViewModel(
     }
 
     private fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(isLoading = isLoading, errorMessage = null) }
+        updateState { it.copy(isLoading = isLoading, errorMessage = null) }
     }
 
     private fun showError(message: String) {
-        _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+        updateState { it.copy(isLoading = false, errorMessage = message) }
     }
 
-    private fun syncFromSession(session: com.habit.gold.core.session.AuthSession) {
+    private fun syncFromSession(session: AuthSession) {
         if (!session.isLoggedIn) {
             resendTimerJob?.cancel()
-            _uiState.update {
+            updateState {
                 it.copy(
                     screen = AuthStep.Login,
                     otpCode = "",
@@ -267,14 +255,15 @@ class AuthFlowViewModel(
             return
         }
 
-        _uiState.update {
+        updateState {
             it.copy(
-                screen = if (session.isProfileComplete) AuthStep.Login else AuthStep.BasicInfo,
+                screen = if (session.isProfileComplete) AuthStep.Handoff else AuthStep.BasicInfo,
                 phoneNumber = session.user?.phoneNumber.orEmpty(),
                 name = session.user?.name.orEmpty(),
                 email = session.user?.email.orEmpty(),
                 pinCode = session.user?.pinCode.orEmpty(),
                 user = session.user,
+                isLoading = false,
                 errorMessage = null,
             )
         }

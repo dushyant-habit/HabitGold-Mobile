@@ -75,6 +75,7 @@ Recommended structure:
 composeApp/src/commonMain/kotlin/com/habit/gold/
   core/
     config/
+    localization/
     di/
     network/
     storage/
@@ -430,6 +431,7 @@ Keep localization readiness simple from the start.
 Rules:
 
 - all user-facing copy should move through a shared string-resource or string-provider strategy
+- migrated shared screens and viewmodels should use the shared `AppStrings` boundary instead of adding new hardcoded copy
 - no completed feature screen should keep important UI copy hardcoded in composables or viewmodels
 - do not build important user-facing strings through fragile concatenation
 - support placeholders and plural-friendly formatting patterns instead of manual string assembly

@@ -11,9 +11,9 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 3 completed`
-- Current focus: `Phase 5 preparation: auth migration and cleanup on top of the shared shell and design system`
-- Next milestone: `auth flow migration review, localization extraction, and feature-level cleanup`
+- Current phase: `Phase 5 in progress`
+- Current focus: `finish auth hardening on top of the shared shell, localization boundary, and MVI foundation`
+- Next milestone: `close the remaining auth gap by adding use cases and then begin Home migration`
 
 ## Phase Status
 
@@ -116,8 +116,11 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Added shared design-system tokens for colors, typography, spacing, shapes, elevations, and gradients
 - [x] Added shared primitives for buttons, text fields, cards, app bars, and state views
 - [x] Added design-system preview coverage and adopted the primitives in the current auth and app-shell UI
+- [x] Added shared `AppStrings` localization boundary and extracted current auth and app-shell copy
+- [x] Split auth UI into smaller screen/component files and migrated auth onto the shared MVI base
+- [x] Added auth handoff-state coverage so auth routing stays aligned with the app shell
 - [x] Verified Phase 3 with `./gradlew :composeApp:allTests`
-- [ ] Extract current auth and app-shell hardcoded user-facing strings into the shared localization approach
+- [x] Extract current auth and app-shell hardcoded user-facing strings into the shared localization approach
 
 ## Current Phase Breakdown
 
@@ -209,7 +212,7 @@ Immediate tasks:
 - [x] create shared loading, empty, and error views
 - [x] define compact/medium/expanded layout groundwork
 - [x] add previews for core components
-- [ ] add shared string-resource/localization strategy and migrate current shell/auth copy
+- [x] add shared string-resource/localization strategy and migrate current shell/auth copy
 
 ### Phase 4: App Shell And Navigation
 
