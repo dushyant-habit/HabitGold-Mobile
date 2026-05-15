@@ -3,12 +3,7 @@ package com.habit.gold.core.storage
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-interface SecureStorage {
-    suspend fun read(key: String): String?
-    suspend fun write(key: String, value: String)
-    suspend fun delete(key: String)
-    suspend fun clear()
-}
+interface SecureStorage : KeyValueStorage
 
 class InMemorySecureStorage : SecureStorage {
     private val mutex = Mutex()

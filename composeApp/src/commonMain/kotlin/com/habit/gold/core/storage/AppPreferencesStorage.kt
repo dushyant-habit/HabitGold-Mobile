@@ -1,8 +1,10 @@
 package com.habit.gold.core.storage
 
+import kotlinx.serialization.Serializable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+@Serializable
 data class AppPreferences(
     val hasUnreadAlerts: Boolean = false,
 )
