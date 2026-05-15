@@ -1,0 +1,19 @@
+package com.habit.gold.feature.home.presentation
+
+import com.habit.gold.core.presentation.mvi.MviEffect
+import com.habit.gold.core.presentation.mvi.MviIntent
+import com.habit.gold.core.presentation.mvi.MviState
+import com.habit.gold.feature.home.domain.model.HomeSummary
+
+data class HomeState(
+    val isLoading: Boolean = true,
+    val summary: HomeSummary? = null,
+    val errorMessage: String? = null,
+) : MviState
+
+sealed interface HomeIntent : MviIntent {
+    data object Load : HomeIntent
+    data object Refresh : HomeIntent
+}
+
+sealed interface HomeEffect : MviEffect

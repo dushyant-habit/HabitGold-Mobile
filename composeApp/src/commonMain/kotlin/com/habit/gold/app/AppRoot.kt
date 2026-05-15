@@ -71,6 +71,7 @@ fun AppRoot() {
                         )
                     }
                     is AppRoute.Main -> AppMainShellScreen(
+                        appKoin = appKoin,
                         session = appState.session,
                         selectedTab = currentRoute.tab,
                         onSelectTab = { tab ->
