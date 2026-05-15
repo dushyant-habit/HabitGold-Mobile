@@ -124,6 +124,9 @@ Layer rules:
 - `presentation` renders and manages UI state
 - `domain` defines business rules and contracts
 - `data` performs IO and mapping
+- each feature should also carry a feature-level overview doc named `feature-<feature-name>-overview.md`
+- that feature overview doc should live inside the feature folder and capture UI flow, APIs, state rules, parity decisions, tests, and known gaps
+- app-level startup and shell areas should use an area overview doc named `<area>-overview.md`, for example `app-startup-overview.md`
 
 ## 4. MVI Standard
 
@@ -208,8 +211,25 @@ The shared layer should own:
 
 Important rule:
 
-- do not invent a fake refresh flow
-- keep refresh as a real boundary until the backend refresh contract is confirmed
+- API parity means endpoint, payload, headers, timeout, auth retry, and environment behavior
+- if Android uses required app headers, KMP must send the same headers before feature validation
+- if Android does not send a default header, KMP should not invent one at the shared client layer
+- internal request markers used only for KMP plumbing must never leak to backend requests or logs
+- for backend migrations, Android network behavior is the working reference unless we explicitly agree to improve or change it
+- authenticated `401` handling must either refresh once or expire the session deterministically
+- timeout values must stay consistent with Android unless there is an explicit decision to change them
+
+Current auth network parity rules:
+
+- send `x-app-version` on every request
+- send `x-app-platform` on every request
+- use 15 second request, connect, and socket timeouts
+- retry one authenticated request after a successful `auth/refresh`
+- send the previous bearer token to `auth/refresh` when available
+- clear session state when refresh is missing or fails
+- inspect the actual Android request path before copying auth payload formatting; display formatting like `+91` can differ from the API payload
+- parity review must include input behavior, not just network behavior: typing limits, deletion rules, focus movement, and error timing
+- parity review must also include feature-entry behavior: deep-link/referral-prefill sources, onboarding sources, and stored flags that change the first render
 
 ## 8. Localization Standard
 
@@ -228,6 +248,44 @@ Rules:
 Current implementation rule:
 
 - when a feature introduces new user-facing copy, update the shared localization boundary in the same task
+- before considering a feature migrated, inventory its strings, drawables, icons, and input/keyboard behavior against Android
+
+Target direction:
+
+- shared feature strings should live in `composeResources/values/strings.xml`
+- shared feature icons and images should move into `composeResources/drawable`
+- native app-only resources such as app icons, launch assets, and platform plist/manifest assets should remain platform-specific
+- `AppStrings` is now the adapter boundary over those resource-backed strings while existing shared features continue migrating
+- new features should add strings to `composeResources` first, then expose them through the shared boundary only where a viewmodel or cross-feature adapter still needs that indirection
+- until direct resource usage fully replaces the adapter where appropriate, copied feature strings in `AppStrings` and shared Material icon usage must still be traced back to Android resources during parity review
+
+## 8A. Feature Migration Checklist
+
+Every migrated feature should be checked for all of the following, not only API success:
+
+- request and response contract parity
+- header and timeout parity
+- exact string and resource inventory
+- validation timing parity
+- input behavior parity
+- keyboard and focus behavior parity
+- back navigation parity
+- loading, error, empty, and success states
+- feature-level documentation updated in `feature-<feature-name>-overview.md`
+- app/startup documentation updated when launch, splash, or top-level routing behavior changes
+
+Feature documentation template rule:
+
+- auth’s `feature-auth-overview.md` is the current reference format
+- new features should reuse the same structure instead of inventing a new documentation style each time
+
+Later foundation items:
+
+- final native-launch and shared-splash parity polish
+- secure platform-backed session persistence
+- full iOS scheme/config parity for `staging`, `preprod`, and `prod`
+- screenshot-based parity QA baseline
+- native integration boundary inventory for platform SDK features
 
 ## 9. Security And Production Standard
 
@@ -240,6 +298,13 @@ Required production thinking:
 - clean release behavior
 - avoid unnecessary libraries
 - R8 / Proguard hardening as integrations grow
+
+Environment rule:
+
+- Android should use real product flavors for `staging`, `preprod`, and `prod`
+- iOS should mirror those environments with schemes / build configurations, not ad hoc hardcoded values
+- no feature API validation is complete until Android and iOS are confirmed against the intended environment
+- when storing URLs in `.xcconfig`, do not write raw `https://...` directly because `//` is treated as a comment; use an xcconfig-safe pattern like `https:$(SLASH)/...`
 
 ## 10. Git And Workflow Standard
 

@@ -47,6 +47,7 @@ class SessionStore(
         refreshToken: String,
         user: AuthenticatedUser,
         isProfileComplete: Boolean,
+        isPinCodeRequired: Boolean,
     ) {
         val session = AuthSession(
             accessToken = accessToken,
@@ -54,6 +55,7 @@ class SessionStore(
             user = user,
             isLoggedIn = true,
             isProfileComplete = isProfileComplete,
+            isPinCodeRequired = isPinCodeRequired,
         )
         authTokenStorage.writeTokens(
             AuthTokens(
@@ -62,21 +64,55 @@ class SessionStore(
             )
         )
         userProfileStorage.writeUser(user)
-        sessionMetadataStorage.writeMetadata(SessionMetadata(isProfileComplete = isProfileComplete))
+        sessionMetadataStorage.writeMetadata(
+            SessionMetadata(
+                isProfileComplete = isProfileComplete,
+                isPinCodeRequired = isPinCodeRequired,
+            )
+        )
         _state.value = session
     }
 
     suspend fun updateProfile(
         user: AuthenticatedUser,
         isProfileComplete: Boolean,
+        isPinCodeRequired: Boolean,
     ) {
         userProfileStorage.writeUser(user)
-        sessionMetadataStorage.writeMetadata(SessionMetadata(isProfileComplete = isProfileComplete))
+        sessionMetadataStorage.writeMetadata(
+            SessionMetadata(
+                isProfileComplete = isProfileComplete,
+                isPinCodeRequired = isPinCodeRequired,
+            )
+        )
         _state.update { current ->
             current.copy(
                 user = user,
                 isLoggedIn = true,
                 isProfileComplete = isProfileComplete,
+                isPinCodeRequired = isPinCodeRequired,
+            )
+        }
+    }
+
+    /**
+     * Persists refreshed auth tokens without disturbing the current user snapshot or startup routing state.
+     */
+    suspend fun updateTokens(
+        accessToken: String,
+        refreshToken: String,
+    ) {
+        authTokenStorage.writeTokens(
+            AuthTokens(
+                accessToken = accessToken,
+                refreshToken = refreshToken,
+            )
+        )
+        _state.update { current ->
+            current.copy(
+                accessToken = accessToken,
+                refreshToken = refreshToken,
+                isLoggedIn = true,
             )
         }
     }

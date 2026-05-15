@@ -12,11 +12,17 @@ interface SessionExpiryHandler {
 }
 
 interface TokenRefreshHandler {
-    suspend fun refreshTokens(refreshToken: String): ApiResult<AuthTokens>
+    suspend fun refreshTokens(
+        refreshToken: String,
+        accessToken: String?,
+    ): ApiResult<AuthTokens>
 }
 
 class UnsupportedTokenRefreshHandler : TokenRefreshHandler {
-    override suspend fun refreshTokens(refreshToken: String): ApiResult<AuthTokens> {
+    override suspend fun refreshTokens(
+        refreshToken: String,
+        accessToken: String?,
+    ): ApiResult<AuthTokens> {
         return ApiResult.Failure(
             NetworkError(
                 kind = NetworkErrorKind.Unauthorized,

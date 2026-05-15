@@ -108,6 +108,26 @@ composeApp/src/commonMain/kotlin/com/habit/gold/
     kyc/
 ```
 
+Every migrated feature should include a feature-level overview file named:
+
+- `feature-<feature-name>-overview.md`
+
+That file should live inside the feature folder and document:
+
+- screens and user flow
+- APIs and payload rules
+- state management shape
+- platform or Android-parity decisions
+- tests
+- known gaps
+
+Template reuse rule:
+
+- reuse the auth feature overview format for future features
+- do not create a new documentation structure for each feature unless there is a real need
+- feature docs should stay consistent enough that someone can jump between features without relearning the doc format
+- for cross-cutting app areas like startup, use a stable area overview doc such as `app-startup-overview.md`
+
 ## Git Workflow Standard
 
 Use a simple, consistent git workflow.
@@ -212,6 +232,7 @@ Rules:
 - do not create `expect/actual` wrappers for ordinary business logic
 - shared code should not know Android classes or iOS framework details
 - if a dependency differs by platform, bind it at the platform or DI layer
+- feature parity review must include interaction behavior such as typing limits, deletion behavior, keyboard movement, focus behavior, and validation timing
 
 ## MVI Standard
 
@@ -439,7 +460,19 @@ Rules:
 - plan for date, currency, and number formatting to be locale aware
 - avoid hardcoding text that will likely need translation later
 - keep layouts resilient to longer strings
+- when migrating a feature, inventory strings, icons, and drawable assets before calling the UI parity pass complete
+- parity review should also cover feature-entry states such as deep-link/referral-prefill sources, onboarding sources, and stored flags that alter the first render
+
+Target direction:
+
+- shared strings should live in `composeResources/values/strings.xml`
+- shared icons and images should live in `composeResources/drawable`
+- platform-only resources should stay native
+- keep using `AppStrings` only as the adapter boundary where a viewmodel or cross-feature abstraction still needs resolved strings
+- for new migrated features, add strings to `composeResources` first and avoid introducing new hardcoded string holders
+- until direct resource usage fully replaces the adapter where appropriate, copied feature strings in `AppStrings` and shared Material icon usage should still be traced back to Android resources during parity review
 - review empty, error, loading, CTA, and legal text too, not just main labels
+- when migrating a feature, inventory strings, icons, and drawable assets before calling the UI parity pass complete
 
 ### Performance Rules
 
@@ -509,6 +542,11 @@ Requirements:
 - retry only where the operation is safe and idempotent
 - requests that create financial side effects must use explicit idempotency strategy
 - network logging must redact tokens, PII, payment payloads, and OTP-related data
+- feature parity checks must include request headers and timeout values, not only endpoint paths and bodies
+- if Android sends app headers like `x-app-version` and `x-app-platform`, KMP must send them too before API validation is considered complete
+- if Android does not send a default header, KMP should not add that header in the shared client by default
+- internal KMP-only markers for auth/public request policy must never leak to backend requests or debug logs
+- for auth flows, verify the exact Android request payload from the call site and repository path; UI display formats and API payload formats may differ
 
 Testing expectations:
 
@@ -550,10 +588,33 @@ Keep release management practical and easy to reason about.
 Rules:
 
 - maintain clear `development`, `staging`, and `production` behavior
+- Android should use real product flavors and iOS should mirror them with schemes / build configurations
+- `.xcconfig` files treat `//` as comments, so URL values must use an xcconfig-safe form such as `https:$(SLASH)/domain/path`
 - secrets must not be committed to source control
 - feature flags should be used only when they reduce release risk
 - risky backend-dependent features should have a rollback path
 - debug logging must be gated by environment
+
+### Feature Migration Checklist
+
+Before marking a feature complete, check:
+
+- API endpoint and payload parity
+- header and timeout parity
+- string parity
+- icon and drawable parity
+- validation timing parity
+- input behavior parity
+- keyboard and focus behavior parity
+- back navigation parity
+- feature-level overview documentation updated
+
+Later foundation items:
+
+- secure platform-backed session persistence
+- full iOS scheme/config parity for `staging`, `preprod`, and `prod`
+- screenshot-based parity QA baseline
+- native integration boundary inventory for platform SDK features
 
 ### Observability Rules
 

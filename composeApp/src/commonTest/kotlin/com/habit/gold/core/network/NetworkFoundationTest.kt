@@ -93,11 +93,13 @@ class NetworkFoundationTest {
         client.post("auth/send-otp") {
             skipAuthentication()
             contentType(ContentType.Application.Json)
-            setBody("""{"mobileNumber":"+919876543210"}""")
+            setBody("""{"mobileNumber":"9876543210"}""")
         }.bodyAsText()
 
         assertEquals("Bearer access-token", capturedRequests[0].headers[HttpHeaders.Authorization])
         assertEquals(null, capturedRequests[1].headers[HttpHeaders.Authorization])
+        assertEquals("1.0", capturedRequests[0].headers["x-app-version"])
+        assertEquals("android", capturedRequests[0].headers["x-app-platform"])
     }
 
     @Test
@@ -129,6 +131,55 @@ class NetworkFoundationTest {
         assertTrue(expiredCalls >= 1)
     }
 
+    @Test
+    fun `retries authenticated request once after successful token refresh`() = runBlocking {
+        val capturedRequests = mutableListOf<HttpRequestData>()
+        var refreshCalls = 0
+        val client = testClient(
+            authTokenProvider = MutableAuthTokenProvider(
+                accessToken = "expired-token",
+                refreshToken = "refresh-token",
+            ),
+            tokenRefreshHandler = object : TokenRefreshHandler {
+                override suspend fun refreshTokens(
+                    refreshToken: String,
+                    accessToken: String?,
+                ): ApiResult<com.habit.gold.core.storage.AuthTokens> {
+                    refreshCalls += 1
+                    return ApiResult.Success(
+                        com.habit.gold.core.storage.AuthTokens(
+                            accessToken = "fresh-token",
+                            refreshToken = "refresh-token-2",
+                        )
+                    )
+                }
+            },
+            engine = MockEngine { request ->
+                capturedRequests += request
+                when (request.headers[HttpHeaders.Authorization]) {
+                    "Bearer expired-token" -> respond(
+                        content = ByteReadChannel("""{"message":"Unauthorized"}"""),
+                        status = HttpStatusCode.Unauthorized,
+                        headers = io.ktor.http.headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                    "Bearer fresh-token" -> respond(
+                        content = ByteReadChannel("""{"ok":true}"""),
+                        status = HttpStatusCode.OK,
+                        headers = io.ktor.http.headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                    )
+                    else -> error("Unexpected auth header ${request.headers[HttpHeaders.Authorization]}")
+                }
+            },
+        )
+
+        val result = safeApiCall<String> { client.get("user/profile").body() }
+
+        assertIs<ApiResult.Success<String>>(result)
+        assertEquals(1, refreshCalls)
+        assertEquals("Bearer expired-token", capturedRequests[0].headers[HttpHeaders.Authorization])
+        assertEquals("Bearer fresh-token", capturedRequests[1].headers[HttpHeaders.Authorization])
+    }
+
     private fun testClient(
         authTokenProvider: AuthTokenProvider = FakeAuthTokenProvider(),
         sessionExpiryHandler: SessionExpiryHandler = object : SessionExpiryHandler {
@@ -142,6 +193,8 @@ class NetworkFoundationTest {
                 appConfig = AppConfig(
                     appName = "HabitGold",
                     bundleId = "com.habit.gold",
+                    appVersion = "1.0-debug",
+                    appPlatform = "android",
                     environment = AppEnvironment.Staging,
                     baseUrl = "https://api.habitgold.com/v1/",
                     enableNetworkLogs = false,
@@ -156,6 +209,14 @@ class NetworkFoundationTest {
     private data class FakeAuthTokenProvider(
         private val accessToken: String? = null,
         private val refreshToken: String? = null,
+    ) : AuthTokenProvider {
+        override fun getAccessToken(): String? = accessToken
+        override fun getRefreshToken(): String? = refreshToken
+    }
+
+    private class MutableAuthTokenProvider(
+        private var accessToken: String? = null,
+        private var refreshToken: String? = null,
     ) : AuthTokenProvider {
         override fun getAccessToken(): String? = accessToken
         override fun getRefreshToken(): String? = refreshToken

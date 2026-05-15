@@ -15,5 +15,6 @@ data class OtpRequestResult(
 
 data class VerifyOtpResult(
     val user: AuthenticatedUser,
-    val requiresBasicInfo: Boolean,
+    val requiresBasicDetails: Boolean,
+    val isPinCodeRequired: Boolean,
 )
