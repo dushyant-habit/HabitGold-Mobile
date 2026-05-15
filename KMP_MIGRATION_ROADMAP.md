@@ -129,6 +129,7 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Create storage contracts for tokens, profile basics, flags, alerts
 - [x] Create secure storage abstraction for sensitive values
 - [x] Define logout cleanup and session restore rules
+- [x] Replace in-memory session bindings with platform-backed persistent storage on Android and iOS
 - [x] Add unit tests for config and session rules
 
 ### Phase 2: Network Foundation

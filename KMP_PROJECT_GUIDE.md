@@ -618,7 +618,7 @@ Before marking a feature complete, check:
 
 Later foundation items:
 
-- secure platform-backed session persistence
+- stronger secure token-storage hardening beyond the current platform-backed persistence layer
 - full iOS scheme/config parity for `staging`, `preprod`, and `prod`
 - screenshot-based parity QA baseline
 - native integration boundary inventory for platform SDK features

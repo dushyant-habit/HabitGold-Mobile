@@ -405,12 +405,12 @@ Current test focus:
 
 Last verified on:
 
-- `2026-05-15`
+- `2026-05-16`
 
 Command:
 
 ```bash
-./gradlew :composeApp:allTests
+./gradlew :composeApp:allTests :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compilePreprodDebugKotlinAndroid
 ```
 
 Result:
@@ -419,10 +419,11 @@ Result:
 - shared auth tests passed across the current Android variants and iOS simulator test targets exercised by `:composeApp:allTests`
 - latest verification included the final auth parity cleanup for shared referral/security iconography and documentation updates
 - latest verification also included the move of shared auth and app-shell copy into `composeResources/values/strings.xml`
+- latest verification included platform-backed session persistence wiring so auth session restore no longer depends on in-memory DI bindings
 
 Known non-blocking warnings during the last run:
 
-- deprecated `ClickableText` usage in the auth terms footer still needs a later cleanup
+- none relevant to the shared auth flow during the last verification pass
 
 ## Known Gaps / Follow-Up
 
@@ -431,9 +432,9 @@ The auth feature is functional, but these areas still need continued follow-up w
 - auth strings now live in shared `composeResources`, but future locale directories and broader direct-resource adoption should continue from this base
 - auth visuals now match the Android iconography closely, but a formal shared drawable/resource migration is still pending
 - iOS-specific interaction polish may still be needed for keyboard behavior
-- `ClickableText` in the terms footer is deprecated and should eventually move to a newer Compose link pattern
 - platform SMS Retriever behavior is intentionally not shared in KMP
 - Android pending-referral attribution and locked referral-prefill behavior are not yet ported into shared auth; that dependency is deferred to the later referral + platform integration phase and must be included there
+- current session persistence is platform-backed on Android and iOS, but token-storage hardening can still be improved further later if we decide to move beyond the current private preference-backed approach
 
 ## When To Update This File
 
