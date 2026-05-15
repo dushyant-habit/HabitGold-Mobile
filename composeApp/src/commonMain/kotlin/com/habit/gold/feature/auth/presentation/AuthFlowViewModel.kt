@@ -8,8 +8,10 @@ import com.habit.gold.core.network.ApiResult
 import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.session.SessionStore
-import com.habit.gold.feature.auth.domain.AuthRepository
 import com.habit.gold.feature.auth.domain.AuthValidators
+import com.habit.gold.feature.auth.domain.usecase.RequestOtpUseCase
+import com.habit.gold.feature.auth.domain.usecase.SubmitBasicDetailsUseCase
+import com.habit.gold.feature.auth.domain.usecase.VerifyOtpUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,9 @@ class AuthFlowViewModel(
     appConfig: AppConfig,
     platformInfo: PlatformInfo,
     private val appStrings: AppStrings,
-    private val authRepository: AuthRepository,
+    private val requestOtpUseCase: RequestOtpUseCase,
+    private val verifyOtpUseCase: VerifyOtpUseCase,
+    private val submitBasicDetailsUseCase: SubmitBasicDetailsUseCase,
     private val sessionStore: SessionStore,
 ) : MviViewModel<AuthFlowUiState, AuthIntent, AuthEffect>(
     initialState = AuthFlowUiState(
@@ -31,6 +35,7 @@ class AuthFlowViewModel(
 ) {
     val uiState: StateFlow<AuthFlowUiState> = state
 
+    private val resendIntervals = listOf(30, 60, 120, 300)
     private var resendTimerJob: Job? = null
 
     init {
@@ -41,20 +46,21 @@ class AuthFlowViewModel(
 
     override fun onIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.UpdatePhoneNumber -> onPhoneChanged(intent.rawValue)
-            is AuthIntent.UpdateOtp -> onOtpChanged(intent.rawValue)
-            is AuthIntent.UpdateName -> onNameChanged(intent.rawValue)
-            is AuthIntent.UpdateEmail -> onEmailChanged(intent.rawValue)
-            is AuthIntent.UpdatePinCode -> onPinCodeChanged(intent.rawValue)
+            is AuthIntent.UpdatePhoneNumber -> updatePhoneNumber(intent.rawValue)
+            is AuthIntent.UpdateOtp -> updateOtp(intent.rawValue)
+            is AuthIntent.UpdateLegalName -> updateLegalName(intent.rawValue)
+            is AuthIntent.UpdateReferralCode -> updateReferralCode(intent.rawValue)
+            is AuthIntent.UpdatePinCode -> updatePinCode(intent.rawValue)
             AuthIntent.RequestOtp -> requestOtp()
             AuthIntent.VerifyOtp -> verifyOtp()
             AuthIntent.ResendOtp -> resendOtp()
             AuthIntent.ReturnToLogin -> returnToLogin()
-            AuthIntent.SubmitBasicInfo -> submitBasicInfo()
+            AuthIntent.ReturnToOtp -> returnToOtp()
+            AuthIntent.SubmitBasicDetails -> submitBasicDetails()
         }
     }
 
-    private fun onPhoneChanged(rawValue: String) {
+    private fun updatePhoneNumber(rawValue: String) {
         updateState {
             it.copy(
                 phoneNumber = AuthValidators.normalizePhone(rawValue),
@@ -63,7 +69,7 @@ class AuthFlowViewModel(
         }
     }
 
-    private fun onOtpChanged(rawValue: String) {
+    private fun updateOtp(rawValue: String) {
         updateState {
             it.copy(
                 otpCode = AuthValidators.normalizeOtp(rawValue),
@@ -72,15 +78,25 @@ class AuthFlowViewModel(
         }
     }
 
-    private fun onNameChanged(rawValue: String) {
-        updateState { it.copy(name = rawValue, errorMessage = null) }
+    private fun updateLegalName(rawValue: String) {
+        updateState {
+            it.copy(
+                legalName = AuthValidators.normalizeLegalName(rawValue),
+                errorMessage = null,
+            )
+        }
     }
 
-    private fun onEmailChanged(rawValue: String) {
-        updateState { it.copy(email = rawValue, errorMessage = null) }
+    private fun updateReferralCode(rawValue: String) {
+        updateState {
+            it.copy(
+                referralCode = AuthValidators.normalizeReferralCode(rawValue),
+                errorMessage = null,
+            )
+        }
     }
 
-    private fun onPinCodeChanged(rawValue: String) {
+    private fun updatePinCode(rawValue: String) {
         updateState {
             it.copy(
                 pinCode = AuthValidators.normalizePinCode(rawValue),
@@ -89,6 +105,9 @@ class AuthFlowViewModel(
         }
     }
 
+    /**
+     * Starts the OTP journey from the shared validation rules so both Android and iOS gate on the same input.
+     */
     private fun requestOtp() {
         val phoneNumber = state.value.phoneNumber
         if (!AuthValidators.isPhoneValid(phoneNumber)) {
@@ -98,7 +117,7 @@ class AuthFlowViewModel(
 
         viewModelScope.launch {
             setLoading(true)
-            when (val result = authRepository.requestOtp(phoneNumber)) {
+            when (val result = requestOtpUseCase(phoneNumber)) {
                 is ApiResult.Success -> {
                     updateState {
                         it.copy(
@@ -107,18 +126,20 @@ class AuthFlowViewModel(
                             otpRefId = result.value.refId,
                             isLoading = false,
                             errorMessage = null,
-                            resendSecondsRemaining = 30,
+                            resendAttempt = 0,
+                            resendSecondsRemaining = resendIntervals.first(),
                         )
                     }
                     startResendCountdown()
                 }
-                is ApiResult.Failure -> {
-                    showError(result.error.message)
-                }
+                is ApiResult.Failure -> showError(result.error.message)
             }
         }
     }
 
+    /**
+     * Verifies OTP and respects the backend onboarding flags so shared auth stays aligned with production Android behavior.
+     */
     private fun verifyOtp() {
         val currentState = state.value
         if (!AuthValidators.isOtpValid(currentState.otpCode)) {
@@ -128,16 +149,16 @@ class AuthFlowViewModel(
 
         viewModelScope.launch {
             setLoading(true)
-            when (val result = authRepository.verifyOtp(currentState.phoneNumber, currentState.otpCode)) {
+            when (val result = verifyOtpUseCase(currentState.phoneNumber, currentState.otpCode)) {
                 is ApiResult.Success -> {
                     resendTimerJob?.cancel()
                     updateState {
                         it.copy(
-                            screen = if (result.value.requiresBasicInfo) AuthStep.BasicInfo else AuthStep.Handoff,
+                            screen = if (result.value.requiresBasicDetails) AuthStep.BasicDetails else AuthStep.Handoff,
                             user = result.value.user,
-                            name = result.value.user.name,
-                            email = result.value.user.email,
+                            legalName = result.value.user.name,
                             pinCode = result.value.user.pinCode,
+                            isPinCodeRequired = result.value.isPinCodeRequired,
                             isLoading = false,
                             errorMessage = null,
                             resendSecondsRemaining = 0,
@@ -150,8 +171,30 @@ class AuthFlowViewModel(
     }
 
     private fun resendOtp() {
-        if (!state.value.canResendOtp) return
-        requestOtp()
+        val currentState = state.value
+        if (!currentState.canResendOtp) return
+
+        viewModelScope.launch {
+            setLoading(true)
+            when (val result = requestOtpUseCase(currentState.phoneNumber)) {
+                is ApiResult.Success -> {
+                    val nextAttempt = (currentState.resendAttempt + 1).coerceAtMost(resendIntervals.lastIndex)
+                    updateState {
+                        it.copy(
+                            screen = AuthStep.Otp,
+                            otpCode = "",
+                            otpRefId = result.value.refId,
+                            isLoading = false,
+                            errorMessage = null,
+                            resendAttempt = nextAttempt,
+                            resendSecondsRemaining = resendIntervals[nextAttempt],
+                        )
+                    }
+                    startResendCountdown()
+                }
+                is ApiResult.Failure -> showError(result.error.message)
+            }
+        }
     }
 
     private fun returnToLogin() {
@@ -161,29 +204,45 @@ class AuthFlowViewModel(
                 screen = AuthStep.Login,
                 otpCode = "",
                 otpRefId = "",
-                errorMessage = null,
-                resendSecondsRemaining = 0,
+                legalName = "",
+                referralCode = "",
+                pinCode = "",
+                isPinCodeRequired = true,
+                user = null,
                 isLoading = false,
+                errorMessage = null,
+                resendAttempt = 0,
+                resendSecondsRemaining = 0,
             )
         }
     }
 
-    private fun submitBasicInfo() {
+    private fun returnToOtp() {
+        updateState {
+            it.copy(
+                screen = AuthStep.Otp,
+                otpCode = "",
+                isLoading = false,
+                errorMessage = null,
+            )
+        }
+    }
+
+    /**
+     * Completes onboarding using the exact shared contract that updates profile first and then applies the referral code.
+     */
+    private fun submitBasicDetails() {
         val currentState = state.value
-        val trimmedName = currentState.name.trim()
-        val trimmedEmail = currentState.email.trim()
+        val trimmedLegalName = currentState.legalName.trim()
         val trimmedPinCode = currentState.pinCode.trim()
+        val normalizedReferralCode = currentState.referralCode.trim().ifBlank { null }
 
         when {
-            trimmedName.isBlank() -> {
-                showError(appStrings.authBlankNameError)
+            !AuthValidators.isLegalNameValid(trimmedLegalName) -> {
+                showError(appStrings.authInvalidLegalNameError)
                 return
             }
-            !AuthValidators.isEmailValid(trimmedEmail) -> {
-                showError(appStrings.authInvalidEmailError)
-                return
-            }
-            !AuthValidators.isPinCodeValid(trimmedPinCode) -> {
+            currentState.isPinCodeRequired && !AuthValidators.isPinCodeValid(trimmedPinCode) -> {
                 showError(appStrings.authInvalidPinCodeError)
                 return
             }
@@ -191,14 +250,19 @@ class AuthFlowViewModel(
 
         viewModelScope.launch {
             setLoading(true)
-            when (val result = authRepository.submitBasicInfo(trimmedName, trimmedEmail, trimmedPinCode)) {
+            when (
+                val result = submitBasicDetailsUseCase(
+                    legalName = trimmedLegalName,
+                    pinCode = trimmedPinCode.takeIf { currentState.isPinCodeRequired },
+                    referralCode = normalizedReferralCode,
+                )
+            ) {
                 is ApiResult.Success -> {
                     updateState {
                         it.copy(
                             screen = AuthStep.Handoff,
                             user = result.value,
-                            name = result.value.name,
-                            email = result.value.email,
+                            legalName = result.value.name,
                             pinCode = result.value.pinCode,
                             isLoading = false,
                             errorMessage = null,
@@ -211,7 +275,7 @@ class AuthFlowViewModel(
     }
 
     /**
-     * Keeps resend timing fully inside shared auth state so Android and iOS behave identically.
+     * Keeps resend timing fully inside shared auth state so Android and iOS stay in sync across navigation and restores.
      */
     private fun startResendCountdown() {
         resendTimerJob?.cancel()
@@ -243,12 +307,14 @@ class AuthFlowViewModel(
                     screen = AuthStep.Login,
                     otpCode = "",
                     otpRefId = "",
-                    name = "",
-                    email = "",
+                    legalName = "",
+                    referralCode = "",
                     pinCode = "",
+                    isPinCodeRequired = true,
                     user = null,
                     isLoading = false,
                     errorMessage = null,
+                    resendAttempt = 0,
                     resendSecondsRemaining = 0,
                 )
             }
@@ -257,11 +323,11 @@ class AuthFlowViewModel(
 
         updateState {
             it.copy(
-                screen = if (session.isProfileComplete) AuthStep.Handoff else AuthStep.BasicInfo,
+                screen = if (session.isProfileComplete) AuthStep.Handoff else AuthStep.BasicDetails,
                 phoneNumber = session.user?.phoneNumber.orEmpty(),
-                name = session.user?.name.orEmpty(),
-                email = session.user?.email.orEmpty(),
+                legalName = session.user?.name.orEmpty(),
                 pinCode = session.user?.pinCode.orEmpty(),
+                isPinCodeRequired = session.isPinCodeRequired,
                 user = session.user,
                 isLoading = false,
                 errorMessage = null,

@@ -14,10 +14,14 @@ import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.di.startKoinIfNeeded
 import com.habit.gold.core.localization.AppStrings
 import com.habit.gold.core.localization.ProvideAppStrings
+import com.habit.gold.core.localization.rememberAppStrings
 import com.habit.gold.core.navigation.AppRoute
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.auth.presentation.AuthFlowScreen
 import com.habit.gold.feature.auth.presentation.AuthFlowViewModel
+import com.habit.gold.feature.auth.domain.usecase.RequestOtpUseCase
+import com.habit.gold.feature.auth.domain.usecase.SubmitBasicDetailsUseCase
+import com.habit.gold.feature.auth.domain.usecase.VerifyOtpUseCase
 import com.habit.gold.ui.theme.HabitGoldTheme
 
 @Composable
@@ -29,7 +33,7 @@ fun AppRoot() {
         ) {
             val appKoin = remember { startKoinIfNeeded() }
             val appConfig: AppConfig = remember(appKoin) { appKoin.get() }
-            val appStrings: AppStrings = remember(appKoin) { appKoin.get() }
+            val appStrings: AppStrings = rememberAppStrings()
             val sessionStore: SessionStore = remember(appKoin) { appKoin.get() }
 
             ProvideAppStrings(appStrings = appStrings) {
@@ -45,17 +49,16 @@ fun AppRoot() {
                 val appState by appRootViewModel.state.collectAsStateWithLifecycle()
 
                 when (val currentRoute = appState.currentRoute) {
-                    AppRoute.Splash -> AppSplashScreen(
-                        appName = appConfig.appName,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    AppRoute.Splash -> AppSplashScreen(modifier = Modifier.fillMaxSize())
                     AppRoute.Authentication -> {
                         val authViewModel = viewModel {
                             AuthFlowViewModel(
                                 appConfig = appConfig,
                                 platformInfo = appKoin.get(),
                                 appStrings = appStrings,
-                                authRepository = appKoin.get(),
+                                requestOtpUseCase = appKoin.get<RequestOtpUseCase>(),
+                                verifyOtpUseCase = appKoin.get<VerifyOtpUseCase>(),
+                                submitBasicDetailsUseCase = appKoin.get<SubmitBasicDetailsUseCase>(),
                                 sessionStore = sessionStore,
                             )
                         }

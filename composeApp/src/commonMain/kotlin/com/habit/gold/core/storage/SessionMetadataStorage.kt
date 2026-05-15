@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.withLock
 
 data class SessionMetadata(
     val isProfileComplete: Boolean = false,
+    val isPinCodeRequired: Boolean = true,
 )
 
 interface SessionMetadataStorage {

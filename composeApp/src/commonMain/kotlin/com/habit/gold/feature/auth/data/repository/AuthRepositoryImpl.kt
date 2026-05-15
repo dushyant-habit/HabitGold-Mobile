@@ -35,80 +35,78 @@ class AuthRepositoryImpl(
             is ApiResult.Failure -> result
             is ApiResult.Success -> {
                 val response = result.value
+                val requiresBasicDetails = response.newUser || response.showOnboarding
                 val baseUser = AuthenticatedUser(
                     id = response.user?.id,
                     phoneNumber = response.user?.mobileNumber ?: phoneNumber,
                 )
 
-                if (response.newUser) {
+                if (requiresBasicDetails) {
                     sessionStore.saveAuthenticatedUser(
                         accessToken = response.accessToken,
                         refreshToken = response.refreshToken,
                         user = baseUser,
                         isProfileComplete = false,
+                        isPinCodeRequired = response.pincodeRequired,
                     )
                     ApiResult.Success(
                         VerifyOtpResult(
                             user = baseUser,
-                            requiresBasicInfo = true,
+                            requiresBasicDetails = true,
+                            isPinCodeRequired = response.pincodeRequired,
                         )
                     )
                 } else {
-                    val profileResult = remoteDataSource.getProfile()
-                    when (profileResult) {
-                        is ApiResult.Success -> {
-                            val enrichedUser = profileResult.value.toAuthenticatedUser(phoneNumber)
-                            val isProfileComplete = AuthValidators.isBasicInfoComplete(enrichedUser)
-                            sessionStore.saveAuthenticatedUser(
-                                accessToken = response.accessToken,
-                                refreshToken = response.refreshToken,
-                                user = enrichedUser,
-                                isProfileComplete = isProfileComplete,
-                            )
-                            ApiResult.Success(
-                                VerifyOtpResult(
-                                    user = enrichedUser,
-                                    requiresBasicInfo = !isProfileComplete,
-                                )
-                            )
-                        }
-                        is ApiResult.Failure -> {
-                            sessionStore.saveAuthenticatedUser(
-                                accessToken = response.accessToken,
-                                refreshToken = response.refreshToken,
-                                user = baseUser,
-                                isProfileComplete = false,
-                            )
-                            ApiResult.Success(
-                                VerifyOtpResult(
-                                    user = baseUser,
-                                    requiresBasicInfo = true,
-                                )
-                            )
-                        }
+                    val profileResult = remoteDataSource.getProfile(accessToken = response.accessToken)
+                    val resolvedUser = when (profileResult) {
+                        is ApiResult.Success -> profileResult.value.toAuthenticatedUser(phoneNumber)
+                        is ApiResult.Failure -> baseUser
                     }
+                    sessionStore.saveAuthenticatedUser(
+                        accessToken = response.accessToken,
+                        refreshToken = response.refreshToken,
+                        user = resolvedUser,
+                        isProfileComplete = true,
+                        isPinCodeRequired = response.pincodeRequired,
+                    )
+                    ApiResult.Success(
+                        VerifyOtpResult(
+                            user = resolvedUser,
+                            requiresBasicDetails = false,
+                            isPinCodeRequired = response.pincodeRequired,
+                        )
+                    )
                 }
             }
         }
     }
 
-    override suspend fun submitBasicInfo(
+    override suspend fun submitBasicDetails(
         name: String,
-        email: String,
-        pinCode: String,
+        pinCode: String?,
+        referralCode: String?,
     ): ApiResult<AuthenticatedUser> {
-        return when (val result = remoteDataSource.updateBasicInfo(name, email, pinCode)) {
+        return when (val result = remoteDataSource.updateBasicInfo(name, email = null, pinCode = pinCode)) {
             is ApiResult.Failure -> result
             is ApiResult.Success -> {
+                val normalizedReferralCode = referralCode
+                    ?.let(AuthValidators::normalizeReferralCode)
+                    ?.takeIf { it.isNotBlank() }
+                if (normalizedReferralCode != null) {
+                    when (val referralResult = remoteDataSource.submitReferralCode(normalizedReferralCode)) {
+                        is ApiResult.Failure -> return referralResult
+                        is ApiResult.Success -> Unit
+                    }
+                }
                 val currentPhoneNumber = sessionStore.state.value.user?.phoneNumber.orEmpty()
                 val updatedUser = result.value.toAuthenticatedUser(currentPhoneNumber).copy(
                     name = name.trim(),
-                    email = email.trim(),
-                    pinCode = pinCode.trim(),
+                    pinCode = pinCode?.trim().orEmpty(),
                 )
                 sessionStore.updateProfile(
                     user = updatedUser,
                     isProfileComplete = true,
+                    isPinCodeRequired = sessionStore.state.value.isPinCodeRequired,
                 )
                 ApiResult.Success(updatedUser)
             }

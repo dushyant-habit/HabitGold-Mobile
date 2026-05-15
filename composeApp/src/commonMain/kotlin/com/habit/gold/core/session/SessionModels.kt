@@ -29,6 +29,7 @@ data class AuthSession(
     val user: AuthenticatedUser? = null,
     val isLoggedIn: Boolean = false,
     val isProfileComplete: Boolean = false,
+    val isPinCodeRequired: Boolean = true,
 ) {
     val authState: SessionAuthState
         get() = when {
@@ -58,5 +59,6 @@ fun SessionSnapshot.toAuthSession(): AuthSession {
         user = user,
         isLoggedIn = tokens != null,
         isProfileComplete = metadata.isProfileComplete,
+        isPinCodeRequired = metadata.isPinCodeRequired,
     )
 }

@@ -34,6 +34,7 @@ class SessionStoreTest {
             refreshToken = "refresh-token",
             user = user,
             isProfileComplete = true,
+            isPinCodeRequired = true,
         )
 
         val restored = sessionStore.restore()
@@ -43,6 +44,7 @@ class SessionStoreTest {
         assertEquals(AppStartupDestination.Home, restored.startupDestination)
         assertEquals("access-token", restored.accessToken)
         assertEquals(user, restored.user)
+        assertTrue(restored.isPinCodeRequired)
     }
 
     @Test
@@ -58,6 +60,7 @@ class SessionStoreTest {
             refreshToken = "refresh-token",
             user = AuthenticatedUser(phoneNumber = "9876543210"),
             isProfileComplete = false,
+            isPinCodeRequired = false,
         )
 
         val restored = sessionStore.restore()
@@ -65,6 +68,7 @@ class SessionStoreTest {
         assertTrue(restored.isLoggedIn)
         assertEquals(SessionAuthState.AuthenticatedProfileIncomplete, restored.authState)
         assertEquals(AppStartupDestination.BasicInfo, restored.startupDestination)
+        assertFalse(restored.isPinCodeRequired)
     }
 
     @Test
@@ -80,6 +84,7 @@ class SessionStoreTest {
             refreshToken = "refresh-token",
             user = AuthenticatedUser(phoneNumber = "9876543210"),
             isProfileComplete = false,
+            isPinCodeRequired = true,
         )
 
         sessionStore.clear()
@@ -91,5 +96,37 @@ class SessionStoreTest {
         assertEquals(AppStartupDestination.Login, restored.startupDestination)
         assertNull(restored.accessToken)
         assertNull(restored.user)
+    }
+
+    @Test
+    fun `updates tokens without losing current user snapshot`() = runBlocking {
+        val sessionStore = SessionStore(
+            authTokenStorage = SecureAuthTokenStorage(InMemorySecureStorage()),
+            userProfileStorage = InMemoryUserProfileStorage(),
+            sessionMetadataStorage = InMemorySessionMetadataStorage(),
+        )
+
+        val user = AuthenticatedUser(
+            id = "user-1",
+            phoneNumber = "9876543210",
+            name = "Habit Gold",
+        )
+        sessionStore.saveAuthenticatedUser(
+            accessToken = "old-access",
+            refreshToken = "old-refresh",
+            user = user,
+            isProfileComplete = true,
+            isPinCodeRequired = false,
+        )
+
+        sessionStore.updateTokens(
+            accessToken = "new-access",
+            refreshToken = "new-refresh",
+        )
+
+        assertEquals("new-access", sessionStore.state.value.accessToken)
+        assertEquals("new-refresh", sessionStore.state.value.refreshToken)
+        assertEquals(user, sessionStore.state.value.user)
+        assertTrue(sessionStore.state.value.isProfileComplete)
     }
 }

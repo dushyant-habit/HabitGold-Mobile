@@ -10,6 +10,12 @@ class AuthValidatorsTest {
     @Test
     fun `normalizes phone to 10 digits`() {
         assertEquals("9876543210", AuthValidators.normalizePhone("+91 98765-43210"))
+        assertEquals("9876543210", AuthValidators.normalizePhone("9876543210123"))
+    }
+
+    @Test
+    fun `normalizes legal name using android onboarding rules`() {
+        assertEquals("Johnathan 123", AuthValidators.normalizeLegalName("Johnathan@ 123!"))
     }
 
     @Test
@@ -21,26 +27,40 @@ class AuthValidatorsTest {
     }
 
     @Test
-    fun `requires all basic info fields`() {
+    fun `normalizes referral code to uppercase`() {
+        assertEquals("FRIEND1", AuthValidators.normalizeReferralCode(" friend1 "))
+    }
+
+    @Test
+    fun `requires legal name and optional pincode based on backend rule`() {
         assertTrue(
-            AuthValidators.isBasicInfoComplete(
-                AuthenticatedUser(
+            AuthValidators.isBasicDetailsComplete(
+                user = AuthenticatedUser(
                     phoneNumber = "9876543210",
                     name = "Habit Gold",
-                    email = "team@habitgold.com",
                     pinCode = "560001",
-                )
-            )
+                ),
+                isPinCodeRequired = true,
+            ),
+        )
+        assertTrue(
+            AuthValidators.isBasicDetailsComplete(
+                user = AuthenticatedUser(
+                    phoneNumber = "9876543210",
+                    name = "Habit Gold",
+                ),
+                isPinCodeRequired = false,
+            ),
         )
         assertFalse(
-            AuthValidators.isBasicInfoComplete(
-                AuthenticatedUser(
+            AuthValidators.isBasicDetailsComplete(
+                user = AuthenticatedUser(
                     phoneNumber = "9876543210",
-                    name = "Habit Gold",
-                    email = "",
+                    name = "",
                     pinCode = "560001",
-                )
-            )
+                ),
+                isPinCodeRequired = true,
+            ),
         )
     }
 }

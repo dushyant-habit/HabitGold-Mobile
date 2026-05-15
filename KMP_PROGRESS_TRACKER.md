@@ -11,9 +11,9 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 5 in progress`
-- Current focus: `finish auth hardening on top of the shared shell, localization boundary, and MVI foundation`
-- Next milestone: `close the remaining auth gap by adding use cases and then begin Home migration`
+- Current phase: `Phase 6 ready`
+- Current focus: `prepare Home migration while keeping startup/splash polish pending for a later pass`
+- Next milestone: `start Home scaffolding and dashboard/domain inventory`
 
 ## Phase Status
 
@@ -31,7 +31,7 @@ Use this together with:
 - [x] Phase 2: Network Foundation
 - [x] Phase 3: Design System
 - [x] Phase 4: App Shell And Navigation
-- [ ] Phase 5: Auth
+- [x] Phase 5: Auth
 - [ ] Phase 6: Home And Portfolio
 - [ ] Phase 7: Trade
 - [ ] Phase 8: SIP / Savings
@@ -47,7 +47,7 @@ This section keeps the important product flows visible explicitly, even when the
 
 ### Core Product Flows
 
-- [ ] Auth Flow
+- [x] Auth Flow
 - [ ] Home / Portfolio Flow
 - [ ] Buy Gold Flow
 - [ ] Sell Gold Flow
@@ -107,26 +107,43 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Added shared `ApiResult` / `NetworkError` with stable app-level error categories
 - [x] Added shared HTTP client hardening with auth-header injection, public-request skip-auth policy, and log redaction
 - [x] Added deterministic auth-expired session-clearing behavior for authenticated `401` responses
+- [x] Added Android-parity auth network headers: `x-app-version` and `x-app-platform`
+- [x] Added Android-parity auth refresh flow with one retry after successful `auth/refresh`
+- [x] Persist refreshed auth tokens back into shared session state
 - [x] Added network test coverage for timeout, connectivity, auth header policy, malformed payloads, and auth-expired handling
+- [x] Added network test coverage for refresh retry behavior
+- [x] Enabled full Ktor API logging for debug-style environments
 - [x] Verified Phase 2 with `./gradlew :composeApp:allTests`
 - [x] Added shared startup coordinator and typed top-level route model
 - [x] Added shared splash, authentication gate, and logged-in shell routing in `AppRoot`
 - [x] Added placeholder bottom-navigation shell for Home, Transactions, and Profile
+- [ ] Finalize branded shared splash UI plus native Android and iOS launch-layer parity
+- [x] Added startup-area overview documentation in `app-startup-overview.md`
 - [x] Added startup routing tests and re-verified with `./gradlew :composeApp:allTests`
 - [x] Added shared design-system tokens for colors, typography, spacing, shapes, elevations, and gradients
 - [x] Added shared primitives for buttons, text fields, cards, app bars, and state views
 - [x] Added design-system preview coverage and adopted the primitives in the current auth and app-shell UI
 - [x] Added shared `AppStrings` localization boundary and extracted current auth and app-shell copy
+- [x] Moved current shared auth and app-shell copy into resource-backed `composeResources/values/strings.xml`
 - [x] Split auth UI into smaller screen/component files and migrated auth onto the shared MVI base
 - [x] Added auth handoff-state coverage so auth routing stays aligned with the app shell
 - [x] Verified Phase 3 with `./gradlew :composeApp:allTests`
 - [x] Extract current auth and app-shell hardcoded user-facing strings into the shared localization approach
+- [x] Ported Android auth onboarding contract including `showOnboarding`, `pincodeRequired`, and referral submission
+- [x] Rebuilt shared Login, OTP, and Basic Details screens to mirror Android auth behavior closely
+- [x] Added shared auth use cases and repository tests for onboarding, profile fallback, and referral submission
+- [x] Added the shared HabitGold auth logo resource for Android and iOS
+- [x] Added Android `staging`, `preprod`, and `prod` product flavors to the KMP app module
+- [x] Aligned iOS runtime environment config with Xcode debug/release settings
+- [x] Confirmed Android auth connectivity permission parity with `INTERNET` and `ACCESS_NETWORK_STATE`
+- [x] Removed the final auth emoji placeholders and aligned shared referral/security visuals closer to Android
+- [x] Verified the auth migration with `./gradlew :composeApp:allTests`
 
 ## Current Phase Breakdown
 
 ### Phase 0: Project Scaffold
 
-Status: `Completed`
+Status: `Completed for routing and shell structure`
 
 Definition of done:
 
@@ -172,7 +189,7 @@ Definition of done:
 - shared HTTP client exists
 - auth/public request policy exists
 - API error model exists
-- refresh boundary exists and is intentionally unsupported until a real refresh API contract is added
+- auth refresh flow matches Android behavior for headers, timeout, and single-retry token refresh
 - app-level error categories are defined and tested
 - auth-expired handling is deterministic
 - network tests exist
@@ -186,6 +203,8 @@ Immediate tasks:
 - [x] define stable error categories and user-safe copy policy
 - [x] define idempotency and auth-expired handling rules
 - [x] create network test plan and first tests
+- [x] port Android auth app headers into shared KMP networking
+- [x] port Android-style single refresh retry for authenticated `401` responses
 
 ### Phase 3: Design System
 
@@ -237,6 +256,32 @@ Immediate tasks:
 - [x] create bottom navigation shell
 - [x] keep Android and iOS entry points thin
 - [x] add tests for startup routing rules
+- [ ] finalize native Android and iOS launch layers with the shared splash experience
+
+### Phase 5: Auth
+
+Status: `Completed`
+
+Definition of done:
+
+- shared auth flow matches Android login, OTP, and basic-details behavior closely
+- auth uses shared MVI and use-case boundaries
+- auth API integration handles onboarding flags and error cases deterministically
+- shared auth strings are localized through `AppStrings`
+- auth viewmodel and repository tests exist
+
+Immediate tasks:
+
+- [x] create `feature/auth` structure
+- [x] port auth DTOs needed for request/verify/profile flow
+- [x] create auth repository contract and implementation
+- [x] create auth use cases
+- [x] create auth MVI state/contracts
+- [x] extract auth user-facing copy into the shared localization approach
+- [x] rebuild login screen using shared design system
+- [x] rebuild OTP screen using shared design system
+- [x] rebuild basic-details onboarding screen
+- [x] add tests for auth reducers/viewmodels/repositories
 
 ### Phase 7: Trade
 
