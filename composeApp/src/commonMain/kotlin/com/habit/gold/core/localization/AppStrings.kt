@@ -46,8 +46,8 @@ import habitgoldmobile.composeapp.generated.resources.auth_terms_label
 import habitgoldmobile.composeapp.generated.resources.auth_terms_url
 import habitgoldmobile.composeapp.generated.resources.auth_verify_and_proceed_cta
 import habitgoldmobile.composeapp.generated.resources.main_tab_home
-import habitgoldmobile.composeapp.generated.resources.main_tab_profile
-import habitgoldmobile.composeapp.generated.resources.main_tab_transactions
+import habitgoldmobile.composeapp.generated.resources.main_tab_history
+import habitgoldmobile.composeapp.generated.resources.main_tab_rewards
 import habitgoldmobile.composeapp.generated.resources.shell_description
 import habitgoldmobile.composeapp.generated.resources.shell_email_label
 import habitgoldmobile.composeapp.generated.resources.shell_home_description
@@ -58,13 +58,14 @@ import habitgoldmobile.composeapp.generated.resources.shell_pin_code_label
 import habitgoldmobile.composeapp.generated.resources.shell_profile_card_title
 import habitgoldmobile.composeapp.generated.resources.shell_profile_complete
 import habitgoldmobile.composeapp.generated.resources.shell_profile_pending
-import habitgoldmobile.composeapp.generated.resources.shell_profile_title
+import habitgoldmobile.composeapp.generated.resources.shell_history_description
+import habitgoldmobile.composeapp.generated.resources.shell_history_title
+import habitgoldmobile.composeapp.generated.resources.shell_rewards_description
+import habitgoldmobile.composeapp.generated.resources.shell_rewards_title
 import habitgoldmobile.composeapp.generated.resources.shell_session_active
 import habitgoldmobile.composeapp.generated.resources.shell_session_card_title
 import habitgoldmobile.composeapp.generated.resources.shell_session_logged_out
 import habitgoldmobile.composeapp.generated.resources.shell_title
-import habitgoldmobile.composeapp.generated.resources.shell_transactions_description
-import habitgoldmobile.composeapp.generated.resources.shell_transactions_title
 import habitgoldmobile.composeapp.generated.resources.shell_welcome_back
 import habitgoldmobile.composeapp.generated.resources.splash_loading_message
 import habitgoldmobile.composeapp.generated.resources.splash_tagline
@@ -122,9 +123,10 @@ interface AppStrings {
     val shellSessionLoggedOut: String
     val shellProfileComplete: String
     val shellProfilePending: String
-    val shellTransactionsTitle: String
-    val shellTransactionsDescription: String
-    val shellProfileTitle: String
+    val shellRewardsTitle: String
+    val shellRewardsDescription: String
+    val shellHistoryTitle: String
+    val shellHistoryDescription: String
     val shellPhoneLabel: String
     val shellEmailLabel: String
     val shellPinCodeLabel: String
@@ -186,9 +188,10 @@ private data class ResourceAppStrings(
     override val shellSessionLoggedOut: String,
     override val shellProfileComplete: String,
     override val shellProfilePending: String,
-    override val shellTransactionsTitle: String,
-    override val shellTransactionsDescription: String,
-    override val shellProfileTitle: String,
+    override val shellRewardsTitle: String,
+    override val shellRewardsDescription: String,
+    override val shellHistoryTitle: String,
+    override val shellHistoryDescription: String,
     override val shellPhoneLabel: String,
     override val shellEmailLabel: String,
     override val shellPinCodeLabel: String,
@@ -198,8 +201,8 @@ private data class ResourceAppStrings(
     private val resendCountdownTemplate: String,
     private val formattedPhoneNumberTemplate: String,
     private val mainTabHome: String,
-    private val mainTabTransactions: String,
-    private val mainTabProfile: String,
+    private val mainTabRewards: String,
+    private val mainTabHistory: String,
 ) : AppStrings {
     override fun authOtpReferenceId(refId: String): String = otpReferenceTemplate
         .replace("%1\$s", refId)
@@ -218,8 +221,8 @@ private data class ResourceAppStrings(
     override fun mainTabLabel(tab: MainTab): String {
         return when (tab) {
             MainTab.Home -> mainTabHome
-            MainTab.Transactions -> mainTabTransactions
-            MainTab.Profile -> mainTabProfile
+            MainTab.Rewards -> mainTabRewards
+            MainTab.History -> mainTabHistory
         }
     }
 }
@@ -278,17 +281,18 @@ fun rememberAppStrings(): AppStrings {
     val shellSessionLoggedOut = stringResource(Res.string.shell_session_logged_out)
     val shellProfileComplete = stringResource(Res.string.shell_profile_complete)
     val shellProfilePending = stringResource(Res.string.shell_profile_pending)
-    val shellTransactionsTitle = stringResource(Res.string.shell_transactions_title)
-    val shellTransactionsDescription = stringResource(Res.string.shell_transactions_description)
-    val shellProfileTitle = stringResource(Res.string.shell_profile_title)
+    val shellRewardsTitle = stringResource(Res.string.shell_rewards_title)
+    val shellRewardsDescription = stringResource(Res.string.shell_rewards_description)
+    val shellHistoryTitle = stringResource(Res.string.shell_history_title)
+    val shellHistoryDescription = stringResource(Res.string.shell_history_description)
     val shellPhoneLabel = stringResource(Res.string.shell_phone_label)
     val shellEmailLabel = stringResource(Res.string.shell_email_label)
     val shellPinCodeLabel = stringResource(Res.string.shell_pin_code_label)
     val shellNotAddedYet = stringResource(Res.string.shell_not_added_yet)
     val shellLogoutCta = stringResource(Res.string.shell_logout_cta)
     val mainTabHome = stringResource(Res.string.main_tab_home)
-    val mainTabTransactions = stringResource(Res.string.main_tab_transactions)
-    val mainTabProfile = stringResource(Res.string.main_tab_profile)
+    val mainTabRewards = stringResource(Res.string.main_tab_rewards)
+    val mainTabHistory = stringResource(Res.string.main_tab_history)
 
     return ResourceAppStrings(
         authTagline = authTagline,
@@ -339,9 +343,10 @@ fun rememberAppStrings(): AppStrings {
         shellSessionLoggedOut = shellSessionLoggedOut,
         shellProfileComplete = shellProfileComplete,
         shellProfilePending = shellProfilePending,
-        shellTransactionsTitle = shellTransactionsTitle,
-        shellTransactionsDescription = shellTransactionsDescription,
-        shellProfileTitle = shellProfileTitle,
+        shellRewardsTitle = shellRewardsTitle,
+        shellRewardsDescription = shellRewardsDescription,
+        shellHistoryTitle = shellHistoryTitle,
+        shellHistoryDescription = shellHistoryDescription,
         shellPhoneLabel = shellPhoneLabel,
         shellEmailLabel = shellEmailLabel,
         shellPinCodeLabel = shellPinCodeLabel,
@@ -351,8 +356,8 @@ fun rememberAppStrings(): AppStrings {
         resendCountdownTemplate = stringResource(Res.string.auth_resend_countdown),
         formattedPhoneNumberTemplate = stringResource(Res.string.auth_formatted_phone_number),
         mainTabHome = mainTabHome,
-        mainTabTransactions = mainTabTransactions,
-        mainTabProfile = mainTabProfile,
+        mainTabRewards = mainTabRewards,
+        mainTabHistory = mainTabHistory,
     )
 }
 

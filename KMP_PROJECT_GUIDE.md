@@ -233,6 +233,13 @@ Rules:
 - shared code should not know Android classes or iOS framework details
 - if a dependency differs by platform, bind it at the platform or DI layer
 - feature parity review must include interaction behavior such as typing limits, deletion behavior, keyboard movement, focus behavior, and validation timing
+- feature audit should not be a one-pass read; it must include separate structure, visual, and interaction passes before implementation
+- audit checklists must explicitly cover:
+  - default collapsed or expanded states
+  - loading treatment such as shimmer
+  - bottom-bar or inset overlap
+  - alignment and badge sizing
+  - sheet, pager, and close-dismiss behavior
 
 ## MVI Standard
 
