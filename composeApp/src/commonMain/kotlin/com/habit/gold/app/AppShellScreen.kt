@@ -1,17 +1,16 @@
 package com.habit.gold.app
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -19,224 +18,151 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.habit.gold.core.designsystem.AppPrimaryButton
-import com.habit.gold.core.designsystem.AppSectionCard
-import com.habit.gold.core.designsystem.AppSupportingText
-import com.habit.gold.core.designsystem.HabitGoldDesignSystem
+import androidx.compose.foundation.layout.WindowInsets
+import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.feature.home.presentation.HomeRoute
+import org.koin.core.Koin
+
+private val MainBottomNavShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
+private val MainBottomNavBorder = Color(0x26000000)
+private val MainBottomNavBackground = Color.White
+private val MainBottomNavSelected = HabitGoldPalette.plum
+private val MainBottomNavUnselected = Color(0xFF80858F)
+private val MainShellBackground = Color(0xFFF8F8FB)
+
+private data class MainTabUi(
+    val tab: MainTab,
+    val icon: ImageVector,
+)
 
 @Composable
 fun AppMainShellScreen(
+    appKoin: Koin,
     session: AuthSession,
     selectedTab: MainTab,
     onSelectTab: (MainTab) -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val strings = appStrings
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MainShellBackground,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar {
-                MainTab.entries.forEach { tab ->
-                    NavigationBarItem(
-                        selected = tab == selectedTab,
-                        onClick = { onSelectTab(tab) },
-                        icon = {
-                            Text(
-                                text = strings.mainTabLabel(tab).first().toString(),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        },
-                        label = { Text(strings.mainTabLabel(tab)) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                        ),
-                    )
-                }
-            }
+            MainBottomNavigationBar(
+                selectedTab = selectedTab,
+                onSelectTab = onSelectTab,
+            )
         },
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(
-                    horizontal = HabitGoldDesignSystem.spacing.lg,
-                    vertical = HabitGoldDesignSystem.spacing.md,
-                ),
-            verticalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.md),
+                .background(MainShellBackground)
+                .padding(innerPadding),
         ) {
-            Text(
-                text = strings.shellTitle,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.ExtraBold,
-            )
-            AppSupportingText(text = strings.shellDescription)
-
             when (selectedTab) {
-                MainTab.Home -> MainShellHomeTab(session = session)
-                MainTab.Transactions -> MainShellTransactionsTab()
-                MainTab.Profile -> MainShellProfileTab(session = session, onLogout = onLogout)
+                MainTab.Home -> HomeRoute(
+                    appKoin = appKoin,
+                    session = session,
+                    onSelectTab = onSelectTab,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                MainTab.Rewards -> MainPlaceholderPage(
+                    title = appStrings.shellRewardsTitle,
+                    body = appStrings.shellRewardsDescription,
+                )
+                MainTab.History -> MainPlaceholderPage(
+                    title = appStrings.shellHistoryTitle,
+                    body = appStrings.shellHistoryDescription,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun MainShellHomeTab(session: AuthSession) {
-    val strings = appStrings
-    AppSectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.sm)) {
-            Text(
-                text = strings.shellWelcomeBack,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = session.user?.name?.takeIf { it.isNotBlank() } ?: strings.shellTitle,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = strings.shellHomeDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.sm),
-    ) {
-        MainShellInfoCard(
-            title = strings.shellSessionCardTitle,
-            value = if (session.isLoggedIn) strings.shellSessionActive else strings.shellSessionLoggedOut,
-            modifier = Modifier.weight(1f),
-        )
-        MainShellInfoCard(
-            title = strings.shellProfileCardTitle,
-            value = if (session.isProfileComplete) strings.shellProfileComplete else strings.shellProfilePending,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun MainShellTransactionsTab() {
-    val strings = appStrings
-    AppSectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.xs)) {
-            Text(
-                text = strings.shellTransactionsTitle,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = strings.shellTransactionsDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MainShellProfileTab(
-    session: AuthSession,
-    onLogout: () -> Unit,
+private fun MainBottomNavigationBar(
+    selectedTab: MainTab,
+    onSelectTab: (MainTab) -> Unit,
 ) {
     val strings = appStrings
-    AppSectionCard {
-        Column(verticalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.sm)) {
-            Text(
-                text = strings.shellProfileTitle,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            MainShellInfoRow(label = strings.shellPhoneLabel, value = session.user?.phoneNumber.orEmpty())
-            MainShellInfoRow(
-                label = strings.shellEmailLabel,
-                value = session.user?.email?.ifBlank { strings.shellNotAddedYet } ?: strings.shellNotAddedYet,
-            )
-            MainShellInfoRow(
-                label = strings.shellPinCodeLabel,
-                value = session.user?.pinCode?.ifBlank { strings.shellNotAddedYet } ?: strings.shellNotAddedYet,
-            )
-            Spacer(modifier = Modifier.size(4.dp))
-            AppPrimaryButton(
-                label = strings.shellLogoutCta,
-                onClick = onLogout,
+    val items = listOf(
+        MainTabUi(tab = MainTab.Home, icon = Icons.Default.Home),
+        MainTabUi(tab = MainTab.Rewards, icon = Icons.Default.CardGiftcard),
+        MainTabUi(tab = MainTab.History, icon = Icons.Default.History),
+    )
+
+    NavigationBar(
+        modifier = Modifier
+            .border(width = 1.dp, color = MainBottomNavBorder, shape = MainBottomNavShape)
+            .clip(MainBottomNavShape),
+        containerColor = MainBottomNavBackground,
+        tonalElevation = 0.dp,
+        contentColor = MainBottomNavSelected,
+    ) {
+        items.forEach { item ->
+            NavigationBarItem(
+                selected = item.tab == selectedTab,
+                onClick = { onSelectTab(item.tab) },
+                icon = {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = strings.mainTabLabel(item.tab),
+                    )
+                },
+                label = {
+                    Text(text = strings.mainTabLabel(item.tab))
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MainBottomNavSelected,
+                    selectedTextColor = MainBottomNavSelected,
+                    indicatorColor = MainBottomNavSelected.copy(alpha = 0.10f),
+                    unselectedIconColor = MainBottomNavUnselected,
+                    unselectedTextColor = MainBottomNavUnselected,
+                ),
             )
         }
     }
 }
 
 @Composable
-private fun MainShellInfoCard(
+private fun MainPlaceholderPage(
     title: String,
-    value: String,
-    modifier: Modifier = Modifier,
+    body: String,
 ) {
-    Card(
-        modifier = modifier,
-        shape = HabitGoldDesignSystem.radii.md,
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(HabitGoldDesignSystem.spacing.md),
-            verticalArrangement = Arrangement.spacedBy(HabitGoldDesignSystem.spacing.xxs),
+        androidx.compose.material3.Card(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(18.dp),
+            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+            elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+            androidx.compose.foundation.layout.Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = title,
+                    style = androidx.compose.material3.MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = body,
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun MainShellInfoRow(
-    label: String,
-    value: String,
-) {
-    val strings = appStrings
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = if (value == strings.shellNotAddedYet) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                Color.Unspecified
-            },
-            textAlign = TextAlign.End,
-        )
     }
 }

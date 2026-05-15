@@ -230,6 +230,11 @@ Current auth network parity rules:
 - inspect the actual Android request path before copying auth payload formatting; display formatting like `+91` can differ from the API payload
 - parity review must include input behavior, not just network behavior: typing limits, deletion rules, focus movement, and error timing
 - parity review must also include feature-entry behavior: deep-link/referral-prefill sources, onboarding sources, and stored flags that change the first render
+- feature audit must be a multi-pass process before implementation starts:
+  - structure pass
+  - visual pass
+  - interaction pass
+- feature audit must explicitly check default state, loading treatment, bottom insets, sheet/pager behavior, alignment, and dismissal affordances so those issues are caught in audit rather than rediscovered during debugging
 
 ## 8. Localization Standard
 

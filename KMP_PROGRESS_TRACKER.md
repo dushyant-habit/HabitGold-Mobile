@@ -11,9 +11,9 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 6 ready`
-- Current focus: `prepare Home migration while keeping startup/splash polish pending for a later pass`
-- Next milestone: `start Home scaffolding and dashboard/domain inventory`
+- Current phase: `Phase 6 in progress`
+- Current focus: `finish the remaining Home-linked cross-feature handoffs and detail entry points after restoring the main Android card sections and Home-owned sheets`
+- Next milestone: `close the remaining Home route handoffs, then review Home side by side before moving to Trade`
 
 ## Phase Status
 
@@ -41,6 +41,21 @@ Use this together with:
 - [ ] Phase 12: Platform Integrations
 - [ ] Phase 13: Hardening And QA
 
+## Phase 6: Home
+
+- [x] Create fresh Android source audit for Home shell, sections, and linked flows
+- [x] Create `feature/home` package structure
+- [x] Port portfolio dashboard domain/data layer
+- [x] Build Home MVI contract and state model
+- [x] Rebuild Home top bar, zero-balance state, and invested-balance card
+- [x] Rebuild Home trust highlights and recent activity first slice
+- [x] Restore Home savings cards, active savings pager, Why HabitGold cards, and footer card sections
+- [x] Restore Home gold-price chart sheet and Why HabitGold intro pager
+- [ ] Complete remaining Home UI sections with Android parity
+- [x] Add Home tests and feature overview doc
+- [x] Rebuild Home savings cards and active savings pager
+- [ ] Rebuild remaining Home linked navigation and cross-feature handoffs
+
 ## Feature Flow Coverage
 
 This section keeps the important product flows visible explicitly, even when they are grouped under broader phases.
@@ -48,6 +63,7 @@ This section keeps the important product flows visible explicitly, even when the
 ### Core Product Flows
 
 - [x] Auth Flow
+- [ ] Home / Portfolio Flow
 - [ ] Home / Portfolio Flow
 - [ ] Buy Gold Flow
 - [ ] Sell Gold Flow
@@ -138,6 +154,19 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Confirmed Android auth connectivity permission parity with `INTERNET` and `ACCESS_NETWORK_STATE`
 - [x] Removed the final auth emoji placeholders and aligned shared referral/security visuals closer to Android
 - [x] Verified the auth migration with `./gradlew :composeApp:allTests`
+- [x] Restarted Phase 6 on a fresh audit branch
+- [x] Added detailed Home audit for shell, sections, borders, animations, APIs, and strings
+- [x] Corrected shared bottom-nav product flow to `Home`, `Rewards`, `History`
+- [x] Added Home foundation data layer, state model, feature overview doc, and tests
+- [x] Verified the first Home foundation slice with `./gradlew :composeApp:allTests :composeApp:compileKotlinIosSimulatorArm64`
+- [x] Replaced the placeholder Home tab with a real shared Home route and Android-matching first UI slice
+- [x] Added shared Home strings for toolbar, balance, trust, and recent activity sections
+- [x] Copied shared Home intro/footer assets and restored Why HabitGold plus secured-gold footer cards
+- [x] Aligned Home card purple treatment and buy/sell-related Home iconography closer to Android
+- [x] Restored Home-owned gold-price chart sheet backed by shared price-history API
+- [x] Restored Why HabitGold intro pager and wired trust-highlight cards to it
+- [x] Added explicit Home pending-action messaging for still-deferred cross-feature routes
+- [x] Verified the new Home UI slice with `./gradlew :composeApp:allTests :composeApp:compileKotlinIosSimulatorArm64`
 
 ## Current Phase Breakdown
 

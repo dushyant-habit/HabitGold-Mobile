@@ -53,9 +53,9 @@ class AppStartupCoordinatorTest {
                     isProfileComplete = true,
                 ),
             ),
-            currentMainTab = MainTab.Profile,
+            currentMainTab = MainTab.History,
         )
 
-        assertEquals(AppRoute.Main(tab = MainTab.Profile), route)
+        assertEquals(AppRoute.Main(tab = MainTab.History), route)
     }
 }
