@@ -5,7 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.habit.gold.feature.auth.presentation.components.AuthBasicInfoScreen
+import com.habit.gold.feature.auth.presentation.components.AuthBasicDetailsScreen
 import com.habit.gold.feature.auth.presentation.components.AuthHandoffScreen
 import com.habit.gold.feature.auth.presentation.components.AuthLoginScreen
 import com.habit.gold.feature.auth.presentation.components.AuthOtpScreen
@@ -33,12 +33,13 @@ fun AuthFlowScreen(
                 onBackToLogin = { onIntent(AuthIntent.ReturnToLogin) },
                 onResendOtp = { onIntent(AuthIntent.ResendOtp) },
             )
-            AuthStep.BasicInfo -> AuthBasicInfoScreen(
+            AuthStep.BasicDetails -> AuthBasicDetailsScreen(
                 uiState = uiState,
-                onNameChanged = { onIntent(AuthIntent.UpdateName(it)) },
-                onEmailChanged = { onIntent(AuthIntent.UpdateEmail(it)) },
+                onBackToOtp = { onIntent(AuthIntent.ReturnToOtp) },
+                onLegalNameChanged = { onIntent(AuthIntent.UpdateLegalName(it)) },
+                onReferralCodeChanged = { onIntent(AuthIntent.UpdateReferralCode(it)) },
                 onPinCodeChanged = { onIntent(AuthIntent.UpdatePinCode(it)) },
-                onSubmitBasicInfo = { onIntent(AuthIntent.SubmitBasicInfo) },
+                onSubmitBasicDetails = { onIntent(AuthIntent.SubmitBasicDetails) },
             )
             AuthStep.Handoff -> AuthHandoffScreen(
                 modifier = Modifier.fillMaxSize(),

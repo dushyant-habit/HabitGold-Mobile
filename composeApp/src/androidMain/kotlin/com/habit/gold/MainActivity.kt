@@ -8,6 +8,7 @@ import com.habit.gold.core.di.startKoinIfNeeded
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_HabitGold)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         startKoinIfNeeded()

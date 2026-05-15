@@ -22,15 +22,25 @@ enum class AppEnvironment {
 data class AppConfig(
     val appName: String,
     val bundleId: String,
+    val appVersion: String,
+    val appPlatform: String,
     val environment: AppEnvironment,
     val baseUrl: String,
     val enableNetworkLogs: Boolean,
 ) {
     val normalizedBaseUrl: String = normalizeBaseUrl(baseUrl)
+    val normalizedAppVersion: String = appVersion.trim().substringBefore("-")
+    val normalizedAppPlatform: String = appPlatform.trim().lowercase()
 
     init {
         require(normalizedBaseUrl.startsWith("https://")) {
             "AppConfig.baseUrl must use HTTPS. Found: $normalizedBaseUrl"
+        }
+        require(normalizedAppVersion.isNotBlank()) {
+            "AppConfig.appVersion must not be blank."
+        }
+        require(normalizedAppPlatform.isNotBlank()) {
+            "AppConfig.appPlatform must not be blank."
         }
     }
 }

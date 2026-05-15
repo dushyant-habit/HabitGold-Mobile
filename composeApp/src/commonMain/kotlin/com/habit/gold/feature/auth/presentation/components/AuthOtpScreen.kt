@@ -1,26 +1,22 @@
 package com.habit.gold.feature.auth.presentation.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.AppErrorText
-import com.habit.gold.core.designsystem.AppPrimaryButton
 import com.habit.gold.core.designsystem.AppScreen
-import com.habit.gold.core.designsystem.AppSectionCard
-import com.habit.gold.core.designsystem.AppTopBar
 import com.habit.gold.core.designsystem.HabitGoldDesignSystem
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.feature.auth.presentation.AuthFlowUiState
@@ -34,75 +30,188 @@ internal fun AuthOtpScreen(
     onResendOtp: () -> Unit,
 ) {
     val strings = appStrings
+    val focusRequesters = remember { List(6) { FocusRequester() } }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val otpDigits = remember { mutableStateListOf("", "", "", "", "", "") }
+
+    LaunchedEffect(uiState.otpCode) {
+        val latestDigits = buildOtpDigits(uiState.otpCode)
+        repeat(6) { index ->
+            if (otpDigits[index] != latestDigits[index]) {
+                otpDigits[index] = latestDigits[index]
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequesters.first().requestFocus()
+    }
+
     AppScreen {
         Column(modifier = Modifier.fillMaxSize()) {
-            AppTopBar(
+            AuthOtpHeader(
                 title = strings.authOtpTitle,
                 onBackClick = onBackToLogin,
             )
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.xxxl))
-            Text(
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            androidx.compose.material3.Text(
                 text = strings.authOtpHeading,
-                style = MaterialTheme.typography.headlineMedium,
+                style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.xs))
-            Text(
-                text = strings.authOtpSentMessage(uiState.phoneNumber),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            androidx.compose.material3.Text(
+                text = strings.authOtpSentIntro,
+                fontSize = 16.sp,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (uiState.otpRefId.isNotBlank()) {
-                Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.xs))
-                AppSectionCard(highlighted = true) {
-                    Text(
-                        text = strings.authOtpReferenceId(uiState.otpRefId),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            androidx.compose.material3.Text(
+                text = strings.authFormattedPhoneNumber(uiState.phoneNumber),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                otpDigits.forEachIndexed { index, value ->
+                    AuthOtpDigitField(
+                        value = value,
+                        onValueChange = { rawValue ->
+                            val digits = rawValue.filter(Char::isDigit)
+                            when {
+                                digits.length > 1 -> {
+                                    val normalized = digits.take(6)
+                                    repeat(6) { cellIndex ->
+                                        otpDigits[cellIndex] = normalized.getOrNull(cellIndex)?.toString().orEmpty()
+                                    }
+                                    onOtpChanged(normalized)
+                                    if (normalized.length == 6) {
+                                        keyboardController?.hide()
+                                        onVerifyOtp()
+                                    } else {
+                                        focusRequesters[normalized.length.coerceAtMost(5)].requestFocus()
+                                    }
+                                }
+                                digits.length == 1 -> {
+                                    otpDigits[index] = digits
+                                    val updatedOtp = otpDigits.joinToString("").take(6)
+                                    onOtpChanged(updatedOtp)
+                                    if (index < 5) {
+                                        focusRequesters[index + 1].requestFocus()
+                                    } else {
+                                        keyboardController?.hide()
+                                    }
+                                    if (updatedOtp.length == 6) {
+                                        onVerifyOtp()
+                                    }
+                                }
+                                else -> {
+                                    otpDigits[index] = ""
+                                    onOtpChanged(otpDigits.joinToString("").take(6))
+                                    if (index > 0) {
+                                        focusRequesters[index - 1].requestFocus()
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        isError = uiState.errorMessage != null,
+                        imeAction = if (index == 5) ImeAction.Done else ImeAction.Next,
+                        keyboardActions = KeyboardActions(
+                            onNext = {
+                                if (index < 5) {
+                                    focusRequesters[index + 1].requestFocus()
+                                }
+                            },
+                            onDone = {
+                                keyboardController?.hide()
+                                onVerifyOtp()
+                            },
+                        ),
+                        onBackspace = {
+                            when {
+                                otpDigits[index].isNotEmpty() -> {
+                                    otpDigits[index] = ""
+                                    onOtpChanged(otpDigits.joinToString("").take(6))
+                                    if (index > 0) {
+                                        focusRequesters[index - 1].requestFocus()
+                                    }
+                                    true
+                                }
+                                index > 0 -> {
+                                    otpDigits[index - 1] = ""
+                                    onOtpChanged(otpDigits.joinToString("").take(6))
+                                    focusRequesters[index - 1].requestFocus()
+                                    true
+                                }
+                                else -> false
+                            }
+                        },
+                        focusRequester = focusRequesters[index],
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.xl))
-            OtpInputRow(
-                value = uiState.otpCode,
-                onValueChange = onOtpChanged,
-            )
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.sm))
-            AppErrorText(uiState.errorMessage)
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.lg))
-            AppPrimaryButton(
-                label = strings.authVerifyOtpCta,
-                isLoading = uiState.isLoading,
-                onClick = onVerifyOtp,
-            )
-            Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.lg))
+
+            if (uiState.errorMessage != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                AppErrorText(uiState.errorMessage)
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = if (uiState.canResendOtp) {
-                        strings.authDidNotReceiveOtp
-                    } else {
-                        strings.authResendCountdown(uiState.resendSecondsRemaining)
-                    },
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Spacer(modifier = Modifier.width(HabitGoldDesignSystem.spacing.xxs + 2.dp))
-                Text(
-                    text = strings.authResendLabel,
-                    color = if (uiState.canResendOtp) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.clickable(
-                        enabled = uiState.canResendOtp,
-                        onClick = onResendOtp,
-                    ),
-                )
+                if (uiState.canResendOtp) {
+                    androidx.compose.material3.Text(
+                        text = strings.authResendLabel,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(
+                            enabled = !uiState.isLoading,
+                            onClick = onResendOtp,
+                        ),
+                    )
+                } else {
+                    androidx.compose.material3.Text(
+                        text = strings.authResendCountdown(uiState.resendSecondsRemaining),
+                        fontSize = 14.sp,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
+
             Spacer(modifier = Modifier.weight(1f))
+
+            if (uiState.isLoading) {
+                AuthProgressIndicator()
+                Spacer(modifier = Modifier.height(HabitGoldDesignSystem.spacing.xs))
+            }
+
+            AuthPrimaryButton(
+                label = strings.authVerifyAndProceedCta,
+                enabled = otpDigits.all { it.isNotEmpty() } && !uiState.isLoading,
+                onClick = {
+                    keyboardController?.hide()
+                    onVerifyOtp()
+                },
+            )
         }
     }
 }

@@ -17,6 +17,7 @@ data class RequestOtpResponseDto(
 data class VerifyOtpRequestDto(
     val mobileNumber: String,
     val otp: String,
+    val referralCode: String? = null,
 )
 
 @Serializable
@@ -25,12 +26,25 @@ data class VerifyOtpResponseDto(
     val refreshToken: String,
     val user: AuthUserDto? = null,
     val newUser: Boolean = true,
+    val showOnboarding: Boolean = false,
+    val pincodeRequired: Boolean = true,
 )
 
 @Serializable
 data class AuthUserDto(
     val id: String,
     val mobileNumber: String,
+)
+
+@Serializable
+data class RefreshTokenRequestDto(
+    val refreshToken: String,
+)
+
+@Serializable
+data class RefreshTokenResponseDto(
+    val accessToken: String,
+    val refreshToken: String,
 )
 
 @Serializable
@@ -47,4 +61,9 @@ data class UpdateBasicInfoRequestDto(
     val name: String,
     val email: String? = null,
     val pinCode: String? = null,
+)
+
+@Serializable
+data class SubmitReferralCodeRequestDto(
+    val referralCode: String,
 )

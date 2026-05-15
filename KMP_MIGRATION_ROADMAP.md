@@ -92,7 +92,7 @@ feature/example/
 
 These are tracked explicitly so major product flows do not get lost inside broad phase names.
 
-- [ ] Auth Flow
+- [x] Auth Flow
 - [ ] Home / Portfolio Flow
 - [ ] Buy Gold Flow
 - [ ] Sell Gold Flow
@@ -139,14 +139,16 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Create shared error parser and mapper
 - [x] Create stable app-level error categories and user-safe error messages
 - [x] Create auth header injection strategy
-- [x] Create refresh-token boundary and unsupported default implementation until backend refresh API is defined
+- [x] Port Android auth app headers: `x-app-version` and `x-app-platform`
+- [x] Port Android-style single refresh retry for authenticated `401` responses
 - [x] Create deterministic auth-expired and logout policy
 - [x] Create public-request vs authenticated-request policy
+- [x] Enable full debug API logging for non-production environments
 - [x] Create idempotency strategy for financial and order-creating requests
 - [x] Create log-redaction rules for tokens, PII, OTPs, and payment payloads
 - [x] Create test utilities for fake/stubbed HTTP behavior
 - [x] Add tests for timeouts, connectivity, auth header injection, backend error parsing, malformed payloads, and auth-expired behavior
-- [ ] Add tests for the real refresh flow once the backend refresh contract exists
+- [x] Add tests for refresh retry behavior and refreshed-session token persistence
 
 ### Phase 3: Design System
 
@@ -169,19 +171,22 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Create bottom navigation shell
 - [x] Keep Android and iOS entry points thin
 - [x] Add tests for startup routing rules
+- [ ] Finalize native Android and iOS launch layers with the shared splash experience
 
 ### Phase 5: Auth
 
 - [x] Create `feature/auth` structure
 - [x] Port auth DTOs needed for request/verify/profile flow
 - [x] Create auth repository contract and implementation
-- [ ] Create auth use cases
+- [x] Create auth use cases
 - [x] Create auth MVI state/contracts
 - [x] Extract auth user-facing copy into the shared localization approach
 - [x] Rebuild login screen using shared design system
 - [x] Rebuild OTP screen using shared design system
 - [x] Rebuild basic-details onboarding screen
 - [x] Add tests for auth reducers/viewmodels/repositories
+- [x] Close Android-parity cleanup for auth interaction behavior and core iconography
+- [ ] Port pending-referral attribution / locked referral-prefill as part of the later referral + platform integration phase
 
 ### Phase 6: Home And Portfolio
 

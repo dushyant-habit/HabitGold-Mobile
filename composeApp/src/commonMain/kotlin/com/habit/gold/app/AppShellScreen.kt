@@ -16,7 +16,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.habit.gold.core.designsystem.AppLoadingView
 import com.habit.gold.core.designsystem.AppPrimaryButton
 import com.habit.gold.core.designsystem.AppSectionCard
 import com.habit.gold.core.designsystem.AppSupportingText
@@ -32,24 +30,6 @@ import com.habit.gold.core.designsystem.HabitGoldDesignSystem
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.session.AuthSession
-
-@Composable
-fun AppSplashScreen(
-    appName: String,
-    modifier: Modifier = Modifier,
-) {
-    val strings = appStrings
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        AppLoadingView(
-            title = appName,
-            message = strings.splashPreparingMessage,
-            modifier = Modifier.fillMaxSize(),
-        )
-    }
-}
 
 @Composable
 fun AppMainShellScreen(
