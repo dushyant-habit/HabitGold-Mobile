@@ -119,6 +119,7 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Added storage contracts for tokens, user profile, session metadata, and app preferences
 - [x] Added generic secure-storage abstraction with in-memory implementation for now
 - [x] Added session restore and logout cleanup behavior to `SessionStore`
+- [x] Replaced in-memory runtime session bindings with platform-backed persistent storage on Android and iOS
 - [x] Added session rule tests and re-verified with `./gradlew :composeApp:allTests`
 - [x] Added shared `ApiResult` / `NetworkError` with stable app-level error categories
 - [x] Added shared HTTP client hardening with auth-header injection, public-request skip-auth policy, and log redaction
