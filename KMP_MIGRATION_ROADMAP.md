@@ -93,7 +93,7 @@ feature/example/
 These are tracked explicitly so major product flows do not get lost inside broad phase names.
 
 - [x] Auth Flow
-- [ ] Home / Portfolio Flow
+- [x] Home / Portfolio Flow
 - [ ] Buy Gold Flow
 - [ ] Sell Gold Flow
 - [ ] Transactions List Flow
@@ -201,11 +201,14 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Rebuild Home trust highlights and first recent-activity slice
 - [x] Rebuild Home savings cards, active savings pager, Why HabitGold cards, and secured footer card sections
 - [x] Rebuild Home gold-price chart sheet and Why HabitGold intro pager
-- [ ] Rebuild Home recent-activity drilldown into transaction details
-- [ ] Rebuild Home coupon handoff and SIP verification dialog
-- [ ] Rebuild Home gold value details, support/help, and editorial entry points
-- [ ] Replace temporary Home pending-action handoffs with real feature routes as later phases land
-- [ ] Rebuild Home UI in Android-matching small sections instead of one giant file
+- [x] Restore Home pull-to-refresh behavior and Android-style shell bottom-bar motion
+- [x] Rebuild Home recent-activity drilldown into transaction details
+- [x] Rebuild Home gold value details and support/help entry points
+- [x] Replace temporary Home pending-action handoffs with typed downstream routes
+- [x] Rebuild Home UI in Android-matching small sections instead of one giant file
+- [x] Run post-parity cleanup pass to split oversized Home files and move route dependencies out of inline composable lookups
+- [ ] Connect coupon handoff and SIP verification dialog to the true shared Trade / SIP feature routes when those phases land
+- [ ] Connect typed Home downstream routes to the final shared Buy, Sell, Profile, Alerts, and Savings destinations as their phases land
 - [x] Add tests for dashboard mapping and home state transitions
 
 ### Phase 7: Trade
