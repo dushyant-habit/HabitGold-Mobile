@@ -13,5 +13,5 @@ val homeModule = module {
     single<HomeRepository> { HomeRepositoryImpl(get()) }
     single { LoadHomeSummaryUseCase(get()) }
     single { GetHomePriceHistoryUseCase(get()) }
-    factory { HomeViewModel(get()) }
+    factory { HomeViewModel(get(), get()) }
 }

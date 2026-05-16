@@ -241,6 +241,36 @@ Rules:
   - alignment and badge sizing
   - sheet, pager, and close-dismiss behavior
 
+## Code Quality And Naming
+
+Maintain code quality during each migration step, not only in a final cleanup phase.
+
+Rules:
+
+- do not allow a feature to “work” while silently accumulating giant files
+- split files once responsibilities become distinct
+- remove stale migration scaffolding before marking a phase complete
+- prefer explicit naming over short generic naming for anything beyond tiny local scope
+- keep dependency lookup and state ownership obvious
+
+Naming guidance:
+
+- good names reflect product meaning: `homeSummary`, `recentTransaction`, `sessionMetadata`, `goldPriceHistory`
+- avoid broad generic names like `data`, `details`, `info`, `value`, `result`, `response`, `item`, and `items` when a more specific name is available
+- `item` and `it` are fine only for short inline scopes where the meaning is obvious
+- method names should describe what they do and why they exist when side effects are involved
+
+File guidance:
+
+- review files once they cross 300 to 400 lines
+- strongly prefer splitting UI files once they cross 500 lines
+- giant files are a migration smell and should be treated as technical debt immediately, not normalized
+
+Definition-of-done addition:
+
+- code, docs, and tests must agree
+- no stale placeholder logic or unused migration residue should remain in completed phase scope
+
 ## MVI Standard
 
 Yes, use MVI for this project.

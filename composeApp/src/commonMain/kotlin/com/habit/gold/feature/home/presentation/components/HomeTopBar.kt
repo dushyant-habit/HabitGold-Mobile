@@ -51,7 +51,6 @@ import org.jetbrains.compose.resources.stringResource
 
 private val HomeToolbarBorder = Color(0x0D000000)
 private val HomeAvatarBackground = HabitGoldPalette.plum.copy(alpha = 0.10f)
-private val HomePrimary = HabitGoldPalette.plum
 private val HomeToolbarSubtle = Color(0xFF6B7280)
 private val HomeAlertsBackground = Color(0xFFF1F5F9)
 private val HomeLivePillBackground = Color(0xFFFAF5FF)
