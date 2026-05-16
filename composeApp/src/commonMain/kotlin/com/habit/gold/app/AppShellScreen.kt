@@ -1,5 +1,11 @@
 package com.habit.gold.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -17,6 +23,12 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -27,6 +39,10 @@ import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.core.storage.AppPreferencesStorage
+import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
+import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
+import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
 import org.koin.core.Koin
 
@@ -51,15 +67,44 @@ fun AppMainShellScreen(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
+    val homeDependencies = remember(appKoin) {
+        HomeRouteDependencies(
+            loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
+            appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
+            getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
+        )
+    }
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab != MainTab.Home) {
+            shouldShowBottomBar = true
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MainShellBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            MainBottomNavigationBar(
-                selectedTab = selectedTab,
-                onSelectTab = onSelectTab,
-            )
+            AnimatedVisibility(
+                visible = shouldShowBottomBar,
+                enter = fadeIn(animationSpec = tween(durationMillis = 220)) +
+                    slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = tween(durationMillis = 220),
+                    ),
+                exit = fadeOut(animationSpec = tween(durationMillis = 120)) +
+                    slideOutVertically(
+                        targetOffsetY = { it / 2 },
+                        animationSpec = tween(durationMillis = 120),
+                    ),
+            ) {
+                MainBottomNavigationBar(
+                    selectedTab = selectedTab,
+                    onSelectTab = onSelectTab,
+                )
+            }
         },
     ) { innerPadding ->
         Box(
@@ -70,9 +115,12 @@ fun AppMainShellScreen(
         ) {
             when (selectedTab) {
                 MainTab.Home -> HomeRoute(
-                    appKoin = appKoin,
+                    dependencies = homeDependencies,
                     session = session,
                     onSelectTab = onSelectTab,
+                    onBottomBarVisibilityChange = { visible ->
+                        shouldShowBottomBar = visible
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
                 MainTab.Rewards -> MainPlaceholderPage(

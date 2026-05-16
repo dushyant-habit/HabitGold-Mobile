@@ -1,13 +1,83 @@
 <resources>
+    <!-- Common -->
+    <string name="common_alerts">Alerts</string>
+    <string name="common_back">Back</string>
+    <string name="common_close">Close</string>
+    <string name="common_contact_us">Contact Us</string>
+    <string name="common_toggle_visibility">Toggle Visibility</string>
+    <string name="common_toggle_expansion">Toggle Expansion</string>
+    <string name="common_gold_unit_short">g</string>
+    <string name="common_invested_value">INVESTED VALUE</string>
+    <string name="common_current_value">CURRENT VALUE</string>
+    <string name="common_view_details">View Details</string>
+    <string name="common_why_habitgold">Why HabitGold?</string>
+    <string name="common_need_help_with_something">Need help with something?</string>
+    <string name="common_support_is_available_for_payments_shipping_and_orders">Support is available for payments, shipping, and orders.</string>
+    <string name="common_your_gold_is_100percent_secured">Your Gold is
+100% Secured</string>
+    <string name="common_safegold">SafeGold</string>
+
+    <!-- Main Tabs -->
+    <string name="main_tab_home">Home</string>
+    <string name="main_tab_rewards">Rewards</string>
+    <string name="main_tab_history">History</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">Invest in a Habit
+Invest in Gold</string>
+    <string name="splash_loading_message">Opening your gold locker</string>
+
+    <!-- App Shell -->
+    <string name="shell_title">HabitGold</string>
+    <string name="shell_description">Phase 4 app shell is live. This shared container will host the real Home, Transactions, and Profile features as we migrate them.</string>
+    <string name="shell_welcome_back">Welcome back</string>
+    <string name="shell_home_description">Home migration foundation is in progress. Portfolio, savings, and recent activity are being rebuilt from the Android audit.</string>
+    <string name="shell_session_card_title">Session</string>
+    <string name="shell_profile_card_title">Profile</string>
+    <string name="shell_session_active">Active</string>
+    <string name="shell_session_logged_out">Logged out</string>
+    <string name="shell_profile_complete">Complete</string>
+    <string name="shell_rewards_title">Rewards migration in progress</string>
+    <string name="shell_rewards_description">Rewards stays on the bottom bar in Android. We are keeping that product flow intact while the rewards and referral screens are rebuilt.</string>
+    <string name="shell_history_title">History migration in progress</string>
+    <string name="shell_history_description">History stays on the bottom bar in Android. Transactions, status drilldowns, and invoices will be restored here next.</string>
+    <string name="shell_phone_label">Phone</string>
+    <string name="shell_email_label">Email</string>
+    <string name="shell_pin_code_label">Pincode</string>
+    <string name="shell_not_added_yet">Not added yet</string>
+    <string name="shell_logout_cta">Log out</string>
+
+    <!-- Auth: Shared -->
     <string name="auth_tagline">Invest in a Habit. Invest in Gold.</string>
+    <string name="auth_feature_physical">100% Physical</string>
+    <string name="auth_feature_insured">100% Insured</string>
+    <string name="auth_feature_zero_fees">Zero hidden fees</string>
+    <string name="auth_terms_footer_prefix">By continuing, you agree to our</string>
+    <string name="auth_terms_label">Terms</string>
+    <string name="auth_privacy_policy_label">Privacy Policy</string>
+    <string name="auth_terms_url">https://habitgold.com/terms</string>
+    <string name="auth_privacy_policy_url">https://habitgold.com/privacy_policy</string>
+    <string name="auth_invalid_phone_error">Enter a valid 10-digit mobile number</string>
+    <string name="auth_invalid_otp_error">Enter the 6-digit OTP</string>
+    <string name="auth_invalid_legal_name_error">Enter your full name</string>
+    <string name="auth_invalid_pin_code_error">Enter a valid 6-digit pincode to continue.</string>
+
+    <!-- Auth: Login -->
     <string name="auth_mobile_number_label">MOBILE NUMBER</string>
     <string name="auth_phone_number_placeholder">98765 43210</string>
     <string name="auth_request_otp_cta">Get OTP</string>
+    <string name="auth_formatted_phone_number">+91 %1$s</string>
+
+    <!-- Auth: OTP -->
     <string name="auth_otp_title">Enter OTP</string>
     <string name="auth_otp_heading">Enter your OTP</string>
     <string name="auth_otp_sent_intro">We have sent a 6-digit code to</string>
     <string name="auth_verify_and_proceed_cta">Verify &amp; Proceed</string>
     <string name="auth_resend_label">Resend OTP</string>
+    <string name="auth_otp_reference_id">Reference ID: %1$s</string>
+    <string name="auth_resend_countdown">Resend OTP in %1$02d:%2$02d</string>
+
+    <!-- Auth: Basic Details -->
     <string name="auth_profile_title">Profile</string>
     <string name="auth_basic_details_heading">Tell us about yourself</string>
     <string name="auth_basic_details_description">We need these details to set up your secure Gold account.</string>
@@ -21,64 +91,16 @@
     <string name="auth_referral_applied_label">Referral code applied</string>
     <string name="auth_security_message">YOUR DATA IS ENCRYPTED &amp; SECURE</string>
     <string name="auth_confirm_and_proceed_cta">Confirm &amp; Proceed</string>
-    <string name="auth_feature_physical">100% Physical</string>
-    <string name="auth_feature_insured">100% Insured</string>
-    <string name="auth_feature_zero_fees">Zero hidden fees</string>
-    <string name="auth_terms_footer_prefix">By continuing, you agree to our</string>
+
+    <!-- Auth: Handoff -->
     <string name="auth_completing_sign_in_title">Finalizing your account</string>
     <string name="auth_completing_sign_in_message">We&apos;re syncing your HabitGold session before handing you off to the main app.</string>
-    <string name="auth_invalid_phone_error">Enter a valid 10-digit mobile number</string>
-    <string name="auth_invalid_otp_error">Enter the 6-digit OTP</string>
-    <string name="auth_invalid_legal_name_error">Enter your full name</string>
-    <string name="auth_invalid_pin_code_error">Enter a valid 6-digit pincode to continue.</string>
-    <string name="auth_terms_label">Terms</string>
-    <string name="auth_privacy_policy_label">Privacy Policy</string>
-    <string name="auth_terms_url">https://habitgold.com/terms</string>
-    <string name="auth_privacy_policy_url">https://habitgold.com/privacy_policy</string>
-    <string name="splash_tagline">Invest in a Habit
-Invest in Gold</string>
-    <string name="splash_loading_message">Opening your gold locker</string>
-    <string name="shell_title">HabitGold</string>
-    <string name="shell_description">Phase 4 app shell is live. This shared container will host the real Home, Transactions, and Profile features as we migrate them.</string>
-    <string name="shell_welcome_back">Welcome back</string>
-    <string name="shell_home_description">Home migration foundation is in progress. Portfolio, savings, and recent activity are being rebuilt from the Android audit.</string>
-    <string name="shell_session_card_title">Session</string>
-    <string name="shell_profile_card_title">Profile</string>
-    <string name="shell_session_active">Active</string>
-    <string name="shell_session_logged_out">Logged out</string>
-    <string name="shell_profile_complete">Complete</string>
-    <string name="shell_profile_pending">Pending</string>
-    <string name="shell_rewards_title">Rewards migration in progress</string>
-    <string name="shell_rewards_description">Rewards stays on the bottom bar in Android. We are keeping that product flow intact while the rewards and referral screens are rebuilt.</string>
-    <string name="shell_history_title">History migration in progress</string>
-    <string name="shell_history_description">History stays on the bottom bar in Android. Transactions, status drilldowns, and invoices will be restored here next.</string>
-    <string name="shell_phone_label">Phone</string>
-    <string name="shell_email_label">Email</string>
-    <string name="shell_pin_code_label">Pincode</string>
-    <string name="shell_not_added_yet">Not added yet</string>
-    <string name="shell_logout_cta">Log out</string>
-    <string name="auth_otp_reference_id">Reference ID: %1$s</string>
-    <string name="auth_resend_countdown">Resend OTP in %1$02d:%2$02d</string>
-    <string name="auth_formatted_phone_number">+91 %1$s</string>
-    <string name="main_tab_home">Home</string>
-    <string name="main_tab_rewards">Rewards</string>
-    <string name="main_tab_history">History</string>
-    <string name="common_alerts">Alerts</string>
-    <string name="common_close">Close</string>
-    <string name="common_toggle_visibility">Toggle Visibility</string>
-    <string name="common_toggle_expansion">Toggle Expansion</string>
-    <string name="common_gold_unit_short">g</string>
-    <string name="common_invested_value">INVESTED VALUE</string>
-    <string name="common_current_value">CURRENT VALUE</string>
-    <string name="common_view_details">View Details</string>
-    <string name="common_why_habitgold">Why HabitGold?</string>
-    <string name="common_need_help_with_something">Need help with something?</string>
-    <string name="common_support_is_available_for_payments_shipping_and_orders">Support is available for payments, shipping, and orders.</string>
-    <string name="common_your_gold_is_100percent_secured">Your Gold is
-100% Secured</string>
-    <string name="common_safegold">SafeGold</string>
+
+    <!-- Home: Shared Actions -->
     <string name="buy_gold_screen_buy_gold">Buy Gold</string>
     <string name="sell_gold_screen_sell_gold">Sell Gold</string>
+
+    <!-- Home: Dashboard -->
     <string name="home_screen_hello">Hello,</string>
     <string name="home_screen_live_gold_price">Live Gold Price:</string>
     <string name="home_screen_total_gold_balance">Total Gold Balance</string>
@@ -114,14 +136,6 @@ Invest in Gold</string>
     <string name="home_screen_gold_savings_sip">Gold Savings SIP</string>
     <string name="home_screen_active">Active</string>
     <string name="home_screen_paused">Paused</string>
-    <string name="home_screen_trust_slide_real_gold_title">24K Real Gold</string>
-    <string name="home_screen_trust_slide_real_gold_description">We buy 99.99% pure physical gold</string>
-    <string name="home_screen_trust_slide_stored_safely_title">Stored Safely</string>
-    <string name="home_screen_trust_slide_stored_safely_description">We keep your gold in 100% Insured Vaults</string>
-    <string name="home_screen_trust_slide_free_delivery_title">Free Delivery</string>
-    <string name="home_screen_trust_slide_free_delivery_description">Your gold will be delivered at free of cost</string>
-    <string name="home_screen_trust_slide_earn_every_time_title">Get Extra Gold</string>
-    <string name="home_screen_trust_slide_earn_every_time_description">You get extra 0.5% gold on every purchase</string>
     <string name="home_screen_activity_empty_title">Your recent activity will show up here.</string>
     <string name="home_screen_loading_summary">Loading your gold dashboard…</string>
     <string name="home_screen_retry_cta">Retry</string>
@@ -131,6 +145,18 @@ Invest in Gold</string>
     <string name="home_screen_footer_badge_insured">100%%&#10;Insured</string>
     <string name="home_screen_footer_badge_vault">Brink&apos;s&#10;Vault</string>
     <string name="home_screen_powered_by">POWERED BY</string>
+
+    <!-- Home: Trust Highlights -->
+    <string name="home_screen_trust_slide_real_gold_title">24K Real Gold</string>
+    <string name="home_screen_trust_slide_real_gold_description">We buy 99.99% pure physical gold</string>
+    <string name="home_screen_trust_slide_stored_safely_title">Stored Safely</string>
+    <string name="home_screen_trust_slide_stored_safely_description">We keep your gold in 100% Insured Vaults</string>
+    <string name="home_screen_trust_slide_free_delivery_title">Free Delivery</string>
+    <string name="home_screen_trust_slide_free_delivery_description">Your gold will be delivered at free of cost</string>
+    <string name="home_screen_trust_slide_earn_every_time_title">Get Extra Gold</string>
+    <string name="home_screen_trust_slide_earn_every_time_description">You get extra 0.5% gold on every purchase</string>
+
+    <!-- Home: Intro Pager -->
     <string name="home_screen_intro_title_gold">24K Pure Digital Gold</string>
     <string name="home_screen_intro_description_gold">Own 99.9%% pure, BIS-certified gold. The digital standard for physical value.</string>
     <string name="home_screen_intro_title_secure">Secure by Design</string>
@@ -143,16 +169,69 @@ Invest in Gold</string>
     <string name="home_screen_intro_button_learn_more">Learn More</string>
     <string name="home_screen_intro_button_start_saving">Start Saving</string>
     <string name="home_screen_intro_button_buy_now">Buy Gold Now</string>
+
+    <!-- Home: Gold Price Sheet -->
     <string name="home_screen_gold_price_trend">Gold Price Trend</string>
     <string name="home_screen_current_gold_price">Current Gold Price</string>
     <string name="home_screen_fetching_live_price">Fetching live price…</string>
     <string name="home_screen_buy_now_cta">Buy Now!</string>
     <string name="home_screen_past_range">past %1$s</string>
-    <string name="home_screen_action_buy_pending">Buy Gold flow is part of Phase 7 and will be wired next.</string>
-    <string name="home_screen_action_sell_pending">Sell Gold flow is part of Phase 7 and will be wired next.</string>
-    <string name="home_screen_action_profile_pending">Profile flow is part of Phase 9 and is not wired yet.</string>
-    <string name="home_screen_action_alerts_pending">Alerts flow is part of Phase 10 and is not wired yet.</string>
-    <string name="home_screen_action_support_pending">Support flow will be restored after Home-linked support screens are migrated.</string>
-    <string name="home_screen_action_savings_pending">Savings detail flow continues in Phase 8.</string>
-    <string name="home_screen_action_value_pending">Gold value details are still being rebuilt in Phase 6.</string>
+
+    <!-- Home: Gold Value Details -->
+    <string name="home_value_details_title">Gold Value Details</string>
+    <string name="home_value_details_empty_state">We could not load your gold value details right now.</string>
+    <string name="home_value_details_gold_purchased">Gold Purchased</string>
+    <string name="home_value_details_rewards_applied">Rewards applied</string>
+    <string name="home_value_details_gst_paid">GST Paid</string>
+    <string name="home_value_details_total_cost">Total Cost</string>
+    <string name="home_value_details_current_value">Current Value</string>
+    <string name="home_value_details_current_sell_price">Current Sell Price</string>
+    <string name="home_value_details_average_buy_price">Average Buy Price</string>
+    <string name="home_value_details_buy_sell_spread">Buy / Sell Spread</string>
+    <string name="home_value_details_final_payout">Final Payout</string>
+
+    <!-- Home: Help Center -->
+    <string name="home_help_center_title">Help Center</string>
+    <string name="home_help_center_intro_title">We are here to help with your gold journey.</string>
+    <string name="home_help_center_intro_description">Browse the most common HabitGold questions around payments, savings, delivery, and redemption.</string>
+    <string name="home_help_center_search_placeholder">Search FAQs</string>
+    <string name="home_help_center_contact_title">Need direct help?</string>
+    <string name="home_help_center_contact_description">Our support team can help with orders, delivery, and account questions.</string>
+    <string name="home_help_center_empty_state">We could not find any FAQ matching your search yet.</string>
+    <string name="home_help_center_faq_1_question">How is my gold stored?</string>
+    <string name="home_help_center_faq_1_answer">Your digital gold is backed by 24K physical gold and stored in insured vaults through our trusted partners.</string>
+    <string name="home_help_center_faq_2_question">Can I sell my gold anytime?</string>
+    <string name="home_help_center_faq_2_answer">Yes. You can sell your eligible gold instantly during supported market hours at the live sell price shown in the app.</string>
+    <string name="home_help_center_faq_3_question">How do savings plans work?</string>
+    <string name="home_help_center_faq_3_answer">Savings plans let you invest automatically on a daily, weekly, or monthly cadence so you can build gold gradually.</string>
+    <string name="home_help_center_faq_4_question">Where can I track my transactions?</string>
+    <string name="home_help_center_faq_4_answer">You can review all completed and pending orders from the History section, including their latest status.</string>
+
+    <!-- Home: Transaction Details -->
+    <string name="home_screen_transaction_details_heading">Transaction Details</string>
+    <string name="home_screen_transaction_id">Transaction ID</string>
+    <string name="home_screen_transaction_type">Type</string>
+    <string name="home_screen_transaction_type_buy">Buy Gold</string>
+    <string name="home_screen_transaction_type_sell">Sell Gold</string>
+    <string name="home_screen_transaction_type_generic">Gold Transaction</string>
+    <string name="home_screen_transaction_status">Status</string>
+    <string name="home_screen_transaction_sip_frequency">SIP Frequency</string>
+    <string name="home_screen_transaction_amount">Amount</string>
+    <string name="home_screen_transaction_gold_quantity">Gold Quantity</string>
+    <string name="home_screen_transaction_date">Date</string>
+    <string name="home_screen_transaction_not_available">Not available</string>
+    <string name="home_screen_transaction_unknown">Unknown</string>
+
+    <!-- Home: Downstream Handoffs -->
+    <string name="home_route_handoff_buy_title">Buy Gold</string>
+    <string name="home_route_handoff_buy_message">The Buy Gold feature is the next dedicated migration slice. This route is now preserved from Home and will connect to the full trade flow in Phase 7.</string>
+    <string name="home_route_handoff_sell_title">Sell Gold</string>
+    <string name="home_route_handoff_sell_message">The Sell Gold feature continues in Phase 7. Home now routes here intentionally instead of ending in a dead tap.</string>
+    <string name="home_route_handoff_profile_title">Profile</string>
+    <string name="home_route_handoff_profile_message">Profile, KYC, nominee, and security settings are planned in Phase 9. Home now hands off here through a real route boundary.</string>
+    <string name="home_route_handoff_alerts_title">Alerts</string>
+    <string name="home_route_handoff_alerts_message">Alerts and notifications are planned under Phase 10. This route is now preserved from the Home toolbar for later feature wiring.</string>
+    <string name="home_route_handoff_savings_title">Savings</string>
+    <string name="home_route_handoff_savings_message">Savings setup, upgrades, and mandate-management continue in Phase 8. Home now hands off here through a dedicated route instead of a temporary message.</string>
+    <string name="home_route_handoff_view_history">Open History</string>
 </resources>

@@ -430,7 +430,7 @@ Known non-blocking warnings during the last run:
 The auth feature is functional, but these areas still need continued follow-up work:
 
 - auth strings now live in shared `composeResources`, but future locale directories and broader direct-resource adoption should continue from this base
-- auth visuals now match the Android iconography closely, but a formal shared drawable/resource migration is still pending
+- auth visuals now match the Android iconography closely; any future shared drawable consolidation is optional cleanup, not a Phase 5 blocker
 - iOS-specific interaction polish may still be needed for keyboard behavior
 - platform SMS Retriever behavior is intentionally not shared in KMP
 - Android pending-referral attribution and locked referral-prefill behavior are not yet ported into shared auth; that dependency is deferred to the later referral + platform integration phase and must be included there

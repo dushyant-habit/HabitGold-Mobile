@@ -7,6 +7,8 @@ import com.habit.gold.feature.home.domain.model.HomeSummary
 
 data class HomeState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
+    val isBalanceVisible: Boolean = true,
     val summary: HomeSummary? = null,
     val errorMessage: String? = null,
 ) : MviState
@@ -14,6 +16,7 @@ data class HomeState(
 sealed interface HomeIntent : MviIntent {
     data object Load : HomeIntent
     data object Refresh : HomeIntent
+    data object ToggleBalanceVisibility : HomeIntent
 }
 
 sealed interface HomeEffect : MviEffect
