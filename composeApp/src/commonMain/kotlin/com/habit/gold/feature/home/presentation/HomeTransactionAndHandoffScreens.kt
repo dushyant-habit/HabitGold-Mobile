@@ -33,14 +33,10 @@ import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_gold_unit_short
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_message
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_title
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_buy_message
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_buy_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_message
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_savings_message
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_savings_title
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_sell_message
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_sell_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_view_history
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_amount
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_date
@@ -137,15 +133,11 @@ internal fun HomeDeferredRouteScreen(
     onOpenHistoryTab: (() -> Unit)? = null,
 ) {
     val title = when (target) {
-        HomeDeferredTarget.BuyGold -> stringResource(Res.string.home_route_handoff_buy_title)
-        HomeDeferredTarget.SellGold -> stringResource(Res.string.home_route_handoff_sell_title)
         HomeDeferredTarget.Profile -> stringResource(Res.string.home_route_handoff_profile_title)
         HomeDeferredTarget.Alerts -> stringResource(Res.string.home_route_handoff_alerts_title)
         HomeDeferredTarget.Savings -> stringResource(Res.string.home_route_handoff_savings_title)
     }
     val message = when (target) {
-        HomeDeferredTarget.BuyGold -> stringResource(Res.string.home_route_handoff_buy_message)
-        HomeDeferredTarget.SellGold -> stringResource(Res.string.home_route_handoff_sell_message)
         HomeDeferredTarget.Profile -> stringResource(Res.string.home_route_handoff_profile_message)
         HomeDeferredTarget.Alerts -> stringResource(Res.string.home_route_handoff_alerts_message)
         HomeDeferredTarget.Savings -> stringResource(Res.string.home_route_handoff_savings_message)

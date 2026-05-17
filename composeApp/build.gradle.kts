@@ -10,6 +10,11 @@ plugins {
 
 val appName = providers.gradleProperty("APP_NAME").getOrElse("HabitGold").trim()
 val androidAppId = providers.gradleProperty("ANDROID_APP_ID").getOrElse("com.habit.gold").trim()
+val juspayClientId = providers.gradleProperty("JUSPAY_CLIENT_ID").getOrElse("").trim()
+val juspayMerchantId = providers.gradleProperty("JUSPAY_MERCHANT_ID").getOrElse("").trim()
+val juspayRoutingId = providers.gradleProperty("JUSPAY_ROUTING_ID").getOrElse("").trim()
+val juspayEnvironment = providers.gradleProperty("JUSPAY_ENVIRONMENT").getOrElse("").trim()
+val juspaySdkVersion = providers.gradleProperty("JUSPAY_SDK_VERSION").getOrElse("").trim()
 fun normalizedBaseUrl(value: String): String = value.trim().removeSuffix("/") + "/"
 fun requireHttpsUrl(propertyName: String, value: String): String {
     require(value.startsWith("https://")) {
@@ -40,6 +45,21 @@ val prodBaseUrl = requireHttpsUrl(
             .getOrElse("https://api.habitgold.com/v1/")
     )
 )
+val juspayEnvironmentStaging = providers.gradleProperty("JUSPAY_ENVIRONMENT_STAGING")
+    .getOrElse(juspayEnvironment.ifBlank { "sandbox" })
+    .trim()
+val juspayEnvironmentPreprod = providers.gradleProperty("JUSPAY_ENVIRONMENT_PREPROD")
+    .getOrElse(juspayEnvironmentStaging)
+    .trim()
+val juspayEnvironmentProd = providers.gradleProperty("JUSPAY_ENVIRONMENT_PROD")
+    .getOrElse(juspayEnvironment.ifBlank { "production" })
+    .trim()
+val enableJuspayPlugin = providers.gradleProperty("ENABLE_JUSPAY_PLUGIN").getOrElse("false").toBoolean()
+val isJuspayConfigured = juspayClientId.isNotBlank() && !juspayClientId.startsWith("REPLACE_WITH_")
+
+if (enableJuspayPlugin && isJuspayConfigured) {
+    apply(plugin = "hypersdk.plugin")
+}
 
 kotlin {
     androidTarget {
@@ -65,6 +85,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+            implementation("androidx.fragment:fragment-ktx:1.6.2")
         }
         commonMain.dependencies {
             implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -112,6 +133,11 @@ android {
         buildConfigField("String", "APP_ENV", "\"prod\"")
         buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
         buildConfigField("Boolean", "ENABLE_NETWORK_LOGS", "false")
+        buildConfigField("String", "JUSPAY_CLIENT_ID", "\"$juspayClientId\"")
+        buildConfigField("String", "JUSPAY_MERCHANT_ID", "\"$juspayMerchantId\"")
+        buildConfigField("String", "JUSPAY_ROUTING_ID", "\"$juspayRoutingId\"")
+        buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentProd\"")
+        buildConfigField("Boolean", "JUSPAY_ENABLED", "$enableJuspayPlugin")
     }
     flavorDimensions += "environment"
     productFlavors {
@@ -121,6 +147,7 @@ android {
             resValue("string", "app_name", "HabitGold Staging")
             buildConfigField("String", "APP_ENV", "\"staging\"")
             buildConfigField("String", "API_BASE_URL", "\"$stagingBaseUrl\"")
+            buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentStaging\"")
         }
         create("preprod") {
             dimension = "environment"
@@ -128,12 +155,14 @@ android {
             resValue("string", "app_name", "HabitGold Preprod")
             buildConfigField("String", "APP_ENV", "\"preprod\"")
             buildConfigField("String", "API_BASE_URL", "\"$preprodBaseUrl\"")
+            buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentPreprod\"")
         }
         create("prod") {
             dimension = "environment"
             resValue("string", "app_name", "HabitGold")
             buildConfigField("String", "APP_ENV", "\"prod\"")
             buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
+            buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentProd\"")
         }
     }
     buildTypes {
@@ -161,6 +190,15 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+}
+
+if (enableJuspayPlugin && isJuspayConfigured) {
+    extensions.configure<Any>("hyperSdkPlugin") {
+        withGroovyBuilder {
+            setProperty("clientId", juspayClientId)
+            setProperty("sdkVersion", juspaySdkVersion)
         }
     }
 }
