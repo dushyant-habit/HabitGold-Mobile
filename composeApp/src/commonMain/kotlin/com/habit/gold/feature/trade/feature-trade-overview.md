@@ -2,6 +2,7 @@
 
 ## Status
 - Phase: `Phase 7`
+- Phase status: `checkpointed, not fully closed`
 - Current status: shared Trade foundation, live price state, route ownership, and real end-to-end shared `WithdrawalMode`, `Buy`, and `Sell` flows are in place; Android and iOS Buy now launch real Juspay through the shared payment contract, Android-style post-payment polling after return is in place, Buy transitions through processing / success / failure / pending states, Sell flows through entry -> payout -> execution -> outcomes with invoice access, and the remaining Trade work is intentionally deferred into a later review pass for transaction-details / invoice-viewer parity plus VPA/help follow-up routes
 - Source audit: [feature-trade-audit.md](/Users/dushyantmainwal/AndroidStudioProjects/HabitGold_Mobile/composeApp/src/commonMain/kotlin/com/habit/gold/feature/trade/feature-trade-audit.md:1)
 - Verification command: `./gradlew :composeApp:allTests :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compilePreprodDebugKotlinAndroid`
@@ -134,6 +135,7 @@ feature/trade/
 - Android Buy payment launch and return handling are real platform-bound Juspay flows
 - iOS Buy payment launch, redirect handling, and callback mapping are real platform-bound HyperSDK flows behind the same shared Trade payment contract
 - `WithdrawalMode`, `Buy`, and `Sell` are now end-to-end working flows and have gone through repeated parity correction passes
+- this feature should currently be treated as a verified checkpoint, not a fully closed Phase 7 sign-off
 - the remaining Trade gaps are:
   - final transaction-details parity
   - final invoice-viewer parity
