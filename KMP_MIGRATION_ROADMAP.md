@@ -213,6 +213,8 @@ These are tracked explicitly so major product flows do not get lost inside broad
 
 ### Phase 7: Trade
 
+Status: `Checkpointed, not fully closed`
+
 - [x] Create strict Android source audit for Buy, Sell, Withdrawal Mode, VPA, transaction details, invoice viewer, and Juspay boundaries
 - [x] Create `feature/trade` structure
 - [x] Port buy-gold repository logic
@@ -250,6 +252,14 @@ These are tracked explicitly so major product flows do not get lost inside broad
 Audit artifact:
 
 - [feature-trade-audit.md](/Users/dushyantmainwal/AndroidStudioProjects/HabitGold_Mobile/composeApp/src/commonMain/kotlin/com/habit/gold/feature/trade/feature-trade-audit.md:1)
+
+Deferred review backlog before Phase 7 can be called complete:
+
+- finish strict Android visual parity for trade-owned transaction details
+- finish strict Android visual parity for the invoice viewer experience
+- rebuild VPA management parity
+- replace the temporary Trade help route with the final shared help experience
+- run one final Trade side-by-side QA sweep
 
 ### Phase 8: SIP / Savings
 
