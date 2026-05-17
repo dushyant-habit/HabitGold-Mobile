@@ -16,7 +16,7 @@ class SellTradeMathTest {
 
         assertEquals(0.0, result.tradableGrams)
         assertEquals(0.0, result.payoutAmount)
-        assertEquals("Amount must be at least ₹10.", result.message)
+        assertEquals(SellTradeValidationError.MinimumAmount, result.validationError)
     }
 
     @Test
@@ -30,7 +30,7 @@ class SellTradeMathTest {
 
         assertEquals(0.1235, result.tradableGrams)
         assertEquals(1235.0, result.payoutAmount)
-        assertEquals(null, result.message)
+        assertEquals(null, result.validationError)
     }
 
     @Test
@@ -56,6 +56,6 @@ class SellTradeMathTest {
         )
 
         assertEquals(0.0, result.tradableGrams)
-        assertEquals("Amount exceeds your sellable gold balance.", result.message)
+        assertEquals(SellTradeValidationError.ExceedsBalance, result.validationError)
     }
 }

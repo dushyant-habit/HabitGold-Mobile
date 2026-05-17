@@ -54,11 +54,15 @@ import habitgoldmobile.composeapp.generated.resources.common_back
 import habitgoldmobile.composeapp.generated.resources.common_retry
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_download_invoice
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_invalid_url
+import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_file_name
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_invoice_saved
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_open_external
+import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_page_description
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_title
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_unable_to_prepare_invoice
+import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_unable_to_render_invoice
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_unable_to_save_invoice
+import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_unable_to_load_invoice
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -87,14 +91,16 @@ actual fun TradeInvoiceViewerScreen(
     val invoiceSavedMessage = stringResource(Res.string.trade_invoice_viewer_invoice_saved)
     val unableToPrepareMessage = stringResource(Res.string.trade_invoice_viewer_unable_to_prepare_invoice)
     val unableToSaveMessage = stringResource(Res.string.trade_invoice_viewer_unable_to_save_invoice)
-    val unableToLoadMessage = "Unable to load invoice PDF."
+    val unableToLoadMessage = stringResource(Res.string.trade_invoice_viewer_unable_to_load_invoice)
+    val unableToRenderMessage = stringResource(Res.string.trade_invoice_viewer_unable_to_render_invoice)
+    val invoiceFileName = stringResource(Res.string.trade_invoice_viewer_file_name)
     val isValidUrl = invoiceUrl.startsWith("http://") || invoiceUrl.startsWith("https://")
 
     var pdfFile by remember(invoiceUrl) { mutableStateOf<File?>(null) }
     var isLoading by remember(invoiceUrl) { mutableStateOf(false) }
     var errorMessage by remember(invoiceUrl) { mutableStateOf<String?>(null) }
     var pendingExportFile by remember { mutableStateOf<File?>(null) }
-    var pendingExportFileName by remember { mutableStateOf("invoice.pdf") }
+    var pendingExportFileName by remember(invoiceFileName) { mutableStateOf(invoiceFileName) }
 
     val saveInvoiceLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf"),
@@ -109,7 +115,7 @@ actual fun TradeInvoiceViewerScreen(
 
         coroutineScope.launch {
             runCatching {
-                copyPdfToUri(context, file, destinationUri)
+                copyPdfToUri(context, file, destinationUri, unableToSaveMessage)
             }.onSuccess {
                 Toast.makeText(context, invoiceSavedMessage, Toast.LENGTH_SHORT).show()
             }.onFailure {
@@ -129,7 +135,11 @@ actual fun TradeInvoiceViewerScreen(
             isLoading = true
             errorMessage = null
             runCatching {
-                downloadPdfToCache(context, invoiceUrl)
+                downloadPdfToCache(
+                    context = context,
+                    invoiceUrl = invoiceUrl,
+                    loadErrorMessage = unableToLoadMessage,
+                )
             }.onSuccess { file ->
                 pdfFile = file
             }.onFailure { error ->
@@ -167,7 +177,11 @@ actual fun TradeInvoiceViewerScreen(
                     onClick = {
                         coroutineScope.launch {
                             val file = pdfFile ?: runCatching {
-                                downloadPdfToCache(context, invoiceUrl)
+                                downloadPdfToCache(
+                                    context = context,
+                                    invoiceUrl = invoiceUrl,
+                                    loadErrorMessage = unableToLoadMessage,
+                                )
                             }.getOrNull()
                             if (file == null) {
                                 Toast.makeText(context, unableToPrepareMessage, Toast.LENGTH_SHORT).show()
@@ -175,7 +189,7 @@ actual fun TradeInvoiceViewerScreen(
                             }
                             pdfFile = file
                             pendingExportFile = file
-                            pendingExportFileName = "invoice.pdf"
+                            pendingExportFileName = invoiceFileName
                             saveInvoiceLauncher.launch(pendingExportFileName)
                         }
                     },
@@ -239,6 +253,7 @@ private fun AndroidPdfRendererViewer(
     file: File,
     modifier: Modifier = Modifier,
 ) {
+    val unableToRenderMessage = stringResource(Res.string.trade_invoice_viewer_unable_to_render_invoice)
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val targetWidthPx = remember(configuration.screenWidthDp, density) {
@@ -272,7 +287,7 @@ private fun AndroidPdfRendererViewer(
         is PdfRenderState.Error -> {
             Box(modifier = modifier.padding(24.dp)) {
                 Text(
-                    text = state.message.ifBlank { "Unable to render invoice PDF." },
+                    text = state.message.ifBlank { unableToRenderMessage },
                     modifier = Modifier.align(Alignment.Center),
                 )
             }
@@ -292,7 +307,7 @@ private fun AndroidPdfRendererViewer(
                     itemsIndexed(state.pages) { index, bitmap ->
                         Image(
                             bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Invoice page ${index + 1}",
+                            contentDescription = stringResource(Res.string.trade_invoice_viewer_page_description, index + 1),
                             modifier = Modifier.fillMaxWidth(),
                             contentScale = ContentScale.FillWidth,
                         )
@@ -309,7 +324,11 @@ private sealed interface PdfRenderState {
     data class Error(val message: String) : PdfRenderState
 }
 
-private suspend fun downloadPdfToCache(context: Context, invoiceUrl: String): File = withContext(Dispatchers.IO) {
+private suspend fun downloadPdfToCache(
+    context: Context,
+    invoiceUrl: String,
+    loadErrorMessage: String,
+): File = withContext(Dispatchers.IO) {
     val connection = (URL(invoiceUrl).openConnection() as HttpURLConnection).apply {
         connectTimeout = 15000
         readTimeout = 15000
@@ -319,7 +338,7 @@ private suspend fun downloadPdfToCache(context: Context, invoiceUrl: String): Fi
     connection.connect()
     if (connection.responseCode !in 200..299) {
         connection.disconnect()
-        error("Unable to load invoice PDF.")
+        error(loadErrorMessage)
     }
     val file = File.createTempFile("invoice_", ".pdf", context.cacheDir)
     connection.inputStream.use { input ->
@@ -335,12 +354,13 @@ private suspend fun copyPdfToUri(
     context: Context,
     sourceFile: File,
     destinationUri: Uri,
+    saveErrorMessage: String,
 ) = withContext(Dispatchers.IO) {
     context.contentResolver.openOutputStream(destinationUri)?.use { output ->
         sourceFile.inputStream().use { input ->
             input.copyTo(output)
         }
-    } ?: error("Unable to save invoice.")
+    } ?: error(saveErrorMessage)
 }
 
 private fun renderPdfPages(file: File, targetWidthPx: Int): List<Bitmap> {

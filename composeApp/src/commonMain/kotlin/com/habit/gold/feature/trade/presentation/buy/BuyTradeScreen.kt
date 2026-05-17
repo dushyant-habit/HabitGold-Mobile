@@ -121,6 +121,8 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
 import habitgoldmobile.composeapp.generated.resources.trade_buy_breakdown_title
 import habitgoldmobile.composeapp.generated.resources.trade_buy_chip_max
 import habitgoldmobile.composeapp.generated.resources.trade_buy_change
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_discount_off
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_min_order_required
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_empty
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_subtitle
 import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
@@ -555,7 +557,11 @@ fun BuyTradeScreen(
                 availableCoupons = state.availableCoupons.size,
                 couponDraft = couponDraft,
                 appliedCouponCode = state.appliedCoupon?.code,
-                appliedBenefitText = state.appliedCoupon?.let(::buyTradeAppliedCouponSummary),
+                appliedBenefitText = if (state.appliedCoupon != null) {
+                    buyTradeAppliedCouponSummary(state.appliedCoupon)
+                } else {
+                    null
+                },
                 onCouponDraftChange = {
                     couponDraft = it.uppercase().filter { character ->
                         character.isLetterOrDigit() || character == '_'
@@ -1188,12 +1194,15 @@ private fun BuyTradePoweredByRow() {
     }
 }
 
+@Composable
 private fun buyTradeAppliedCouponSummary(
     validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation,
 ): String? {
     val parts = buildList {
 //        validation.promotionalCashback.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it cashback") }
-        validation.promotionalDiscount.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it off") }
+        validation.promotionalDiscount.takeIf { it != "0" && it.isNotBlank() }?.let {
+            add(stringResource(Res.string.trade_buy_coupon_discount_off, it))
+        }
 //        validation.promotionalExtraGold.takeIf { it != "0" && it.isNotBlank() }?.let { add("+$it g gold") }
 //        validation.promotionalDeliveryDiscount.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it delivery off") }
     }
@@ -1212,13 +1221,14 @@ internal fun isBuyCouponApplicable(
     return estimateAmount >= minOrder
 }
 
+@Composable
 internal fun buyCouponDisabledReason(
     coupon: com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon,
     estimateAmount: Double,
 ): String? {
     val minOrder = buyCouponMinOrderAmount(coupon) ?: return null
     if (estimateAmount >= minOrder) return null
-    return "Min. order ₹${formatMoney(minOrder)} required"
+    return stringResource(Res.string.trade_buy_coupon_min_order_required, formatMoney(minOrder))
 }
 
 internal data class BuyTradeCalculation(

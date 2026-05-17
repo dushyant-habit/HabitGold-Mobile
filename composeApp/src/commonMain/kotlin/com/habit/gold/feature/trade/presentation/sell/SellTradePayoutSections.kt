@@ -223,7 +223,7 @@ internal fun SellTradePayoutScreen(
                 }
             }
 
-            state.errorMessage?.takeIf { it.isNotBlank() }?.let { message ->
+            state.resolveErrorMessage()?.takeIf { it.isNotBlank() }?.let { message ->
                 Text(
                     text = message,
                     color = Color(0xFFB42318),
