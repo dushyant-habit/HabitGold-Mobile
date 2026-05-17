@@ -1,0 +1,77 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android-and-shared:
+    name: Android and Shared Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run shared tests
+        run: ./gradlew :composeApp:allTests
+
+      - name: Compile Android preprod debug
+        run: ./gradlew :composeApp:compilePreprodDebugKotlinAndroid
+
+      - name: Run Android lint
+        run: ./gradlew :composeApp:lintPreprodDebug
+
+  ios:
+    name: iOS Checks
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile Kotlin iOS simulator target
+        run: ./gradlew :composeApp:compileKotlinIosSimulatorArm64
+
+      - name: Install CocoaPods dependencies
+        working-directory: iosApp
+        run: pod install
+
+      - name: Build iOS workspace
+        working-directory: iosApp
+        run: |
+          xcodebuild \
+            -workspace iosApp.xcworkspace \
+            -scheme iosApp \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build

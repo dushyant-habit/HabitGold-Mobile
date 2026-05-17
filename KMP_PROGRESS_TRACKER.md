@@ -132,6 +132,7 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Added migration roadmap
 - [x] Added progress tracker
 - [x] Added explicit git workflow documentation and helper scripts for branch/commit naming
+- [x] Added baseline PR automation with GitHub Actions checks, PR template, and PR creation helper script
 - [x] Aligned Android app id and iOS app bundle id to `com.habit.gold`
 - [x] Documented pre-migration audit for Home, Buy, Sell, Delivery, SIP, and Refer & Earn
 - [x] Added shared app composition root for future app-shell growth
