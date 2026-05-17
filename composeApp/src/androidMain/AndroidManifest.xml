@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".HabitGoldApplication"
@@ -16,7 +17,8 @@
         android:theme="@style/Theme.HabitGold">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.HabitGold.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

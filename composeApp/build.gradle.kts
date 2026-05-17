@@ -10,14 +10,36 @@ plugins {
 
 val appName = providers.gradleProperty("APP_NAME").getOrElse("HabitGold").trim()
 val androidAppId = providers.gradleProperty("ANDROID_APP_ID").getOrElse("com.habit.gold").trim()
-val androidDebugEnvironment = providers.gradleProperty("ANDROID_APP_ENV_DEBUG").getOrElse("development").trim()
-val androidReleaseEnvironment = providers.gradleProperty("ANDROID_APP_ENV_RELEASE").getOrElse("production").trim()
-val androidDebugBaseUrl = providers.gradleProperty("ANDROID_API_BASE_URL_DEBUG")
-    .getOrElse("https://staging.habitgold.com/v1/")
-    .trim()
-val androidReleaseBaseUrl = providers.gradleProperty("ANDROID_API_BASE_URL_RELEASE")
-    .getOrElse("https://api.habitgold.com/v1/")
-    .trim()
+fun normalizedBaseUrl(value: String): String = value.trim().removeSuffix("/") + "/"
+fun requireHttpsUrl(propertyName: String, value: String): String {
+    require(value.startsWith("https://")) {
+        "$propertyName must use HTTPS. Found: $value"
+    }
+    return value
+}
+val stagingBaseUrl = requireHttpsUrl(
+    "STAGING_API_BASE_URL",
+    normalizedBaseUrl(
+        providers.gradleProperty("STAGING_API_BASE_URL")
+            .orElse(providers.gradleProperty("ANDROID_API_BASE_URL_DEBUG"))
+            .getOrElse("https://staging.habitgold.com/v1/")
+    )
+)
+val preprodBaseUrl = requireHttpsUrl(
+    "PREPROD_API_BASE_URL",
+    normalizedBaseUrl(
+        providers.gradleProperty("PREPROD_API_BASE_URL")
+            .getOrElse(stagingBaseUrl)
+    )
+)
+val prodBaseUrl = requireHttpsUrl(
+    "PROD_API_BASE_URL",
+    normalizedBaseUrl(
+        providers.gradleProperty("PROD_API_BASE_URL")
+            .orElse(providers.gradleProperty("ANDROID_API_BASE_URL_RELEASE"))
+            .getOrElse("https://api.habitgold.com/v1/")
+    )
+)
 
 kotlin {
     androidTarget {
@@ -50,6 +72,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.foundation)
+            implementation(compose.materialIconsExtended)
             implementation(compose.material3)
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
@@ -65,6 +88,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -84,16 +109,37 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "APP_NAME", "\"$appName\"")
-        buildConfigField("String", "APP_ENV", "\"$androidReleaseEnvironment\"")
-        buildConfigField("String", "API_BASE_URL", "\"$androidReleaseBaseUrl\"")
+        buildConfigField("String", "APP_ENV", "\"prod\"")
+        buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
         buildConfigField("Boolean", "ENABLE_NETWORK_LOGS", "false")
+    }
+    flavorDimensions += "environment"
+    productFlavors {
+        create("staging") {
+            dimension = "environment"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "HabitGold Staging")
+            buildConfigField("String", "APP_ENV", "\"staging\"")
+            buildConfigField("String", "API_BASE_URL", "\"$stagingBaseUrl\"")
+        }
+        create("preprod") {
+            dimension = "environment"
+            versionNameSuffix = "-preprod"
+            resValue("string", "app_name", "HabitGold Preprod")
+            buildConfigField("String", "APP_ENV", "\"preprod\"")
+            buildConfigField("String", "API_BASE_URL", "\"$preprodBaseUrl\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            resValue("string", "app_name", "HabitGold")
+            buildConfigField("String", "APP_ENV", "\"prod\"")
+            buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
+        }
     }
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            buildConfigField("String", "APP_ENV", "\"$androidDebugEnvironment\"")
-            buildConfigField("String", "API_BASE_URL", "\"$androidDebugBaseUrl\"")
             buildConfigField("Boolean", "ENABLE_NETWORK_LOGS", "true")
         }
         getByName("release") {

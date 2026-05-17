@@ -5,4 +5,8 @@
         <item name="android:statusBarColor">#FFF8ED</item>
         <item name="android:navigationBarColor">#FFF8ED</item>
     </style>
+
+    <style name="Theme.HabitGold.Splash" parent="@style/Theme.HabitGold">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
 </resources>

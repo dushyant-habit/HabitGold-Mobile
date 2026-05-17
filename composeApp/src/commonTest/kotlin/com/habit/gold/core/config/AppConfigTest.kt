@@ -10,12 +10,14 @@ class AppConfigTest {
         val config = AppConfig(
             appName = "HabitGold",
             bundleId = "com.habit.gold",
+            appVersion = "1.0",
+            appPlatform = "android",
             environment = AppEnvironment.Production,
             baseUrl = "https://api.habitgold.com/v1/",
             enableNetworkLogs = false,
         )
 
-        assertEquals("https://api.habitgold.com/v1", config.normalizedBaseUrl)
+        assertEquals("https://api.habitgold.com/v1/", config.normalizedBaseUrl)
     }
 
     @Test
