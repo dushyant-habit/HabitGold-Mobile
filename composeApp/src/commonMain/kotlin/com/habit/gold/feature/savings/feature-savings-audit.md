@@ -405,17 +405,25 @@ The current shared Phase 8 implementation now includes:
 - create / update mandate-session API wiring
 - shared Juspay launch through the existing payment contract
 - post-payment mandate polling with `polling`, `processing`, `success`, and `failure` states
+- strict re-audit-driven setup rebuild with:
+  - real daily / weekly / monthly hero assets
+  - immediate first paint from Home-passed route data
+  - setup top bar with help wiring
+  - live buy price footer
+  - coupon row and setup promo state
+  - compounding preview card and next-payment card
 
 This means the biggest remaining Phase 8 work is no longer route ownership or payment plumbing. It is the remaining product polish and any deferred SIP surfaces outside the current Home-driven setup flow.
 
-## Implementation Rule After This Re-Audit
+## Current Phase 8 Rule
 
-Do not continue Savings setup implementation by patching the current screen.
+The current shared setup screen is no longer a placeholder rebuild candidate.
 
-Next implementation pass must:
+Further Savings work should now follow this order:
 
-1. remove the loading-first setup behavior
-2. restore the real frequency image assets
-3. rebuild setup UI section-by-section from the Android contract above
-4. recheck coupon, compounding, next-payment, and bottom-bar parity
-5. then verify payment + polling behavior again on top of the corrected UI
+1. finish exact setup micro-parity
+2. finish manage-autopay visual parity
+3. close any deferred coupon / promo and detail-surface gaps
+4. run final end-to-end Savings QA
+
+Do not restart the setup flow from scratch again unless a new audit proves the route-entry or logic contract itself is wrong.

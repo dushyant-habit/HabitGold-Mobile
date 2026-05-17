@@ -24,7 +24,7 @@ Still pending in Phase 8:
 
 - exact compounding bottom-sheet parity
 - final setup micro-parity pass for spacing, sheet density, and detail rhythm
-- savings-specific coupon and promo UX
+- savings-specific coupon and promo UX refinement
 - Buy-tab SIP parity if product keeps a dedicated Buy SIP entry
 - manage-autopay strict visual parity
 - execution history / additional detail parity if required
@@ -59,7 +59,7 @@ The second major Savings slice now owns the setup / upgrade flow:
 The next Savings slice should focus on polish and parity:
 
 - compounding sheet exact parity
-- savings coupon handling
+- savings coupon and promo UX refinement
 - Buy-tab SIP entry parity if still required
 - manage-autopay strict visual parity
 - execution-history / detail surfaces if product needs them

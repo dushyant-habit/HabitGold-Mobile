@@ -12,9 +12,9 @@ Use this together with:
 ## Current Status
 
 - Current phase: `Phase 8`
-- Phase 8 status: `audit complete, shared Savings setup and mandate-management slices live`
-- Current focus: `finish remaining Savings parity and logic backlog before closing Phase 8`
-- Next milestone: `close compounding-sheet parity, promo UX, manage-autopay parity, and final Savings QA`
+- Phase 8 status: `shared Savings setup and mandate-management slices live, parity still pending`
+- Current focus: `finish setup micro-parity, promo refinement, and manage-autopay parity before closing Phase 8`
+- Next milestone: `close setup sheet/detail parity, complete manage-autopay review, and run final Savings QA`
 
 ## Phase Status
 
@@ -93,9 +93,10 @@ Use this together with:
 - [x] Port savings polling, pending, success, and failure states
 - [ ] Finish exact compounding bottom-sheet parity
 - [ ] Finish final setup spacing / density micro-parity
-- [ ] Port savings-specific coupon and promo handling
+- [ ] Finish savings-specific coupon and promo UX refinement
 - [ ] Finish manage-autopay strict visual parity
 - [ ] Rebuild any deferred savings detail / execution-history surfaces if product needs them
+- [ ] Run final end-to-end Savings QA
 
 ## Feature Flow Coverage
 
