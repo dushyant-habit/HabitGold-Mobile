@@ -102,23 +102,28 @@ Primary docs:
 
 ## Pull Request Automation
 
-Use a consistent PR automation path.
+Use a consistent PR automation path that stays free by default.
 
-- CI should run on every PR to `main`
 - PRs should use the shared template in `.github/pull_request_template.md`
 - use `scripts/git-create-pr.sh [base-branch]` to open a PR with:
   - the latest commit subject as the PR title
   - the commit stack included in the PR body
   - the standard verification checklist
   - explicit review-focus and deferred-items sections
+- run the verification commands locally before opening or merging a PR
 
-Required PR automation checks:
+Required local verification before merge:
 
 - `./gradlew :composeApp:allTests`
 - `./gradlew :composeApp:compilePreprodDebugKotlinAndroid`
 - `./gradlew :composeApp:lintPreprodDebug`
 - `./gradlew :composeApp:compileKotlinIosSimulatorArm64`
 - `xcodebuild -workspace iosApp/iosApp.xcworkspace -scheme iosApp -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`
+
+Cost rule:
+
+- do not enable GitHub-hosted CI by default if it can consume paid quota
+- especially avoid automatic macOS runner workflows unless you explicitly decide the repo plan and budget support them
 
 PR review rule:
 

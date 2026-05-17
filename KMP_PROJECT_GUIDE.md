@@ -164,7 +164,6 @@ Rules:
 
 PR automation baseline:
 
-- use GitHub Actions PR checks for shared tests, Android compile/lint, Kotlin iOS compile, and workspace-based iOS build
 - use the repo PR template so every PR records:
   - summary
   - scope
@@ -172,7 +171,9 @@ PR automation baseline:
   - review focus
   - deferred items
 - prefer `scripts/git-create-pr.sh` for opening PRs so the commit stack and verification checklist are prefilled
-- treat failed CI, missing docs alignment, or missing deferred-item disclosure as blockers for merge
+- run verification locally by default to keep the process free
+- only add hosted CI later if you explicitly choose a plan/budget that supports it
+- treat failed local verification, missing docs alignment, or missing deferred-item disclosure as blockers for merge
 
 ## Architecture Principles
 
