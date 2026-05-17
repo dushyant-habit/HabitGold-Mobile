@@ -38,12 +38,27 @@ import androidx.compose.foundation.layout.WindowInsets
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
+import com.habit.gold.feature.trade.domain.TradeLivePriceStore
+import com.habit.gold.feature.trade.domain.usecase.CreateBuyOrderUseCase
+import com.habit.gold.feature.trade.domain.usecase.CreateSellOrderUseCase
+import com.habit.gold.feature.trade.domain.usecase.ExecuteSellOrderUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeInvoiceUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeStatusUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeTransactionsUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeUserVpasUseCase
+import com.habit.gold.feature.trade.domain.usecase.PollTradeStatusUseCase
+import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
+import com.habit.gold.feature.trade.presentation.rememberPlatformTradePaymentLauncher
+import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
 import org.koin.core.Koin
 
 private val MainBottomNavShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
@@ -68,12 +83,39 @@ fun AppMainShellScreen(
     modifier: Modifier = Modifier,
 ) {
     var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
+    PlatformBackHandler(
+        enabled = selectedTab != MainTab.Home,
+        onBack = { onSelectTab(MainTab.Home) },
+    )
+
+    val paymentLauncher = rememberPlatformTradePaymentLauncher()
     val homeDependencies = remember(appKoin) {
         HomeRouteDependencies(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
             appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
             getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
         )
+    }
+    val tradeDependencies = remember(appKoin, paymentLauncher) {
+        TradeRouteDependencies(
+            livePriceStore = appKoin.get<TradeLivePriceStore>(),
+            createBuyOrderUseCase = appKoin.get<CreateBuyOrderUseCase>(),
+            getTradeAvailableCouponsUseCase = appKoin.get<GetTradeAvailableCouponsUseCase>(),
+            validateTradeCouponUseCase = appKoin.get<ValidateTradeCouponUseCase>(),
+            pollTradeStatusUseCase = appKoin.get<PollTradeStatusUseCase>(),
+            paymentLauncher = paymentLauncher,
+            createSellOrderUseCase = appKoin.get<CreateSellOrderUseCase>(),
+            executeSellOrderUseCase = appKoin.get<ExecuteSellOrderUseCase>(),
+            getSellAvailabilityUseCase = appKoin.get<GetSellAvailabilityUseCase>(),
+            getTradeUserVpasUseCase = appKoin.get<GetTradeUserVpasUseCase>(),
+            getTradeStatusUseCase = appKoin.get<GetTradeStatusUseCase>(),
+            getTradeTransactionsUseCase = appKoin.get<GetTradeTransactionsUseCase>(),
+            getTradeInvoiceUseCase = appKoin.get<GetTradeInvoiceUseCase>(),
+        )
+    }
+
+    LaunchedEffect(session.isLoggedIn) {
+        tradeDependencies.livePriceStore.setLoggedIn(session.isLoggedIn)
     }
 
     LaunchedEffect(selectedTab) {
@@ -116,6 +158,7 @@ fun AppMainShellScreen(
             when (selectedTab) {
                 MainTab.Home -> HomeRoute(
                     dependencies = homeDependencies,
+                    tradeDependencies = tradeDependencies,
                     session = session,
                     onSelectTab = onSelectTab,
                     onBottomBarVisibilityChange = { visible ->

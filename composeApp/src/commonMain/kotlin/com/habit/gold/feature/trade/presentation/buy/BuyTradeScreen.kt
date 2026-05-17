@@ -1,0 +1,1295 @@
+package com.habit.gold.feature.trade.presentation.buy
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.habit.gold.feature.trade.domain.TradeLivePriceState
+import com.habit.gold.feature.trade.domain.usecase.GetTradeInvoiceUseCase
+import com.habit.gold.core.network.ApiResult
+import com.habit.gold.feature.trade.presentation.formatCountdown
+import com.habit.gold.feature.trade.presentation.formatGoldQuantity
+import com.habit.gold.feature.trade.presentation.formatMoney
+import com.habit.gold.feature.trade.presentation.formatPercent
+import com.habit.gold.feature.trade.presentation.roundToGoldScale
+import com.habit.gold.feature.trade.presentation.roundToMoney
+import com.habit.gold.feature.trade.presentation.sanitizeGramInput
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.buy_gold_screen_buy_gold
+import habitgoldmobile.composeapp.generated.resources.common_go_to_dashboard
+import habitgoldmobile.composeapp.generated.resources.common_help
+import habitgoldmobile.composeapp.generated.resources.common_safegold
+import habitgoldmobile.composeapp.generated.resources.common_transaction_details
+import habitgoldmobile.composeapp.generated.resources.safegold_image
+import habitgoldmobile.composeapp.generated.resources.home_screen_powered_by
+import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_to_be_paid
+import habitgoldmobile.composeapp.generated.resources.trade_buy_applied_coupon_format
+import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
+import habitgoldmobile.composeapp.generated.resources.trade_buy_breakdown_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_chip_max
+import habitgoldmobile.composeapp.generated.resources.trade_buy_change
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_empty
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_subtitle
+import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
+import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_coupon_code
+import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_earn_extra_gold
+import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_insured_vaults
+import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_pure_gold
+import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_pure_gold_short
+import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_start_small
+import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_value
+import habitgoldmobile.composeapp.generated.resources.trade_buy_gst
+import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_label
+import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_unavailable
+import habitgoldmobile.composeapp.generated.resources.trade_buy_latest_order_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_max_upi_limit_message
+import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_grams
+import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_rupees
+import habitgoldmobile.composeapp.generated.resources.trade_buy_offers
+import habitgoldmobile.composeapp.generated.resources.trade_buy_pay_now
+import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_body
+import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_plus_gst
+import habitgoldmobile.composeapp.generated.resources.trade_buy_quantity
+import habitgoldmobile.composeapp.generated.resources.trade_buy_remove
+import habitgoldmobile.composeapp.generated.resources.trade_buy_retry
+import habitgoldmobile.composeapp.generated.resources.trade_buy_select_grams
+import habitgoldmobile.composeapp.generated.resources.trade_buy_success_body
+import habitgoldmobile.composeapp.generated.resources.trade_buy_success_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_status_completed
+import habitgoldmobile.composeapp.generated.resources.trade_buy_available_coupons_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_total_payable
+import habitgoldmobile.composeapp.generated.resources.trade_buy_updating_price
+import habitgoldmobile.composeapp.generated.resources.trade_buy_updates_in
+import habitgoldmobile.composeapp.generated.resources.trade_buy_verifying_body
+import habitgoldmobile.composeapp.generated.resources.trade_buy_verifying_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_view_breakdown
+import habitgoldmobile.composeapp.generated.resources.trade_buy_youre_buying
+import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_paid
+import habitgoldmobile.composeapp.generated.resources.trade_buy_error_code
+import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_body
+import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_code_fallback
+import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_credited
+import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_order_id_label
+import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_purchase_body
+import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_purchase_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_secure_100_percent
+import habitgoldmobile.composeapp.generated.resources.trade_buy_secure_bhim_registered
+import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_invalid_url
+import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_view_invoice
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
+
+internal const val OneTimeUpiLimit = 100000.0
+
+internal val BuyWhite = Color.White
+internal val BuyPrimary = Color(0xFF7B2CBF)
+internal val BuyPrimaryLight = Color(0xFFF4E8FF)
+internal val BuyGoldTint = Color(0xFFD2A700)
+internal val BuyGoldBackground = Color(0xFFF7F2FC)
+internal val BuySlate950 = Color(0xFF020617)
+internal val BuySlate800 = Color(0xFF1E293B)
+internal val BuySlate600 = Color(0xFF475569)
+internal val BuySlate500 = Color(0xFF64748B)
+internal val BuySlate400 = Color(0xFF94A3B8)
+internal val BuySlate300 = Color(0xFFCBD5E1)
+internal val BuySlate200 = Color(0xFFE2E8F0)
+internal val BuySlate100 = Color(0xFFF1F5F9)
+internal val BuySlate50 = Color(0xFFF8FAFC)
+internal val BuyNeutral25 = Color(0xFFFCFCFD)
+internal val BuyRed50 = Color(0xFFFEF2F2)
+internal val BuyRed400 = Color(0xFFF87171)
+internal val BuyRed700 = Color(0xFFB91C1C)
+internal val BuyGreen25 = Color(0xFFF0FDF4)
+internal val BuyGreen500 = Color(0xFF22C55E)
+internal val BuySuccess700 = Color(0xFF15803D)
+
+internal const val BuyPollingWindowSeconds = 30
+internal const val BuyPollIntervalSeconds = 5
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BuyTradeScreen(
+    state: BuyTradeState,
+    livePriceState: TradeLivePriceState,
+    onBackClick: () -> Unit,
+    onGoToDashboard: () -> Unit,
+    onHelpClick: () -> Unit,
+    getTradeInvoiceUseCase: GetTradeInvoiceUseCase,
+    onOpenInvoice: (String) -> Unit,
+    onIntent: (BuyTradeIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var amountRupees by rememberSaveable { mutableStateOf("50") }
+    var amountGrams by rememberSaveable { mutableStateOf("0.5") }
+    var validationMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var showAmountBreakdown by rememberSaveable { mutableStateOf(false) }
+    var couponDraft by rememberSaveable { mutableStateOf("") }
+    var showCouponSheet by rememberSaveable { mutableStateOf(false) }
+    var isFetchingInvoice by remember(state.currentOrderId, state.step) { mutableStateOf(false) }
+    var invoiceErrorMessage by remember(state.currentOrderId, state.step) { mutableStateOf<String?>(null) }
+
+    val livePrice = livePriceState.price
+    val buyRateId = livePrice?.buyRateId.orEmpty()
+    val goldPrice = livePrice?.buy ?: 0.0
+    val gstRate = ((livePrice?.taxPc ?: 0.0).takeIf { it > 0.0 } ?: 0.0) / 100.0
+    val numericRupees = amountRupees.toDoubleOrNull() ?: 0.0
+    val numericGrams = amountGrams.toDoubleOrNull() ?: 0.0
+    val livePriceUnavailableMessage = stringResource(Res.string.trade_buy_live_price_unavailable)
+    val maxUpiLimitMessage = stringResource(Res.string.trade_buy_max_upi_limit_message)
+    val invalidInvoiceMessage = stringResource(Res.string.trade_invoice_viewer_invalid_url)
+    val showEntryTopBar = state.step == BuyTradeStep.Entry && !state.isLoading
+    val focusManager = LocalFocusManager.current
+    val facts = listOf(
+        stringResource(Res.string.trade_buy_fact_earn_extra_gold),
+        stringResource(Res.string.trade_buy_fact_pure_gold_short),
+        stringResource(Res.string.trade_buy_fact_insured_vaults),
+        stringResource(Res.string.trade_buy_fact_start_small),
+    )
+    var currentFactIndex by rememberSaveable { mutableStateOf(0) }
+    val couponSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val calculation = remember(state.entryMode, numericRupees, numericGrams, goldPrice, gstRate) {
+        calculateBuyTrade(
+            entryMode = state.entryMode,
+            numericRupees = numericRupees,
+            numericGrams = numericGrams,
+            goldPrice = goldPrice,
+            gstRate = gstRate,
+        )
+    }
+
+    val canSubmit = !state.isLoading &&
+        livePrice != null &&
+        buyRateId.isNotBlank() &&
+        calculation.totalPayable in 10.0..OneTimeUpiLimit &&
+        calculation.goldQuantity > 0.0
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(3500)
+            currentFactIndex = (currentFactIndex + 1) % facts.size
+        }
+    }
+
+    val displayedMessage = validationMessage ?: state.errorMessage
+    val isUpiLimitExceeded = calculation.totalPayable > OneTimeUpiLimit
+
+    LaunchedEffect(isFetchingInvoice, state.currentOrderId, state.order?.orderId, state.pollingSnapshot?.orderId) {
+        if (!isFetchingInvoice) return@LaunchedEffect
+        val orderId = state.currentOrderId ?: state.order?.orderId ?: state.pollingSnapshot?.orderId
+        if (orderId.isNullOrBlank()) {
+            invoiceErrorMessage = invalidInvoiceMessage
+            isFetchingInvoice = false
+            return@LaunchedEffect
+        }
+        when (val result = getTradeInvoiceUseCase(orderId)) {
+            is ApiResult.Success -> {
+                val invoiceUrl = result.value.invoiceUrl
+                if (invoiceUrl.isBlank()) {
+                    invoiceErrorMessage = invalidInvoiceMessage
+                } else {
+                    invoiceErrorMessage = null
+                    onOpenInvoice(invoiceUrl)
+                }
+                isFetchingInvoice = false
+            }
+            is ApiResult.Failure -> {
+                invoiceErrorMessage = result.error.message
+                isFetchingInvoice = false
+            }
+        }
+    }
+
+    LaunchedEffect(state.isLoading, state.step) {
+        if (state.isLoading || state.step != BuyTradeStep.Entry) {
+            focusManager.clearFocus(force = true)
+        }
+    }
+
+    when (state.step) {
+        BuyTradeStep.Processing -> {
+            BuyTradeProcessingScreen(
+                orderId = state.currentOrderId ?: state.order?.orderId ?: state.pollingSnapshot?.orderId.orEmpty(),
+                pollingSnapshot = state.pollingSnapshot,
+                modifier = modifier,
+            )
+            return
+        }
+        BuyTradeStep.Success -> {
+            BuyTradeSuccessScreen(
+                amount = "₹${formatMoney(state.order?.let(::calculateOrderTotalPaid) ?: calculation.totalPayable)}",
+                goldCredited = "${formatConversionGrams(state.order?.goldQuantityGrams ?: calculation.goldQuantity)} gm",
+                invoiceErrorMessage = invoiceErrorMessage,
+                isInvoiceLoading = isFetchingInvoice,
+                onGoToDashboard = onGoToDashboard,
+                onViewInvoiceClick = {
+                    if (!isFetchingInvoice) {
+                        isFetchingInvoice = true
+                    }
+                },
+                modifier = modifier,
+            )
+            return
+        }
+        BuyTradeStep.Failure -> {
+            BuyTradeFailureScreen(
+                body = state.errorMessage ?: stringResource(Res.string.trade_buy_failure_body),
+                errorCode = state.currentOrderId ?: stringResource(Res.string.trade_buy_failure_code_fallback),
+                onRetryClick = { onIntent(BuyTradeIntent.ResetToEntry) },
+                onHomeClick = onGoToDashboard,
+                modifier = modifier,
+            )
+            return
+        }
+        BuyTradeStep.Pending -> {
+            BuyTradePendingScreen(
+                body = stringResource(Res.string.trade_buy_pending_body),
+                orderId = state.currentOrderId ?: state.pollingSnapshot?.orderId,
+                status = state.pollingSnapshot?.status,
+                onGoToDashboard = onGoToDashboard,
+                onRetryClick = { onIntent(BuyTradeIntent.ResetToEntry) },
+                modifier = modifier,
+            )
+            return
+        }
+        BuyTradeStep.Entry -> Unit
+    }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = BuyWhite,
+        topBar = {
+            if (showEntryTopBar) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.align(Alignment.CenterStart),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null,
+                            tint = Color.Black,
+                        )
+                    }
+                    Text(
+                        text = stringResource(Res.string.buy_gold_screen_buy_gold),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BuySlate800,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                    IconButton(
+                        onClick = onHelpClick,
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Help,
+                            contentDescription = stringResource(Res.string.common_help),
+                            tint = BuyPrimary,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            }
+        },
+        bottomBar = {
+            BuyTradeBottomBar(
+                livePriceState = livePriceState,
+                totalPayable = calculation.totalPayable,
+                enabled = canSubmit && !isUpiLimitExceeded,
+                isLoading = state.isLoading,
+                errorMessage = displayedMessage,
+                onShowBreakdown = { showAmountBreakdown = true },
+                onPrimaryAction = {
+                    focusManager.clearFocus(force = true)
+                    if (livePrice == null || buyRateId.isBlank()) {
+                        validationMessage = livePriceUnavailableMessage
+                        return@BuyTradeBottomBar
+                    }
+                    if (isUpiLimitExceeded) {
+                        validationMessage = maxUpiLimitMessage
+                        return@BuyTradeBottomBar
+                    }
+                    validationMessage = null
+                    onIntent(
+                        BuyTradeIntent.SubmitOneTimeOrder(
+                            amount = calculation.totalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
+                            grams = calculation.goldQuantity.takeIf { state.entryMode == BuyTradeEntryMode.Grams },
+                            buyRateId = buyRateId,
+                            couponCode = state.appliedCoupon?.code,
+                        ),
+                    )
+                },
+            )
+        },
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { focusManager.clearFocus() }
+                .padding(horizontal = 24.dp)
+                .imePadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(modifier = Modifier.height(4.dp))
+            BuyTradeInfoPill(
+                facts = facts,
+                currentFactIndex = currentFactIndex,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            BuyTradeEntryModeTabs(
+                activeMode = state.entryMode,
+                onSelectMode = {
+                    validationMessage = null
+                    onIntent(BuyTradeIntent.ChangeEntryMode(it))
+                },
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                    stringResource(Res.string.trade_buy_enter_amount)
+                } else {
+                    stringResource(Res.string.trade_buy_select_grams)
+                },
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = BuySlate400,
+                letterSpacing = 2.sp,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                BuyTradeRupeeInput(
+                    value = amountRupees,
+                    onDone = { focusManager.clearFocus() },
+                    onValueChange = {
+                        validationMessage = null
+                        amountRupees = it.filter(Char::isDigit).take(6)
+                    },
+                )
+            } else {
+                BuyTradeGramInput(
+                    value = amountGrams,
+                    maxSelectableGrams = maxSelectableGrams(goldPrice, gstRate),
+                    onDone = { focusManager.clearFocus() },
+                    onValueChange = {
+                        validationMessage = null
+                        amountGrams = sanitizeGramInput(it, fractionDigits = 1)
+                    },
+                    onStepDown = {
+                        validationMessage = null
+                        amountGrams = stepOneTimeGrams(amountGrams, -1, maxSelectableGrams(goldPrice, gstRate))
+                    },
+                    onStepUp = {
+                        validationMessage = null
+                        amountGrams = stepOneTimeGrams(amountGrams, 1, maxSelectableGrams(goldPrice, gstRate))
+                    },
+                )
+            }
+
+            if (isUpiLimitExceeded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(Res.string.trade_buy_max_upi_limit_message),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BuyRed700,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(Res.string.trade_buy_youre_buying, formatConversionGrams(calculation.goldQuantity)),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BuyGoldTint,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+                BuyTradeGramSlider(
+                    value = amountGrams.toFloatOrNull()?.coerceIn(0.1f, maxSelectableGrams(goldPrice, gstRate).toFloat()) ?: 0.5f,
+                    maxValue = maxSelectableGrams(goldPrice, gstRate).toFloat(),
+                    onValueChange = {
+                        validationMessage = null
+                        amountGrams = ((it * 10).roundToInt() / 10f).toString()
+                    },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            BuyTradeQuickAmounts(
+                entryMode = state.entryMode,
+                maxSelectableGrams = maxSelectableGrams(goldPrice, gstRate),
+                onSelectRupees = {
+                    validationMessage = null
+                    amountRupees = it
+                },
+                onSelectGrams = {
+                    validationMessage = null
+                    amountGrams = it
+                },
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            BuyTradeCouponRow(
+                availableCoupons = state.availableCoupons.size,
+                couponDraft = couponDraft,
+                appliedCouponCode = state.appliedCoupon?.code,
+                appliedBenefitText = state.appliedCoupon?.let(::buyTradeAppliedCouponSummary),
+                onCouponDraftChange = {
+                    couponDraft = it.uppercase().filter { character ->
+                        character.isLetterOrDigit() || character == '_'
+                    }.take(20)
+                },
+                onApplyCoupon = {
+                    if (couponDraft.isNotBlank()) {
+                        onIntent(
+                            BuyTradeIntent.ApplyCoupon(
+                                code = couponDraft,
+                                amount = calculation.totalPayable,
+                                grams = calculation.goldQuantity,
+                            ),
+                        )
+                    }
+                },
+                onRemoveAppliedCoupon = {
+                    couponDraft = ""
+                    validationMessage = null
+                    onIntent(BuyTradeIntent.ClearAppliedCoupon)
+                },
+                onShowOffers = { showCouponSheet = true },
+                isApplyingEnabled = couponDraft.isNotBlank() &&
+                    !state.isLoading &&
+                    state.appliedCoupon?.code != couponDraft,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            BuyTradePoweredByRow()
+
+            Spacer(modifier = Modifier.height(40.dp))
+        }
+    }
+
+    if (showAmountBreakdown) {
+        val amountBreakdownSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showAmountBreakdown = false },
+            sheetState = amountBreakdownSheetState,
+            containerColor = BuyWhite,
+        ) {
+            BuyAmountBreakdownSheet(
+                calculation = calculation,
+                gstRate = gstRate,
+                onPayNowClick = {
+                    showAmountBreakdown = false
+                    if (livePrice == null || buyRateId.isBlank()) {
+                        validationMessage = livePriceUnavailableMessage
+                        return@BuyAmountBreakdownSheet
+                    }
+                    if (isUpiLimitExceeded) {
+                        validationMessage = maxUpiLimitMessage
+                        return@BuyAmountBreakdownSheet
+                    }
+                    onIntent(
+                        BuyTradeIntent.SubmitOneTimeOrder(
+                            amount = calculation.totalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
+                            grams = calculation.goldQuantity.takeIf { state.entryMode == BuyTradeEntryMode.Grams },
+                            buyRateId = buyRateId,
+                            couponCode = state.appliedCoupon?.code,
+                        ),
+                    )
+                },
+                isPayNowEnabled = canSubmit && !isUpiLimitExceeded,
+                isLoading = state.isLoading,
+            )
+        }
+    }
+
+    if (showCouponSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showCouponSheet = false },
+            sheetState = couponSheetState,
+            containerColor = BuyWhite,
+        ) {
+            BuyCouponSheet(
+                coupons = state.availableCoupons,
+                estimateAmount = calculation.totalPayable,
+                appliedCouponCode = state.appliedCoupon?.code,
+                onApplyCoupon = { code ->
+                    couponDraft = code
+                    onIntent(
+                        BuyTradeIntent.ApplyCoupon(
+                            code = code,
+                            amount = calculation.totalPayable,
+                            grams = calculation.goldQuantity,
+                        ),
+                    )
+                    showCouponSheet = false
+                },
+            )
+        }
+    }
+
+}
+
+@Composable
+private fun BuyTradeInfoPill(
+    facts: List<String>,
+    currentFactIndex: Int,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.AutoAwesome,
+            contentDescription = null,
+            tint = BuyGoldTint,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        AnimatedContent(
+            targetState = currentFactIndex,
+            transitionSpec = {
+                if (targetState > initialState) {
+                    (slideInVertically { height -> height } + fadeIn()).togetherWith(
+                        slideOutVertically { height -> -height } + fadeOut(),
+                    )
+                } else {
+                    (slideInVertically { height -> -height } + fadeIn()).togetherWith(
+                        slideOutVertically { height -> height } + fadeOut(),
+                    )
+                }.using(SizeTransform(clip = false))
+            },
+            label = "BuyFactAnimation",
+        ) { targetIndex ->
+            Text(
+                text = facts[targetIndex],
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = BuyGoldTint,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BuyTradeEntryModeTabs(
+    activeMode: BuyTradeEntryMode,
+    onSelectMode: (BuyTradeEntryMode) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(40.dp))
+            .background(BuySlate50)
+            .border(1.dp, BuySlate200, RoundedCornerShape(40.dp))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        BuyTradeModeChip(
+            label = stringResource(Res.string.trade_buy_mode_rupees),
+            selected = activeMode == BuyTradeEntryMode.Rupees,
+            onClick = { onSelectMode(BuyTradeEntryMode.Rupees) },
+            modifier = Modifier.weight(1f),
+        )
+        BuyTradeModeChip(
+            label = stringResource(Res.string.trade_buy_mode_grams),
+            selected = activeMode == BuyTradeEntryMode.Grams,
+            onClick = { onSelectMode(BuyTradeEntryMode.Grams) },
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun BuyTradeModeChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(40.dp))
+            .background(if (selected) BuyWhite else Color.Transparent)
+            .then(
+                if (selected) {
+                    Modifier.border(1.dp, BuySlate200, RoundedCornerShape(40.dp))
+                } else {
+                    Modifier
+                },
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 32.dp, vertical = 11.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = if (selected) BuyPrimary else BuySlate500,
+            fontSize = 11.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun BuyTradeRupeeInput(
+    value: String,
+    onDone: () -> Unit,
+    onValueChange: (String) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BuySlate50, RoundedCornerShape(12.dp))
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "₹",
+            fontSize = 42.sp,
+            color = BuySlate400,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.align(Alignment.CenterStart),
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Black,
+                color = BuySlate950,
+                textAlign = TextAlign.Center,
+            ),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+            ),
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            singleLine = true,
+            cursorBrush = SolidColor(BuyPrimary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 48.dp),
+            decorationBox = { innerTextField ->
+                Box(contentAlignment = Alignment.Center) {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = "0",
+                            fontSize = 42.sp,
+                            fontWeight = FontWeight.Black,
+                            color = BuySlate300,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    innerTextField()
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun BuyTradeGramInput(
+    value: String,
+    maxSelectableGrams: Double,
+    onDone: () -> Unit,
+    onValueChange: (String) -> Unit,
+    onStepDown: () -> Unit,
+    onStepUp: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BuyTradeCircleStepper("-", onClick = {
+            if (parseOneTimeGrams(value, maxSelectableGrams) > 0.1) onStepDown()
+        })
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .weight(1f)
+                .background(BuySlate50, RoundedCornerShape(12.dp))
+                .padding(vertical = 6.dp),
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                textStyle = TextStyle(
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Black,
+                    color = BuySlate950,
+                    textAlign = TextAlign.Center,
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Decimal,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(onDone = { onDone() }),
+                singleLine = true,
+                cursorBrush = SolidColor(BuyPrimary),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp),
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.Center) {
+                        if (value.isEmpty()) {
+                            Text(
+                                text = "0.0",
+                                fontSize = 42.sp,
+                                fontWeight = FontWeight.Black,
+                                color = BuySlate300,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+
+            Text(
+                text = "gm",
+                fontSize = 20.sp,
+                color = BuySlate500,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 12.dp),
+            )
+        }
+
+        BuyTradeCircleStepper("+", onClick = {
+            val current = value.toDoubleOrNull() ?: 0.1
+            val next = (current + 0.1).coerceAtMost(maxSelectableGrams)
+            if (next > current) onStepUp()
+        })
+    }
+}
+
+@Composable
+private fun BuyTradeCircleStepper(
+    symbol: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .background(BuyWhite)
+            .border(1.dp, BuyPrimary, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = symbol,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Medium,
+            color = BuyPrimary,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BuyTradeGramSlider(
+    value: Float,
+    maxValue: Float,
+    onValueChange: (Float) -> Unit,
+) {
+    androidx.compose.material3.Slider(
+        value = value.coerceIn(0.1f, maxValue),
+        onValueChange = onValueChange,
+        valueRange = 0.1f..maxValue,
+        steps = (((maxValue - 0.1f) * 10f).toInt() - 1).coerceAtLeast(0),
+        modifier = Modifier.fillMaxWidth(),
+        thumb = {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(BuyPrimary, CircleShape)
+                    .border(2.dp, BuyWhite, CircleShape),
+            )
+        },
+        track = { sliderState ->
+            val fraction = (sliderState.value - sliderState.valueRange.start) /
+                (sliderState.valueRange.endInclusive - sliderState.valueRange.start)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(BuySlate200),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction)
+                        .height(6.dp)
+                        .background(BuyPrimary),
+                )
+            }
+        },
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text("0.1 gm", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
+        Text("${formatGramsPlain(parseOneTimeGrams(maxValue.toString(), maxValue.toDouble()))} gm", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
+    }
+}
+
+@Composable
+private fun BuyTradeQuickAmounts(
+    entryMode: BuyTradeEntryMode,
+    maxSelectableGrams: Double,
+    onSelectRupees: (String) -> Unit,
+    onSelectGrams: (String) -> Unit,
+) {
+    val chips = if (entryMode == BuyTradeEntryMode.Rupees) {
+        listOf("1000", "5000", stringResource(Res.string.trade_buy_chip_max))
+    } else {
+        listOf("1g", "5g", stringResource(Res.string.trade_buy_chip_max))
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        chips.forEachIndexed { index, chip ->
+            Box(
+                modifier = Modifier
+                    .width(74.dp)
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable {
+                        if (entryMode == BuyTradeEntryMode.Rupees) {
+                            val target = when (chip) {
+                                "1000" -> "1000"
+                                "5000" -> "5000"
+                                else -> OneTimeUpiLimit.toInt().toString()
+                            }
+                            onSelectRupees(target)
+                        } else {
+                            val targetGrams = when (chip) {
+                                "1g" -> 1.0
+                                "5g" -> 5.0
+                                else -> maxSelectableGrams
+                            }
+                            onSelectGrams(formatGramsPlain(parseOneTimeGrams(targetGrams.toString(), maxSelectableGrams)))
+                        }
+                    }
+                    .background(BuyWhite)
+                    .border(1.dp, BuySlate200, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = chip,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BuySlate600,
+                )
+            }
+
+            if (index < chips.lastIndex) {
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun BuyTradeCouponRow(
+    availableCoupons: Int,
+    couponDraft: String,
+    appliedCouponCode: String?,
+    appliedBenefitText: String?,
+    onCouponDraftChange: (String) -> Unit,
+    onApplyCoupon: () -> Unit,
+    onRemoveAppliedCoupon: () -> Unit,
+    onShowOffers: () -> Unit,
+    isApplyingEnabled: Boolean,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(BuyWhite)
+            .border(1.dp, BuySlate100, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        if (appliedCouponCode != null) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = Color(0xFF10B981),
+                modifier = Modifier.size(16.dp),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                Text(
+                    text = appliedCouponCode,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BuySlate950,
+                    maxLines = 1,
+                )
+                appliedBenefitText?.let {
+                    Text(
+                        text = it,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = BuySlate500,
+                        maxLines = 2,
+                    )
+                }
+            }
+            Text(
+                text = stringResource(Res.string.trade_buy_change),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = BuyPrimary,
+                modifier = Modifier.clickable(onClick = onShowOffers),
+            )
+            Text(
+                text = stringResource(Res.string.trade_buy_remove),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = BuyRed700,
+                modifier = Modifier.clickable(onClick = onRemoveAppliedCoupon),
+            )
+        } else {
+            BasicTextField(
+                value = couponDraft,
+                onValueChange = onCouponDraftChange,
+                singleLine = true,
+                cursorBrush = SolidColor(BuyPrimary),
+                textStyle = TextStyle(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BuySlate950,
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(38.dp)
+                    .background(BuyWhite, RoundedCornerShape(10.dp))
+                    .border(1.dp, BuySlate200, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 10.dp, vertical = 9.dp),
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (couponDraft.isEmpty()) {
+                            Text(
+                                text = stringResource(Res.string.trade_buy_enter_coupon_code),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = BuySlate300,
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+            Button(
+                onClick = onApplyCoupon,
+                enabled = isApplyingEnabled,
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(999.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BuyPrimary,
+                    contentColor = BuyWhite,
+                    disabledContainerColor = BuySlate200,
+                    disabledContentColor = BuySlate400,
+                ),
+            ) {
+                Text(
+                    text = stringResource(Res.string.trade_buy_apply),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Row(
+                modifier = Modifier.clickable(onClick = onShowOffers),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.trade_buy_offers),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = BuyPrimary,
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = BuyPrimary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BuyTradePoweredByRow() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(Res.string.home_screen_powered_by),
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            color = BuySlate400,
+            letterSpacing = 1.2.sp,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Image(
+            painter = painterResource(Res.drawable.safegold_image),
+            contentDescription = stringResource(Res.string.common_safegold),
+            modifier = Modifier.height(10.dp),
+            contentScale = ContentScale.Fit,
+        )
+    }
+}
+
+private fun buyTradeAppliedCouponSummary(
+    validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation,
+): String? {
+    val parts = buildList {
+//        validation.promotionalCashback.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it cashback") }
+        validation.promotionalDiscount.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it off") }
+//        validation.promotionalExtraGold.takeIf { it != "0" && it.isNotBlank() }?.let { add("+$it g gold") }
+//        validation.promotionalDeliveryDiscount.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it delivery off") }
+    }
+    return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
+}
+
+internal fun buyCouponMinOrderAmount(
+    coupon: com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon,
+): Double? = coupon.minOrderValue?.toDoubleOrNull()
+
+internal fun isBuyCouponApplicable(
+    coupon: com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon,
+    estimateAmount: Double,
+): Boolean {
+    val minOrder = buyCouponMinOrderAmount(coupon) ?: return true
+    return estimateAmount >= minOrder
+}
+
+internal fun buyCouponDisabledReason(
+    coupon: com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon,
+    estimateAmount: Double,
+): String? {
+    val minOrder = buyCouponMinOrderAmount(coupon) ?: return null
+    if (estimateAmount >= minOrder) return null
+    return "Min. order ₹${formatMoney(minOrder)} required"
+}
+
+internal data class BuyTradeCalculation(
+    val totalPayable: Double,
+    val goldValue: Double,
+    val gstAmount: Double,
+    val goldQuantity: Double,
+)
+
+internal fun calculateBuyTrade(
+    entryMode: BuyTradeEntryMode,
+    numericRupees: Double,
+    numericGrams: Double,
+    goldPrice: Double,
+    gstRate: Double,
+): BuyTradeCalculation {
+    return when (entryMode) {
+        BuyTradeEntryMode.Rupees -> {
+            val totalAmount = numericRupees
+            val gstAmount = inclusiveGstAmount(totalAmount, gstRate)
+            val goldValue = (totalAmount - gstAmount).coerceAtLeast(0.0)
+            val goldQuantity = if (goldPrice > 0.0) roundToGoldScale(goldValue / goldPrice) else 0.0
+            BuyTradeCalculation(
+                totalPayable = totalAmount,
+                goldValue = goldValue,
+                gstAmount = gstAmount,
+                goldQuantity = goldQuantity,
+            )
+        }
+        BuyTradeEntryMode.Grams -> {
+            val goldQuantity = roundToGoldScale(numericGrams)
+            val goldValue = roundToMoney(goldQuantity * goldPrice)
+            val gstAmount = roundToMoney(goldValue * gstRate)
+            BuyTradeCalculation(
+                totalPayable = roundToMoney(goldValue + gstAmount),
+                goldValue = goldValue,
+                gstAmount = gstAmount,
+                goldQuantity = goldQuantity,
+            )
+        }
+    }
+}
+
+private fun maxSelectableGrams(goldPrice: Double, gstRate: Double): Double {
+    return if (goldPrice > 0.0) {
+        ((OneTimeUpiLimit * (1.0 - gstRate)) / goldPrice).coerceIn(0.1, 99.9)
+    } else {
+        99.9
+    }
+}
+
+private fun inclusiveGstAmount(totalAmount: Double, gstRate: Double): Double {
+    if (totalAmount <= 0.0 || gstRate <= 0.0) return 0.0
+    return roundToMoney(totalAmount * gstRate / (1.0 + gstRate))
+}
+
+private fun parseOneTimeGrams(value: String, maxGrams: Double): Double {
+    return (value.toDoubleOrNull() ?: 0.5).coerceIn(0.1, maxGrams)
+}
+
+private fun stepOneTimeGrams(current: String, deltaSteps: Int, maxGrams: Double): String {
+    val currentValue = parseOneTimeGrams(current, maxGrams)
+    val steppedValue = (currentValue + (deltaSteps * 0.1)).coerceIn(0.1, maxGrams)
+    return formatGramsPlain(steppedValue)
+}
+
+private fun formatGramsPlain(value: Double): String {
+    val scaled = ((value * 10).roundToInt() / 10.0)
+    return scaled.toString().trimEnd('0').trimEnd('.').ifBlank { "0" }
+}
+
+internal fun formatConversionGrams(value: Double): String {
+    return formatGoldQuantity(value)
+}

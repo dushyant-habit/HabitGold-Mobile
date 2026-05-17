@@ -417,8 +417,6 @@ internal fun transactionTitleFor(transactionPreview: HomeRecentTransactionPrevie
 
 internal fun deferredIconFor(homeDeferredTarget: HomeDeferredTarget): ImageVector {
     return when (homeDeferredTarget) {
-        HomeDeferredTarget.BuyGold -> Icons.Default.Payments
-        HomeDeferredTarget.SellGold -> Icons.Default.Savings
         HomeDeferredTarget.Profile -> Icons.Default.AccountBalance
         HomeDeferredTarget.Alerts -> Icons.Default.Info
         HomeDeferredTarget.Savings -> Icons.Default.LocalShipping
