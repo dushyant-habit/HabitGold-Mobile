@@ -162,6 +162,19 @@ Rules:
 - update documentation when standards, architecture, workflow, or migration scope changes
 - if the working tree already contains mixed changes, do not fake clean history retroactively without choosing a safe split strategy first
 
+PR automation baseline:
+
+- use the repo PR template so every PR records:
+  - summary
+  - scope
+  - verification
+  - review focus
+  - deferred items
+- prefer `scripts/git-create-pr.sh` for opening PRs so the commit stack and verification checklist are prefilled
+- run verification locally by default to keep the process free
+- only add hosted CI later if you explicitly choose a plan/budget that supports it
+- treat failed local verification, missing docs alignment, or missing deferred-item disclosure as blockers for merge
+
 ## Architecture Principles
 
 ### 1. Thin Platform Layers
@@ -220,6 +233,7 @@ Keep these platform-specific when necessary:
 - push notifications
 - app links / deep links integration details
 - native SDK wrappers
+- analytics / observability SDK wiring such as Clarity, Crashlytics, and Firebase Performance
 
 ### 5. KMP Boundary Rules
 
@@ -234,12 +248,34 @@ Rules:
 - if a dependency differs by platform, bind it at the platform or DI layer
 - feature parity review must include interaction behavior such as typing limits, deletion behavior, keyboard movement, focus behavior, and validation timing
 - feature audit should not be a one-pass read; it must include separate structure, visual, and interaction passes before implementation
+- payment or SDK-heavy features must also include:
+  - API pass
+  - platform boundary pass
 - audit checklists must explicitly cover:
   - default collapsed or expanded states
   - loading treatment such as shimmer
   - bottom-bar or inset overlap
   - alignment and badge sizing
   - sheet, pager, and close-dismiss behavior
+- for large screens with dense custom UI like `Buy Gold`, add a screen-specific strict UI checklist before implementation and keep a short parity-lessons ledger after the first pass
+- that screen-specific checklist should explicitly verify:
+  - top bar density
+  - top fact / info strip behavior
+  - exact CTA copy
+  - live timer/progress visuals
+  - coupon row and coupon sheet structure
+  - real branding asset usage
+  - bottom action surface spacing
+  - pre-submit validation behavior against current estimates
+- if a feature touches Juspay or another payment SDK, the audit document must call out:
+  - what stays in shared code
+  - what stays in platform code
+  - how callback results re-enter shared state
+  - any system UI recovery or overlay cleanup rules
+  - whether SDK `success` and `failure` callbacks still require backend polling before final success/failure UI
+  - whether missing SDK payload must fall back to direct status polling
+- for CocoaPods-backed iOS SDKs, always verify the generated `.xcworkspace`, not only the Gradle build or raw `.xcodeproj`
+- if an iOS SDK relies on post-install plist or URL-scheme mutation, keep critical callback schemes and query schemes explicit in source control when possible so local CocoaPods or Ruby drift does not silently break runtime redirects
 
 ## Code Quality And Naming
 
@@ -270,6 +306,41 @@ Definition-of-done addition:
 
 - code, docs, and tests must agree
 - no stale placeholder logic or unused migration residue should remain in completed phase scope
+
+Final commit stage rule:
+
+- before making the final commit for a feature or phase, run a short code-quality gate in addition to UI/API/manual QA
+
+Final code-quality gate:
+
+- naming
+  - method names should explain action and side effect
+  - important state variables should use domain language, not generic buckets
+- file structure
+  - split oversized files where responsibilities are clearly separate
+  - avoid multi-screen files as a stable endpoint unless the grouping is intentional and still readable
+- duplication
+  - extract repeated math, formatting, mapping, validation, and reusable UI logic
+- dependency ownership
+  - route-level DI should stay obvious
+  - composables should not hide dependency lookup or platform behavior
+- state clarity
+  - loading, polling, success, failure, pending, and reset behavior should be easy to trace
+  - re-entry into a flow should not accidentally restore stale terminal state
+- cleanup
+  - remove stale strings, route placeholders, dead helper classes, old audit text, and outdated docs wording
+  - run an explicit unused-code sweep for private composables, helpers, constants, params, and temporary migration classes
+  - do not treat a successful compile as proof that dead code is gone
+- platform boundary
+  - verify SDK flows still respect shared vs native ownership
+  - for iOS pods, verify the workspace path and not only the raw project
+- verification
+  - run the agreed build/test commands
+  - make sure docs reflect the actual verified state before committing
+
+Practical expectation:
+
+- if a feature works but still has obvious structural confusion, vague naming, stale residue, or doc mismatch, it is not ready for the final commit
 
 ## MVI Standard
 
@@ -360,6 +431,9 @@ Rules:
 - Prefer interface-based injection at important boundaries.
 - Test code must be able to replace dependencies easily.
 - Platform-specific bindings should be isolated cleanly.
+- SDK-bound integrations like Juspay, FCM, Install Referrer, and OTP auto-read must appear both in the owning feature phase and in the platform-integration phase of the roadmap.
+- If Android SDK launch is implemented before iOS, document the exact Android bridge and keep the iOS gap explicit instead of implying full parity.
+- deferred Gradle/plugin parity items must also be documented explicitly when they are known from the Android app but intentionally not added yet.
 
 ## Concurrency Standard
 
@@ -582,6 +656,7 @@ Requirements:
 - feature parity checks must include request headers and timeout values, not only endpoint paths and bodies
 - if Android sends app headers like `x-app-version` and `x-app-platform`, KMP must send them too before API validation is considered complete
 - if Android does not send a default header, KMP should not add that header in the shared client by default
+- if the shared client does not set a global JSON body content type, every `POST`, `PUT`, and `PATCH` request that sends a DTO body must explicitly call `contentType(ContentType.Application.Json)`
 - internal KMP-only markers for auth/public request policy must never leak to backend requests or debug logs
 - for auth flows, verify the exact Android request payload from the call site and repository path; UI display formats and API payload formats may differ
 

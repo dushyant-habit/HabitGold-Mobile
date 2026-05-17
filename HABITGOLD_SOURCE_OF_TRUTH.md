@@ -189,6 +189,62 @@ Migration cleanup rule:
 - for large migrated screens, the cleanup pass should also split oversized presentation files and remove route-level service-locator lookups if they slipped in during migration
 - phase completion requires docs, tests, and implementation to agree with each other
 
+Final commit gate:
+
+- before a final feature or phase commit, run an explicit code-quality check, not only a feature-behavior check
+- a phase is not ready for final commit if any of these are still materially wrong in completed scope:
+  - file responsibility is blurred
+  - naming is vague
+  - duplicate logic is left in multiple places
+  - stale migration residue still exists
+  - route or dependency ownership is confusing
+  - docs and actual behavior disagree
+  - tests or verification are missing for important completed paths
+
+Required final code-quality checklist:
+
+- naming and intent check
+  - methods must describe action and side effect clearly
+  - variables that survive across branches, effects, or screens must use domain names
+  - avoid vague names like `data`, `info`, `details`, `value`, `item`, `items`, `result`, and `response` when a more specific name is possible
+- file ownership and size check
+  - each file should have one clear responsibility
+  - UI files above 500 lines need active justification or splitting
+  - cross-screen files should be treated as temporary unless the grouping is very deliberate
+- duplication and helper extraction check
+  - repeated formatting, validation, mapping, or UI patterns should be extracted once repetition is obvious
+  - math and formatting rules must not diverge silently across related screens like Buy and Sell
+- dependency ownership check
+  - composables should not become service locators
+  - platform-only behavior should stay behind DI or platform boundaries
+  - route ownership and back behavior must be obvious from the route layer
+- state and navigation clarity check
+  - screen states should be explicit and not overloaded with unrelated flags
+  - back behavior, loading states, polling states, and outcome states should be easy to follow
+  - stale success or pending state must not survive when the user re-enters the feature unless product intentionally wants that
+- resource and placeholder cleanup check
+  - remove unused strings, old route copy, stale sheet titles, dead deferred messages, and placeholder assets in completed scope
+  - unresolved later-phase routes are fine only if they are intentionally documented and still accurate
+- unused declaration sweep
+  - run an explicit sweep for unused private composables, helpers, constants, params, and stale temporary classes in the completed feature scope
+  - do not assume compile success means dead code is gone
+  - if a helper or constant only exists because an earlier UI direction was removed, delete it before the final commit
+- platform and SDK boundary check
+  - shared code must not hide platform SDK assumptions
+  - native integrations like Juspay must have clear callback, polling, and return-state ownership
+  - iOS CocoaPods-backed SDK work must be verified against the workspace-based build path
+- docs alignment check
+  - overview docs, audit docs, roadmap, and tracker must describe the current real state, not an older milestone
+  - completed flows should not still be documented as placeholder or “first slice” if they are already end to end
+- test and verification check
+  - important completed flows need targeted tests where practical
+  - final verification commands and results must be known before the commit
+  - if verification passed only after an environment fix, that should be understood and not mistaken for a source-code bug
+
+Rule:
+
+- do not create the final feature or phase commit until this checklist has been reviewed against the completed scope
+
 ## 5. Design System Standard
 
 Use design tokens and shared primitives, not scattered screen-level styling.
@@ -257,6 +313,7 @@ Important rule:
 - if Android uses required app headers, KMP must send the same headers before feature validation
 - if Android does not send a default header, KMP should not invent one at the shared client layer
 - internal request markers used only for KMP plumbing must never leak to backend requests or logs
+- every `POST`, `PUT`, or `PATCH` request that sends a DTO body must explicitly set `ContentType.Application.Json` if the shared client is not adding it globally
 - for backend migrations, Android network behavior is the working reference unless we explicitly agree to improve or change it
 - authenticated `401` handling must either refresh once or expire the session deterministically
 - timeout values must stay consistent with Android unless there is an explicit decision to change them
@@ -276,7 +333,32 @@ Current auth network parity rules:
   - structure pass
   - visual pass
   - interaction pass
+- payment or SDK-heavy features must also add:
+  - API pass
+  - platform boundary pass
 - feature audit must explicitly check default state, loading treatment, bottom insets, sheet/pager behavior, alignment, and dismissal affordances so those issues are caught in audit rather than rediscovered during debugging
+- when a feature touches Juspay or another payment SDK, the audit must explicitly record:
+  - shared state ownership
+  - native launcher ownership
+  - result callback mapping
+  - post-overlay or post-callback UI recovery rules
+  - whether SDK `success` and `failure` callbacks still require backend polling before final UI state
+  - whether missing SDK payload must fall back to direct status polling
+- for CocoaPods-backed iOS SDKs, verification must include the generated `.xcworkspace`, not only Gradle or the raw `.xcodeproj`
+- if an iOS SDK depends on post-install plist or URL-scheme mutation, keep critical redirect schemes and query schemes explicit in source control when possible so the integration stays stable even if local Ruby/CocoaPods automation drifts
+- for large high-variance screens like `Buy Gold`, the audit must also produce:
+  - a screen-specific strict UI checklist
+  - a short parity-lessons-learned ledger after the first implementation pass
+- the strict UI checklist must explicitly cover:
+  - top bar density
+  - top info strip / pill behavior
+  - exact CTA copy
+  - bottom action surface spacing
+  - timer/progress visuals
+  - coupon row structure
+  - coupon sheet structure
+  - real asset usage instead of text fallback
+  - validation behavior tied to current estimate values where applicable
 
 ## 8. Localization Standard
 
@@ -333,6 +415,22 @@ Later foundation items:
 - full iOS scheme/config parity for `staging`, `preprod`, and `prod`
 - screenshot-based parity QA baseline
 - native integration boundary inventory for platform SDK features
+- deferred Gradle / SDK parity items that are intentionally not in the KMP app yet:
+  - Microsoft Clarity Compose SDK and Clarity project-id/build-config wiring
+  - Firebase plugins and SDKs used by the Android app: Messaging, Crashlytics, and Performance
+  - Google Services / Crashlytics / Firebase Perf Gradle plugins
+  - Android Install Referrer dependency and native binding
+  - Android SMS Retriever dependency and native OTP auto-read binding
+  - Juspay iOS launcher/binding and final cross-platform SDK parity
+  - Android app versionCode / versionName parity with the production Android app where headers or analytics depend on app version
+
+Platform SDK planning rule:
+
+- SDK-bound work like Juspay, FCM, Install Referrer, and OTP auto-read must be visible in two places when relevant
+- first in the owning feature phase where shared contracts, business rules, verification flow, and UI state are defined
+- then again in the platform-integration phase where native SDK wiring, callbacks, permissions, and lifecycle hooks are finalized
+- when Android SDK launch is implemented early for a feature like Trade, document the exact Android binding shape and what still remains for iOS
+- analytics and observability SDKs like Clarity, Crashlytics, and Firebase Performance should also be tracked explicitly as deferred Gradle/platform work when not included yet
 
 ## 9. Security And Production Standard
 
@@ -380,7 +478,7 @@ Commit rules:
 - one logical task per commit whenever practical
 - do not mix unrelated work in one commit
 - include tests with behavior changes when possible
-- update docs when architecture, workflow, standards, or migration scope changes
+- update docs when architecture, workflow, standards, migration scope, or PR automation changes
 
 ## 11. Documentation Levels
 
@@ -399,12 +497,14 @@ Examples:
 - migration roadmap
 - progress tracker
 - git workflow
+- PR automation files under `.github/` and `scripts/`
 
 When to update:
 
 - phase starts or completes
 - architecture changes
 - workflow changes
+- PR automation changes
 - standards change
 
 ### Feature-Level Documentation

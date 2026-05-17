@@ -11,9 +11,10 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 6 completed`
-- Current focus: `prepare Phase 7 Trade on top of the completed Home shell, child routes, and downstream handoff routes`
-- Next milestone: `start the shared Buy / Sell trade flow migration without reopening Home foundation work`
+- Current phase: `Phase 7`
+- Phase 7 status: `checkpointed, not fully closed`
+- Current focus: `checkpoint the verified Trade foundation, Buy/Sell/Withdrawal flows, and Juspay bridges while deferring transaction-details, invoice-viewer, VPA-management, and help parity to a later review pass`
+- Next milestone: `resume the deferred Trade review backlog and close the remaining parity work before marking Phase 7 complete`
 
 ## Phase Status
 
@@ -58,6 +59,27 @@ Use this together with:
 - [x] Rebuild remaining Home linked navigation and cross-feature handoffs
 - [x] Run post-parity cleanup pass to split oversized Home files and remove inline route-level dependency lookups
 
+## Phase 7: Trade
+
+- [x] Complete strict Android parity audit for Trade flows, APIs, platform boundaries, and design
+- [x] Create `feature/trade` structure
+- [x] Add shared Trade repository contract, DTOs, remote data source, and repository implementation
+- [x] Add shared polling policy and polling use case
+- [x] Add shared payment-launch contract for native Juspay bridging later
+- [x] Add initial Buy and Sell MVI contracts
+- [x] Add Trade foundation tests and verify build success
+- [x] Add first functional shared `WithdrawalMode`
+- [x] Connect Home buy/sell entry points to real Trade-owned routes
+- [x] Add first functional shared `Buy`
+- [x] Add first functional shared `Sell`
+- [x] Add first functional trade-owned transaction details and invoice viewer
+- [x] Add Android Juspay launcher binding behind the shared Trade payment contract
+- [x] Add iOS Juspay launcher binding behind the shared Trade payment contract
+- [x] Finish strict Android visual parity for `WithdrawalMode`
+- [x] Finish strict Android visual parity for `Buy`
+- [x] Finish strict Android visual parity for `Sell`
+- [ ] Finish strict Android visual parity for trade-owned transaction details and invoice viewer in the later Trade review pass
+
 ## Feature Flow Coverage
 
 This section keeps the important product flows visible explicitly, even when they are grouped under broader phases.
@@ -66,8 +88,8 @@ This section keeps the important product flows visible explicitly, even when the
 
 - [x] Auth Flow
 - [x] Home / Portfolio Flow
-- [ ] Buy Gold Flow
-- [ ] Sell Gold Flow
+- [x] Buy Gold Flow
+- [x] Sell Gold Flow
 - [ ] Transactions List Flow
 - [ ] Transaction Details / Status Flow
 - [ ] SIP / Savings Flow
@@ -80,13 +102,14 @@ This section keeps the important product flows visible explicitly, even when the
 ### Hidden Subflows To Preserve
 
 - [x] Home savings create / upgrade / resume handoff
-- [ ] Withdrawal Mode gateway
+- [x] Withdrawal Mode gateway
+- [x] Trade polling-driven payment launch and status transitions
 - [ ] Rewards Redeem Flow
 - [ ] Rewards History Flow
 - [ ] Referral Status / History decision
 - [ ] Delivery address OTP + serviceability flow
 - [ ] Delivery pending-checkout restore flow
-- [ ] VPA selection / payout flow
+- [x] VPA selection / payout flow
 
 ### Flow To Phase Mapping
 
@@ -109,6 +132,7 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Added migration roadmap
 - [x] Added progress tracker
 - [x] Added explicit git workflow documentation and helper scripts for branch/commit naming
+- [x] Added free-by-default PR automation with template and PR creation helper script
 - [x] Aligned Android app id and iOS app bundle id to `com.habit.gold`
 - [x] Documented pre-migration audit for Home, Buy, Sell, Delivery, SIP, and Refer & Earn
 - [x] Added shared app composition root for future app-shell growth
@@ -316,7 +340,9 @@ Immediate tasks:
 
 ### Phase 7: Trade
 
-Status: `Not started`
+Status: `Checkpointed, not fully closed`
+
+Status: `In progress with end-to-end Buy and Sell flows live, Android+iOS Juspay binding in place, and remaining detail-route parity still underway`
 
 Definition of done:
 
@@ -327,12 +353,14 @@ Definition of done:
 
 Immediate tasks:
 
-- [ ] port buy-gold repository logic
-- [ ] port sell-gold repository logic
-- [ ] create shared transaction polling engine
-- [ ] build Buy Gold Flow
-- [ ] build Sell Gold Flow
-- [ ] add trade flow tests
+- [x] create strict Android source audit for Buy, Sell, Withdrawal Mode, VPA, transaction details, invoice viewer, and Juspay boundaries
+- [x] port buy-gold repository logic
+- [x] port sell-gold repository logic
+- [x] create shared transaction polling engine
+- [x] define shared payment-launch contract and typed payment result mapping before wiring Juspay
+- [x] build Buy Gold Flow
+- [x] build Sell Gold Flow
+- [x] add trade flow tests
 
 ### Phase 10: History, Rewards, Referral, Alerts
 

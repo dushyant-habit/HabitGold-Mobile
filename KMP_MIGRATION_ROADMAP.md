@@ -94,8 +94,8 @@ These are tracked explicitly so major product flows do not get lost inside broad
 
 - [x] Auth Flow
 - [x] Home / Portfolio Flow
-- [ ] Buy Gold Flow
-- [ ] Sell Gold Flow
+- [x] Buy Gold Flow
+- [x] Sell Gold Flow
 - [ ] Transactions List Flow
 - [ ] Transaction Details / Status Flow
 - [ ] SIP / Savings Flow
@@ -213,24 +213,53 @@ These are tracked explicitly so major product flows do not get lost inside broad
 
 ### Phase 7: Trade
 
-- [ ] Create `feature/trade` structure
-- [ ] Port buy-gold repository logic
-- [ ] Port sell-gold repository logic
-- [ ] Create shared transaction polling component/engine
-- [ ] Create buy flow MVI state
-- [ ] Create sell flow MVI state
-- [ ] Build Buy Gold Flow explicitly
-- [ ] Port Buy one-time and grams/rupees conversion behavior
-- [ ] Port Buy coupons, promo validation, and auto-fetch behavior
-- [ ] Port Buy payment launch and post-payment verification states
-- [ ] Build Sell Gold Flow explicitly
-- [ ] Port Withdrawal Mode entry flow into Buy vs Sell vs Delivery
-- [ ] Port Sell payout UPI selection and short-poll pending behavior
-- [ ] Port Sell locked-gold messaging and invoice access
-- [ ] Build Transaction Details / Status Flow pieces shared with trade
-- [ ] Rebuild buy UI
-- [ ] Rebuild sell UI and sell outcome states
-- [ ] Add tests for trade polling and status transitions
+Status: `Checkpointed, not fully closed`
+
+- [x] Create strict Android source audit for Buy, Sell, Withdrawal Mode, VPA, transaction details, invoice viewer, and Juspay boundaries
+- [x] Create `feature/trade` structure
+- [x] Port buy-gold repository logic
+- [x] Port sell-gold repository logic
+- [x] Create shared transaction polling component/engine
+- [x] Create shared payment-launch contract for native Juspay bridging
+- [x] Add first functional shared routes and screens for `WithdrawalMode`, `Buy`, `Sell`, transaction details, and invoice viewer
+- [x] Finish strict Android visual parity for `WithdrawalMode`
+- [x] Finish strict Android visual parity for `Buy`
+- [x] Finish strict Android visual parity for `Sell`
+- [ ] Finish strict Android visual parity for trade-owned transaction details and invoice viewer in a later Phase 7 review pass
+- [x] Replace the fallback payment launcher with real Android and iOS Juspay bindings
+- [x] Create buy flow MVI state
+- [x] Create sell flow MVI state
+- [x] Define shared payment-launch contract for Trade and keep Juspay state/verification/polling in shared code
+- [x] Add Trade foundation tests and verify `./gradlew :composeApp:allTests :composeApp:compileKotlinIosSimulatorArm64 :composeApp:compilePreprodDebugKotlinAndroid`
+- [x] Connect Home buy/sell entry points to real shared Trade routes
+- [x] Rebuild `WithdrawalMode` explicitly
+- [x] Build the first shared Buy Gold one-time flow explicitly
+- [x] Port Buy one-time and grams/rupees conversion behavior
+- [x] Port Buy coupons, promo validation, and auto-fetch behavior
+- [x] Port Buy payment launch and post-payment verification states
+- [x] Add Android Juspay launcher binding behind the shared Trade payment contract
+- [x] Add iOS Juspay launcher binding or equivalent payment bridge behind the same shared Trade payment contract
+- [x] Build the first shared Sell Gold flow explicitly
+- [x] Port Withdrawal Mode entry flow into Buy vs Sell vs Delivery
+- [x] Port Sell payout UPI selection and short-poll pending behavior
+- [x] Port Sell locked-gold messaging and invoice access
+- [x] Rebuild the first shared trade-owned transaction details and invoice viewer routes
+- [ ] Build Transaction Details / Status Flow pieces shared with trade during the later Phase 7 review pass
+- [x] Rebuild buy UI
+- [x] Rebuild sell UI and sell outcome states
+- [x] Add tests for trade polling and status transitions
+
+Audit artifact:
+
+- [feature-trade-audit.md](/Users/dushyantmainwal/AndroidStudioProjects/HabitGold_Mobile/composeApp/src/commonMain/kotlin/com/habit/gold/feature/trade/feature-trade-audit.md:1)
+
+Deferred review backlog before Phase 7 can be called complete:
+
+- finish strict Android visual parity for trade-owned transaction details
+- finish strict Android visual parity for the invoice viewer experience
+- rebuild VPA management parity
+- replace the temporary Trade help route with the final shared help experience
+- run one final Trade side-by-side QA sweep
 
 ### Phase 8: SIP / Savings
 
@@ -275,7 +304,10 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [ ] Port Rewards history and Rewards redeem as separate subflows
 - [ ] Port Refer & Earn detail, booster extension prompts, and buy/SIP deep links
 - [ ] Port Referral status/history flows or intentionally redesign them
+- [ ] Define shared referral-attribution contract and map Install Referrer ownership to the Android platform layer
+- [ ] Port referral/attribution submission rules so shared code owns backend-facing attribution behavior
 - [ ] Port alerts state and persistence behavior
+- [ ] Define shared push-token registration and notification-preferences contract so FCM/APNs bindings stay platform-specific
 - [ ] Add tests for each feature's core state and mapping
 
 ### Phase 11: Delivery / Get Coin
@@ -309,19 +341,33 @@ These notes came from a deeper pass through the Android app and are here to prev
 - [ ] Add Android environment split strategy: `staging`, `preprod`, `prod`
 - [ ] Decide iOS environment strategy: schemes/configurations or build settings equivalent
 - [ ] Align environment-specific app IDs / bundle IDs and display names
+- [ ] Align KMP Android app versionCode / versionName and any app-version headers with the intended production Android parity strategy
 - [ ] Android secure storage implementation
 - [ ] iOS secure storage implementation
+- [ ] Android SMS Retriever / OTP auto-read binding behind the shared auth contract
+- [ ] Decide and document iOS OTP auto-fill expectations separately from Android SMS auto-read
 - [ ] Android push notifications integration
 - [ ] iOS push notifications integration
+- [ ] Wire Android FCM token callbacks into the shared notification registration contract
+- [ ] Wire iOS push/APNs token callbacks into the shared notification registration contract
 - [ ] Android deep-link and referral capture integration
 - [ ] iOS deep-link and referral capture integration
-- [ ] Android payment SDK integration
-- [ ] iOS payment integration strategy
+- [ ] Android Install Referrer integration feeding the shared referral-attribution contract
+- [ ] iOS attribution equivalent or documented non-equivalent path for referral capture
+- [x] Android Juspay SDK integration finalization for shared Trade payment flows
+- [x] iOS payment SDK integration finalization for shared Trade payment flows
+- [ ] Android Microsoft Clarity integration and build-config/project-id wiring
+- [ ] Decide iOS Clarity equivalent or document that the analytics experience is Android-only
+- [ ] Android Firebase Messaging SDK/plugin wiring
+- [ ] Android Firebase Crashlytics SDK/plugin wiring
+- [ ] Android Firebase Performance SDK/plugin wiring
+- [ ] Decide iOS crash/performance/notification SDK parity strategy for the shared app
 
 ### Phase 13: Hardening And QA
 
 - [ ] Review dependencies before adding feature SDKs; avoid carrying over Android-only libraries without a concrete need
 - [ ] Add and maintain minimal dependency set in shared code
+- [ ] Review deferred Gradle/plugin parity items and confirm which ones must land before production rollout
 - [ ] Add Android release hardening rules and expand Proguard/R8 rules only as integrations require them
 - [ ] Verify cleartext remains disabled and backup/security manifest rules stay intact
 - [ ] Add CI quality gates

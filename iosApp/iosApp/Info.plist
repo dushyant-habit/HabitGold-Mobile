@@ -10,6 +10,62 @@
 	<string>$(APP_NAME)</string>
 	<key>ENABLE_NETWORK_LOGS</key>
 	<string>$(ENABLE_NETWORK_LOGS)</string>
+	<key>JUSPAY_CLIENT_ID</key>
+	<string>$(JUSPAY_CLIENT_ID)</string>
+	<key>JUSPAY_ENABLED</key>
+	<string>$(JUSPAY_ENABLED)</string>
+	<key>JUSPAY_ENVIRONMENT</key>
+	<string>$(JUSPAY_ENVIRONMENT)</string>
+	<key>JUSPAY_MERCHANT_ID</key>
+	<string>$(JUSPAY_MERCHANT_ID)</string>
+	<key>JUSPAY_ROUTING_ID</key>
+	<string>$(JUSPAY_ROUTING_ID)</string>
+	<key>JUSPAY_SDK_VERSION</key>
+	<string>$(JUSPAY_SDK_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>juspay-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				<string>paytm-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>credpay</string>
+		<string>phonepe</string>
+		<string>paytmmp</string>
+		<string>tez</string>
+		<string>paytm</string>
+		<string>bhim</string>
+		<string>myairtel</string>
+		<string>slice-upi</string>
+		<string>ppe</string>
+		<string>amazonpay</string>
+		<string>kiwi</string>
+		<string>navipay</string>
+		<string>mobikwik</string>
+		<string>tatadigital</string>
+		<string>popclubapp</string>
+		<string>super</string>
+		<string>postpe</string>
+		<string>jupiter</string>
+		<string>hdfcbanknb</string>
+		<string>aunb</string>
+		<string>imobileappnb</string>
+		<string>simplypayupi</string>
+		<string>tnupi</string>
+		<string>magnetapp</string>
+		<string>lxme</string>
+		<string>indmoney</string>
+		<string>whatsapp</string>
+		<string>canaraaipe</string>
+		<string>fpupi</string>
+		<string>scapia</string>
+		<string>salaryse</string>
+	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
