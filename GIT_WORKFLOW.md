@@ -100,6 +100,31 @@ Primary docs:
 - [KMP_PROGRESS_TRACKER.md](/Users/dushyantmainwal/AndroidStudioProjects/HabitGold_Mobile/KMP_PROGRESS_TRACKER.md:1)
 - [KMP_PRE_MIGRATION_AUDIT.md](/Users/dushyantmainwal/AndroidStudioProjects/HabitGold_Mobile/KMP_PRE_MIGRATION_AUDIT.md:1)
 
+## Pull Request Automation
+
+Use a consistent PR automation path.
+
+- CI should run on every PR to `main`
+- PRs should use the shared template in `.github/pull_request_template.md`
+- use `scripts/git-create-pr.sh [base-branch]` to open a PR with:
+  - the latest commit subject as the PR title
+  - the commit stack included in the PR body
+  - the standard verification checklist
+  - explicit review-focus and deferred-items sections
+
+Required PR automation checks:
+
+- `./gradlew :composeApp:allTests`
+- `./gradlew :composeApp:compilePreprodDebugKotlinAndroid`
+- `./gradlew :composeApp:lintPreprodDebug`
+- `./gradlew :composeApp:compileKotlinIosSimulatorArm64`
+- `xcodebuild -workspace iosApp/iosApp.xcworkspace -scheme iosApp -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`
+
+PR review rule:
+
+- no feature PR should claim a phase is complete unless the docs, tracker, and roadmap all agree
+- if a branch is only a checkpoint, the PR must say so explicitly in the summary and deferred-items sections
+
 ## Working Agreement For This Repo
 
 From this point forward:

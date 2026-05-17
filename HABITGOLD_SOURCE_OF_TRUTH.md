@@ -478,7 +478,7 @@ Commit rules:
 - one logical task per commit whenever practical
 - do not mix unrelated work in one commit
 - include tests with behavior changes when possible
-- update docs when architecture, workflow, standards, or migration scope changes
+- update docs when architecture, workflow, standards, migration scope, or PR automation changes
 
 ## 11. Documentation Levels
 
@@ -497,12 +497,14 @@ Examples:
 - migration roadmap
 - progress tracker
 - git workflow
+- PR automation files under `.github/` and `scripts/`
 
 When to update:
 
 - phase starts or completes
 - architecture changes
 - workflow changes
+- PR automation changes
 - standards change
 
 ### Feature-Level Documentation

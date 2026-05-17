@@ -162,6 +162,18 @@ Rules:
 - update documentation when standards, architecture, workflow, or migration scope changes
 - if the working tree already contains mixed changes, do not fake clean history retroactively without choosing a safe split strategy first
 
+PR automation baseline:
+
+- use GitHub Actions PR checks for shared tests, Android compile/lint, Kotlin iOS compile, and workspace-based iOS build
+- use the repo PR template so every PR records:
+  - summary
+  - scope
+  - verification
+  - review focus
+  - deferred items
+- prefer `scripts/git-create-pr.sh` for opening PRs so the commit stack and verification checklist are prefilled
+- treat failed CI, missing docs alignment, or missing deferred-item disclosure as blockers for merge
+
 ## Architecture Principles
 
 ### 1. Thin Platform Layers
