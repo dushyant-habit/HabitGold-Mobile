@@ -11,6 +11,8 @@ import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetTradeStatusUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetTradeUserVpasUseCase
 import com.habit.gold.feature.trade.domain.usecase.PollTradeStatusUseCase
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.trade_sell_draft_missing
 import kotlinx.coroutines.launch
 
 class SellTradeViewModel(
@@ -39,6 +41,7 @@ class SellTradeViewModel(
                     createdOrder = null,
                     pollingSnapshot = null,
                     errorMessage = null,
+                    errorMessageResource = null,
                 )
             }
             is SellTradeIntent.ChangeEntryMode -> updateState { it.copy(entryMode = intent.mode) }
@@ -62,7 +65,7 @@ class SellTradeViewModel(
 
     private fun loadFoundation() {
         viewModelScope.launch {
-            updateState { it.copy(isLoading = true, errorMessage = null) }
+            updateState { it.copy(isLoading = true, errorMessage = null, errorMessageResource = null) }
 
             val availabilityResult = getSellAvailabilityUseCase()
             val vpaResult = getTradeUserVpasUseCase()
@@ -84,6 +87,7 @@ class SellTradeViewModel(
                     userVpas = vpas,
                     selectedVpaId = preferredVpa?.id,
                     errorMessage = errorMessage,
+                    errorMessageResource = null,
                 )
             }
         }
@@ -92,18 +96,23 @@ class SellTradeViewModel(
     private fun submitSell(vpaId: String) {
         val draft = state.value.draftRequest
         if (draft == null) {
-            updateState { it.copy(errorMessage = "Sell request details are missing. Please enter the amount again.") }
+            updateState {
+                it.copy(
+                    errorMessage = null,
+                    errorMessageResource = Res.string.trade_sell_draft_missing,
+                )
+            }
             return
         }
         viewModelScope.launch {
-            updateState { it.copy(isLoading = true, errorMessage = null) }
+            updateState { it.copy(isLoading = true, errorMessage = null, errorMessageResource = null) }
             when (val createResult = createSellOrderUseCase(com.habit.gold.feature.trade.domain.model.TradeSellOrderRequest(draft.grams, draft.sellRateId))) {
                 is ApiResult.Success -> {
                     val createdOrder = createResult.value
                     updateState { it.copy(createdOrder = createdOrder) }
                     when (val executeResult = executeSellOrderUseCase(createdOrder.orderId, vpaId)) {
                         is ApiResult.Success -> {
-                            updateState { it.copy(isLoading = false, errorMessage = null) }
+                            updateState { it.copy(isLoading = false, errorMessage = null, errorMessageResource = null) }
                             startPolling(orderId = executeResult.value.orderId.ifBlank { createdOrder.orderId })
                         }
                         is ApiResult.Failure -> updateState {
@@ -111,18 +120,25 @@ class SellTradeViewModel(
                                 isLoading = false,
                                 createdOrder = createdOrder,
                                 errorMessage = executeResult.error.message,
+                                errorMessageResource = null,
                             )
                         }
                     }
                 }
-                is ApiResult.Failure -> updateState { it.copy(isLoading = false, errorMessage = createResult.error.message) }
+                is ApiResult.Failure -> updateState {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = createResult.error.message,
+                        errorMessageResource = null,
+                    )
+                }
             }
         }
     }
 
     private fun startPolling(orderId: String) {
         viewModelScope.launch {
-            updateState { it.copy(isLoading = true, errorMessage = null) }
+            updateState { it.copy(isLoading = true, errorMessage = null, errorMessageResource = null) }
             when (val result = pollTradeStatusUseCase(orderId, TradePollingPolicies.sell())) {
                 is ApiResult.Success -> {
                     val nextSnapshot = when (val outcome = result.value) {
@@ -144,6 +160,7 @@ class SellTradeViewModel(
                             step = nextStep,
                             pollingSnapshot = nextSnapshot,
                             errorMessage = nextError,
+                            errorMessageResource = null,
                         )
                     }
                 }
@@ -162,6 +179,7 @@ class SellTradeViewModel(
                             step = SellTradeStep.Pending,
                             pollingSnapshot = snapshot,
                             errorMessage = result.error.message,
+                            errorMessageResource = null,
                         )
                     }
                 }

@@ -150,6 +150,7 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_quantit
 import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_upi
 import habitgoldmobile.composeapp.generated.resources.trade_sell_enter_amount
 import habitgoldmobile.composeapp.generated.resources.trade_sell_enter_valid_amount
+import habitgoldmobile.composeapp.generated.resources.trade_sell_exceeds_balance
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fact_live_price_refresh
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fact_sell_anytime
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fact_verified_upi
@@ -168,6 +169,7 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_mode_rupees
 import habitgoldmobile.composeapp.generated.resources.trade_sell_net_amount_credited
 import habitgoldmobile.composeapp.generated.resources.trade_sell_next_release_on
 import habitgoldmobile.composeapp.generated.resources.trade_sell_no_upi_ids_available
+import habitgoldmobile.composeapp.generated.resources.trade_sell_no_sellable_balance
 import habitgoldmobile.composeapp.generated.resources.trade_sell_no_gold_available
 import habitgoldmobile.composeapp.generated.resources.trade_sell_payout_body
 import habitgoldmobile.composeapp.generated.resources.trade_sell_pending_body
@@ -195,9 +197,13 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_upi_payout
 import habitgoldmobile.composeapp.generated.resources.trade_sell_updates_in
 import habitgoldmobile.composeapp.generated.resources.trade_sell_what_you_can_do
 import habitgoldmobile.composeapp.generated.resources.trade_sell_what_you_can_do_body
+import habitgoldmobile.composeapp.generated.resources.trade_sell_youre_selling
 import habitgoldmobile.composeapp.generated.resources.trade_sell_you_receive
 import habitgoldmobile.composeapp.generated.resources.trade_sell_zero_gm
 import habitgoldmobile.composeapp.generated.resources.trade_sell_default
+import habitgoldmobile.composeapp.generated.resources.trade_sell_draft_missing
+import habitgoldmobile.composeapp.generated.resources.trade_sell_min_amount
+import habitgoldmobile.composeapp.generated.resources.trade_sell_min_quantity
 import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_invalid_url
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_message
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_view_invoice
@@ -249,6 +255,7 @@ fun SellTradeScreen(
     val fetchingBalanceMessage = stringResource(Res.string.trade_sell_fetching_balance)
     val enterValidAmountMessage = stringResource(Res.string.trade_sell_enter_valid_amount)
     val invalidInvoiceMessage = stringResource(Res.string.trade_invoice_viewer_invalid_url)
+    val resolvedErrorMessage = state.resolveErrorMessage()
 
     LaunchedEffect(state.step) {
         if (state.step != SellTradeStep.Entry) {
@@ -301,6 +308,13 @@ fun SellTradeScreen(
             sellableBalance = sellableBalance,
         )
     }
+    val sellValidationErrorMessage = when (sellComputation.validationError) {
+        SellTradeValidationError.NoSellableBalance -> stringResource(Res.string.trade_sell_no_sellable_balance)
+        SellTradeValidationError.ExceedsBalance -> stringResource(Res.string.trade_sell_exceeds_balance)
+        SellTradeValidationError.MinimumQuantity -> stringResource(Res.string.trade_sell_min_quantity)
+        SellTradeValidationError.MinimumAmount -> stringResource(Res.string.trade_sell_min_amount)
+        null -> null
+    }
 
     when (state.step) {
         SellTradeStep.Entry -> SellTradeEntryScreen(
@@ -308,7 +322,7 @@ fun SellTradeScreen(
             livePriceState = livePriceState,
             amountInput = amountInput,
             sellComputation = sellComputation,
-            validationMessage = validationMessage ?: state.errorMessage,
+            validationMessage = validationMessage ?: resolvedErrorMessage,
             totalBalance = totalBalance,
             sellableBalance = sellableBalance,
             lockedBalance = lockedBalance,
@@ -340,7 +354,7 @@ fun SellTradeScreen(
                     return@SellTradeEntryScreen
                 }
                 if (sellComputation.tradableGrams <= 0.0) {
-                    validationMessage = sellComputation.message ?: enterValidAmountMessage
+                    validationMessage = sellValidationErrorMessage ?: enterValidAmountMessage
                     return@SellTradeEntryScreen
                 }
                 validationMessage = null
@@ -379,7 +393,7 @@ fun SellTradeScreen(
         )
 
         SellTradeStep.Failure -> SellTradeFailureScreen(
-            message = state.errorMessage ?: stringResource(Res.string.trade_sell_failure_fallback_body),
+            message = resolvedErrorMessage ?: stringResource(Res.string.trade_sell_failure_fallback_body),
             onGoToDashboard = onGoToDashboard,
             modifier = modifier,
         )
@@ -769,7 +783,7 @@ private fun SellTradeInputSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "You're selling ${formatGold(tradableGrams)}gm of gold.",
+                text = stringResource(Res.string.trade_sell_youre_selling, formatGold(tradableGrams)),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFD2A700),
@@ -1067,8 +1081,15 @@ internal fun SellTradeVpaCard(
 internal data class SellComputation(
     val tradableGrams: Double,
     val payoutAmount: Double,
-    val message: String? = null,
+    val validationError: SellTradeValidationError? = null,
 )
+
+internal enum class SellTradeValidationError {
+    NoSellableBalance,
+    ExceedsBalance,
+    MinimumQuantity,
+    MinimumAmount,
+}
 
 private const val MinSellValueRupees = 10.0
 private const val MinTradeUnitGrams = 0.0001
@@ -1082,13 +1103,13 @@ internal fun computeSellTrade(
 ): SellComputation {
     val safeInput = max(rawInput.toDoubleOrNull() ?: 0.0, 0.0)
     if (sellPrice <= 0.0 || safeInput <= 0.0) return SellComputation(0.0, 0.0)
-    if (sellableBalance <= 0.0) return SellComputation(0.0, 0.0, "No sellable balance available right now.")
+    if (sellableBalance <= 0.0) return SellComputation(0.0, 0.0, SellTradeValidationError.NoSellableBalance)
 
     val eps = 1e-9
     val availableValue = sellableBalance * sellPrice
 
     if (entryMode == SellTradeEntryMode.Rupees && safeInput > availableValue + eps) {
-        return SellComputation(0.0, 0.0, "Amount exceeds your sellable gold balance.")
+        return SellComputation(0.0, 0.0, SellTradeValidationError.ExceedsBalance)
     }
 
     val rawGrams = when (entryMode) {
@@ -1097,7 +1118,7 @@ internal fun computeSellTrade(
     }
 
     if (entryMode == SellTradeEntryMode.Grams && rawGrams > sellableBalance + eps) {
-        return SellComputation(0.0, 0.0, "Amount exceeds your sellable gold balance.")
+        return SellComputation(0.0, 0.0, SellTradeValidationError.ExceedsBalance)
     }
 
     val rawUnits = rawGrams * UnitsPerGram.toDouble()
@@ -1114,22 +1135,27 @@ internal fun computeSellTrade(
     }
 
     if (chosenUnits <= 0L) {
-        return SellComputation(0.0, 0.0, "Minimum sell quantity is 0.0001g.")
+        return SellComputation(0.0, 0.0, SellTradeValidationError.MinimumQuantity)
     }
 
     val chosenGrams = chosenUnits.toDouble() / UnitsPerGram.toDouble()
     if (chosenGrams + eps < MinTradeUnitGrams) {
-        return SellComputation(0.0, 0.0, "Minimum sell quantity is 0.0001g.")
+        return SellComputation(0.0, 0.0, SellTradeValidationError.MinimumQuantity)
     }
     if ((chosenGrams * sellPrice) + eps < MinSellValueRupees) {
-        return SellComputation(0.0, 0.0, "Amount must be at least ₹10.")
+        return SellComputation(0.0, 0.0, SellTradeValidationError.MinimumAmount)
     }
 
     return SellComputation(
         tradableGrams = chosenGrams,
         payoutAmount = roundSellPayoutToPaise(chosenGrams * sellPrice),
-        message = null,
+        validationError = null,
     )
+}
+
+@Composable
+internal fun SellTradeState.resolveErrorMessage(): String? {
+    return errorMessageResource?.let { stringResource(it) } ?: errorMessage
 }
 
 internal fun roundSellPayoutToPaise(value: Double): Double {

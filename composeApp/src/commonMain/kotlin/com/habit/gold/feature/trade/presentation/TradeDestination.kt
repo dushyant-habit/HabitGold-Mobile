@@ -16,5 +16,5 @@ sealed interface TradeDestination {
         val returnDestination: TradeDestination? = null,
     ) : TradeDestination
     data object VpaList : TradeDestination
-    data object HelpCenter : TradeDestination
+    data class HelpCenter(val returnDestination: TradeDestination) : TradeDestination
 }

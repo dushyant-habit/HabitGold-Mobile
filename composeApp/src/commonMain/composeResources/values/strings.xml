@@ -149,6 +149,10 @@ Invest in Gold</string>
     <string name="trade_buy_available_coupons_title">Available Coupons</string>
     <string name="trade_buy_coupon_sheet_subtitle">Select one to validate and apply.</string>
     <string name="trade_buy_coupon_sheet_empty">No coupons available right now.</string>
+    <string name="trade_buy_coupon_estimate_summary">Est. %1$s · %2$s</string>
+    <string name="trade_buy_coupon_locked">LOCKED</string>
+    <string name="trade_buy_coupon_min_order_required">Min. order ₹%1$s required</string>
+    <string name="trade_buy_coupon_discount_off">₹%1$s off</string>
     <string name="trade_buy_view_breakdown">View Breakdown</string>
     <string name="trade_buy_breakdown_title">Breakdown</string>
     <string name="trade_buy_amount_to_be_paid">Amount to be paid</string>
@@ -217,7 +221,12 @@ Invest in Gold</string>
     <string name="trade_sell_fetching_balance">Fetching your gold balance. Please wait.</string>
     <string name="trade_sell_no_gold_available">No gold available to sell.</string>
     <string name="trade_sell_exceeds_balance">Amount exceeds your sellable gold balance.</string>
+    <string name="trade_sell_no_sellable_balance">No sellable balance available right now.</string>
+    <string name="trade_sell_min_quantity">Minimum sell quantity is 0.0001g.</string>
+    <string name="trade_sell_min_amount">Amount must be at least ₹10.</string>
+    <string name="trade_sell_draft_missing">Sell request details are missing. Please enter the amount again.</string>
     <string name="trade_sell_net_amount_credited">Net amount to be credited: ₹%1$s</string>
+    <string name="trade_sell_youre_selling">You&apos;re selling %1$sgm of gold.</string>
     <string name="trade_sell_button_locked">Gold Under Holding Period</string>
     <string name="trade_sell_balance_information">Balance Information</string>
     <string name="trade_sell_total_gold">Total gold</string>
@@ -282,6 +291,7 @@ Invest in Gold</string>
     <string name="trade_transaction_details_sip_name">SIP name</string>
     <string name="trade_transaction_details_sip_frequency">SIP frequency</string>
     <string name="trade_transaction_details_not_found">We could not find this transaction in the shared Trade history yet.</string>
+    <string name="trade_transaction_details_load_failed">We could not load this transaction right now. Please try again.</string>
     <string name="trade_transaction_details_view_invoice">View invoice</string>
     <string name="trade_invoice_viewer_title">Invoice</string>
     <string name="trade_invoice_viewer_open_invoice">Open invoice</string>
@@ -293,6 +303,9 @@ Invest in Gold</string>
     <string name="trade_invoice_viewer_unable_to_prepare_invoice">Unable to prepare invoice.</string>
     <string name="trade_invoice_viewer_unable_to_save_invoice">Unable to save invoice.</string>
     <string name="trade_invoice_viewer_unable_to_load_invoice">Unable to load invoice PDF.</string>
+    <string name="trade_invoice_viewer_unable_to_render_invoice">Unable to render invoice PDF.</string>
+    <string name="trade_invoice_viewer_page_description">Invoice page %1$d</string>
+    <string name="trade_invoice_viewer_file_name">invoice.pdf</string>
     <string name="trade_invoice_viewer_open_external">Open externally</string>
 
     <!-- Home: Dashboard -->
@@ -331,6 +344,12 @@ Invest in Gold</string>
     <string name="home_screen_gold_savings_sip">Gold Savings SIP</string>
     <string name="home_screen_active">Active</string>
     <string name="home_screen_paused">Paused</string>
+    <string name="home_screen_buy_gold">Buy Gold</string>
+    <string name="home_screen_sell_gold">Sell Gold</string>
+    <string name="home_screen_coin_delivery">Coin Delivery</string>
+    <string name="home_screen_transaction_generic">Transaction</string>
+    <string name="home_screen_current_savings_cycle">Current Savings ₹%1$s/cycle</string>
+    <string name="home_screen_invests_every_cycle">Invests every cycle</string>
     <string name="home_screen_activity_empty_title">Your recent activity will show up here.</string>
     <string name="home_screen_loading_summary">Loading your gold dashboard…</string>
     <string name="home_screen_retry_cta">Retry</string>
@@ -408,6 +427,7 @@ Invest in Gold</string>
     <string name="home_screen_transaction_type">Type</string>
     <string name="home_screen_transaction_type_buy">Buy Gold</string>
     <string name="home_screen_transaction_type_sell">Sell Gold</string>
+    <string name="home_screen_transaction_type_coin_delivery">Coin Delivery</string>
     <string name="home_screen_transaction_type_generic">Gold Transaction</string>
     <string name="home_screen_transaction_status">Status</string>
     <string name="home_screen_transaction_sip_frequency">SIP Frequency</string>

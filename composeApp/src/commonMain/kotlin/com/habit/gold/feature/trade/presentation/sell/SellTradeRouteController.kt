@@ -67,7 +67,7 @@ internal fun SellTradeRouteController(
                 else -> onBackToHome()
             }
         },
-        onHelpClick = { onNavigate(TradeDestination.HelpCenter) },
+        onHelpClick = { onNavigate(TradeDestination.HelpCenter(returnDestination = destination)) },
         onGoToDashboard = exitSellToDashboard,
         getTradeInvoiceUseCase = dependencies.getTradeInvoiceUseCase,
         onOpenInvoice = { invoiceUrl ->
