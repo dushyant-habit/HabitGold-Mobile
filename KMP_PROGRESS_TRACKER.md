@@ -11,9 +11,9 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 6 in progress`
-- Current focus: `finish the remaining Home-linked cross-feature handoffs and detail entry points after restoring the main Android card sections and Home-owned sheets`
-- Next milestone: `close the remaining Home route handoffs, then review Home side by side before moving to Trade`
+- Current phase: `Phase 6 completed`
+- Current focus: `prepare Phase 7 Trade on top of the completed Home shell, child routes, and downstream handoff routes`
+- Next milestone: `start the shared Buy / Sell trade flow migration without reopening Home foundation work`
 
 ## Phase Status
 
@@ -32,7 +32,7 @@ Use this together with:
 - [x] Phase 3: Design System
 - [x] Phase 4: App Shell And Navigation
 - [x] Phase 5: Auth
-- [ ] Phase 6: Home And Portfolio
+- [x] Phase 6: Home And Portfolio
 - [ ] Phase 7: Trade
 - [ ] Phase 8: SIP / Savings
 - [ ] Phase 9: Profile And Security
@@ -51,10 +51,12 @@ Use this together with:
 - [x] Rebuild Home trust highlights and recent activity first slice
 - [x] Restore Home savings cards, active savings pager, Why HabitGold cards, and footer card sections
 - [x] Restore Home gold-price chart sheet and Why HabitGold intro pager
-- [ ] Complete remaining Home UI sections with Android parity
+- [x] Restore Home pull-to-refresh behavior and Android-style shell bottom-bar motion
+- [x] Complete remaining Home UI sections with Android parity
 - [x] Add Home tests and feature overview doc
 - [x] Rebuild Home savings cards and active savings pager
-- [ ] Rebuild remaining Home linked navigation and cross-feature handoffs
+- [x] Rebuild remaining Home linked navigation and cross-feature handoffs
+- [x] Run post-parity cleanup pass to split oversized Home files and remove inline route-level dependency lookups
 
 ## Feature Flow Coverage
 
@@ -63,8 +65,7 @@ This section keeps the important product flows visible explicitly, even when the
 ### Core Product Flows
 
 - [x] Auth Flow
-- [ ] Home / Portfolio Flow
-- [ ] Home / Portfolio Flow
+- [x] Home / Portfolio Flow
 - [ ] Buy Gold Flow
 - [ ] Sell Gold Flow
 - [ ] Transactions List Flow
@@ -78,7 +79,7 @@ This section keeps the important product flows visible explicitly, even when the
 
 ### Hidden Subflows To Preserve
 
-- [ ] Home savings create / upgrade / resume handoff
+- [x] Home savings create / upgrade / resume handoff
 - [ ] Withdrawal Mode gateway
 - [ ] Rewards Redeem Flow
 - [ ] Rewards History Flow

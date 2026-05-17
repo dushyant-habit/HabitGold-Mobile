@@ -147,6 +147,48 @@ Preferred flow:
 4. new immutable state is produced
 5. UI re-renders from state
 
+## 4A. Code Quality Standard
+
+Code quality must be reviewed continuously during migration, not only after features are finished.
+
+Rules:
+
+- completed feature code must be readable without tribal knowledge
+- large files should be treated as a smell, even if they still compile
+- duplicated UI logic or formatting logic should be extracted once repetition is clear
+- composables should not quietly become service locators
+- dead code, stale placeholders, and leftover migration scaffolding must be removed before a phase is called complete
+- naming should describe domain meaning, not temporary implementation shape
+
+Review checklist for every completed phase:
+
+- file size check
+- naming check
+- dependency ownership check
+- dead code and stale resource check
+- state and navigation clarity check
+- test readability check
+
+Naming rules:
+
+- prefer domain names like `recentTransaction`, `goldValueDetails`, `savingsMandate`, `authSession`
+- avoid vague names like `data`, `info`, `details`, `value`, `item`, `items`, `result`, `response` when a clearer domain name is possible
+- short names like `item` or `it` are acceptable only in very tight local scope
+- method names should describe intent and effect clearly
+- variables that cross multiple branches or screens should be especially explicit
+
+File-size rules:
+
+- if a file grows past roughly 300 to 400 lines, review whether it should be split
+- if a composable file grows past roughly 500 lines, splitting should be the default unless there is a strong reason not to
+- giant multi-screen files are not acceptable as a stable final state
+
+Migration cleanup rule:
+
+- before calling a phase complete, run a cleanup pass for stale strings, stale routes, stale bottom sheets, old placeholder logic, and docs mismatches
+- for large migrated screens, the cleanup pass should also split oversized presentation files and remove route-level service-locator lookups if they slipped in during migration
+- phase completion requires docs, tests, and implementation to agree with each other
+
 ## 5. Design System Standard
 
 Use design tokens and shared primitives, not scattered screen-level styling.

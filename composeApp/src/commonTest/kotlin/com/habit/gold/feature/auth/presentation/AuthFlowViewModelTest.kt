@@ -278,7 +278,6 @@ private object TestAppStrings : AppStrings {
     override val shellSessionActive = "Active"
     override val shellSessionLoggedOut = "Logged out"
     override val shellProfileComplete = "Complete"
-    override val shellProfilePending = "Pending"
     override val shellRewardsTitle = "Rewards migration in progress"
     override val shellRewardsDescription = "Rewards stays on the bottom bar in Android. We are keeping that product flow intact while the rewards and referral screens are rebuilt."
     override val shellHistoryTitle = "History migration in progress"

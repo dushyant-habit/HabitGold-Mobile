@@ -57,7 +57,6 @@ import habitgoldmobile.composeapp.generated.resources.shell_phone_label
 import habitgoldmobile.composeapp.generated.resources.shell_pin_code_label
 import habitgoldmobile.composeapp.generated.resources.shell_profile_card_title
 import habitgoldmobile.composeapp.generated.resources.shell_profile_complete
-import habitgoldmobile.composeapp.generated.resources.shell_profile_pending
 import habitgoldmobile.composeapp.generated.resources.shell_history_description
 import habitgoldmobile.composeapp.generated.resources.shell_history_title
 import habitgoldmobile.composeapp.generated.resources.shell_rewards_description
@@ -122,7 +121,6 @@ interface AppStrings {
     val shellSessionActive: String
     val shellSessionLoggedOut: String
     val shellProfileComplete: String
-    val shellProfilePending: String
     val shellRewardsTitle: String
     val shellRewardsDescription: String
     val shellHistoryTitle: String
@@ -187,7 +185,6 @@ private data class ResourceAppStrings(
     override val shellSessionActive: String,
     override val shellSessionLoggedOut: String,
     override val shellProfileComplete: String,
-    override val shellProfilePending: String,
     override val shellRewardsTitle: String,
     override val shellRewardsDescription: String,
     override val shellHistoryTitle: String,
@@ -280,7 +277,6 @@ fun rememberAppStrings(): AppStrings {
     val shellSessionActive = stringResource(Res.string.shell_session_active)
     val shellSessionLoggedOut = stringResource(Res.string.shell_session_logged_out)
     val shellProfileComplete = stringResource(Res.string.shell_profile_complete)
-    val shellProfilePending = stringResource(Res.string.shell_profile_pending)
     val shellRewardsTitle = stringResource(Res.string.shell_rewards_title)
     val shellRewardsDescription = stringResource(Res.string.shell_rewards_description)
     val shellHistoryTitle = stringResource(Res.string.shell_history_title)
@@ -342,7 +338,6 @@ fun rememberAppStrings(): AppStrings {
         shellSessionActive = shellSessionActive,
         shellSessionLoggedOut = shellSessionLoggedOut,
         shellProfileComplete = shellProfileComplete,
-        shellProfilePending = shellProfilePending,
         shellRewardsTitle = shellRewardsTitle,
         shellRewardsDescription = shellRewardsDescription,
         shellHistoryTitle = shellHistoryTitle,

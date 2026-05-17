@@ -7,6 +7,7 @@ import kotlinx.coroutines.sync.withLock
 @Serializable
 data class AppPreferences(
     val hasUnreadAlerts: Boolean = false,
+    val isBalanceVisible: Boolean = true,
 )
 
 interface AppPreferencesStorage {

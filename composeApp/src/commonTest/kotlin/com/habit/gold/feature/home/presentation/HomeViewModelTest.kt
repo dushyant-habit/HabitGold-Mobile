@@ -3,6 +3,7 @@ package com.habit.gold.feature.home.presentation
 import com.habit.gold.core.network.ApiResult
 import com.habit.gold.core.network.NetworkError
 import com.habit.gold.core.network.NetworkErrorKind
+import com.habit.gold.core.storage.InMemoryAppPreferencesStorage
 import com.habit.gold.feature.home.domain.HomeRepository
 import com.habit.gold.feature.home.domain.model.HomeDashboardSummary
 import com.habit.gold.feature.home.domain.model.HomeForceUpdate
@@ -10,16 +11,20 @@ import com.habit.gold.feature.home.domain.model.HomeGoldPricePoint
 import com.habit.gold.feature.home.domain.model.HomeRecentTransactionPreview
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -69,7 +74,10 @@ class HomeViewModelTest {
                 )
             ),
         )
-        val viewModel = HomeViewModel(LoadHomeSummaryUseCase(repository))
+        val viewModel = HomeViewModel(
+            loadHomeSummaryUseCase = LoadHomeSummaryUseCase(repository),
+            appPreferencesStorage = InMemoryAppPreferencesStorage(),
+        )
 
         viewModel.onIntent(HomeIntent.Load)
         advanceUntilIdle()
@@ -90,7 +98,10 @@ class HomeViewModelTest {
                 )
             ),
         )
-        val viewModel = HomeViewModel(LoadHomeSummaryUseCase(repository))
+        val viewModel = HomeViewModel(
+            loadHomeSummaryUseCase = LoadHomeSummaryUseCase(repository),
+            appPreferencesStorage = InMemoryAppPreferencesStorage(),
+        )
 
         viewModel.onIntent(HomeIntent.Load)
         advanceUntilIdle()
@@ -98,6 +109,58 @@ class HomeViewModelTest {
         assertEquals(false, viewModel.state.value.isLoading)
         assertEquals("Failed to load portfolio dashboard", viewModel.state.value.errorMessage)
         assertEquals(null, viewModel.state.value.summary)
+    }
+
+    @Test
+    fun `refresh keeps summary visible and uses refresh state instead of first load shimmer`() = runTest(dispatcher) {
+        val repository = RefreshAwareHomeRepository()
+        val viewModel = HomeViewModel(
+            loadHomeSummaryUseCase = LoadHomeSummaryUseCase(repository),
+            appPreferencesStorage = InMemoryAppPreferencesStorage(),
+        )
+
+        viewModel.onIntent(HomeIntent.Load)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRefreshing)
+        assertEquals("txn-initial", viewModel.state.value.summary?.recentTransactions?.firstOrNull()?.id)
+
+        viewModel.onIntent(HomeIntent.Refresh)
+        runCurrent()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertTrue(viewModel.state.value.isRefreshing)
+        assertEquals("txn-initial", viewModel.state.value.summary?.recentTransactions?.firstOrNull()?.id)
+
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRefreshing)
+        assertEquals("txn-refreshed", viewModel.state.value.summary?.recentTransactions?.firstOrNull()?.id)
+    }
+
+    @Test
+    fun `toggle balance visibility persists preference`() = runTest(dispatcher) {
+        val preferencesStorage = InMemoryAppPreferencesStorage()
+        val viewModel = HomeViewModel(
+            loadHomeSummaryUseCase = LoadHomeSummaryUseCase(
+                FakeViewModelHomeRepository(
+                    dashboardResult = ApiResult.Success(viewModelDashboard()),
+                )
+            ),
+            appPreferencesStorage = preferencesStorage,
+        )
+
+        viewModel.onIntent(HomeIntent.Load)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.isBalanceVisible)
+
+        viewModel.onIntent(HomeIntent.ToggleBalanceVisibility)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isBalanceVisible)
+        assertFalse(preferencesStorage.readPreferences().isBalanceVisible)
     }
 }
 
@@ -137,4 +200,44 @@ private fun viewModelDashboard(): HomeDashboardSummary {
         finalPayoutAmount = 11000.0,
         buySellPriceDifference = 200.0,
     )
+}
+
+private class RefreshAwareHomeRepository : HomeRepository {
+    private var invocationCount = 0
+
+    override suspend fun getPortfolioDashboard(): ApiResult<HomeDashboardSummary> {
+        invocationCount += 1
+        if (invocationCount > 1) delay(1)
+        return ApiResult.Success(viewModelDashboard())
+    }
+
+    override suspend fun getRecentTransactions(
+        page: Int,
+        limit: Int,
+    ): ApiResult<List<HomeRecentTransactionPreview>> {
+        val transactionId = if (invocationCount <= 1) "txn-initial" else "txn-refreshed"
+        return ApiResult.Success(
+            listOf(
+                HomeRecentTransactionPreview(
+                    id = transactionId,
+                    type = "BUY",
+                    status = "COMPLETED",
+                    amount = "5000",
+                    goldQuantity = "0.5000",
+                    createdAt = "2026-05-15T08:30:00.000Z",
+                    isSip = false,
+                    sipName = null,
+                    sipFrequency = null,
+                )
+            )
+        )
+    }
+
+    override suspend fun getForceUpdate(): ApiResult<HomeForceUpdate?> = ApiResult.Success(null)
+
+    override suspend fun getSipMandates(): ApiResult<List<HomeSipMandate>> = ApiResult.Success(emptyList())
+
+    override suspend fun getPriceHistory(days: Int): ApiResult<List<HomeGoldPricePoint>> {
+        return ApiResult.Success(emptyList())
+    }
 }
