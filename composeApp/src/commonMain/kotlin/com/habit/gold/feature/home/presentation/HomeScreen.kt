@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.presentation.components.GoldSavingsPlansCard
 import com.habit.gold.feature.home.presentation.components.HomeBalanceCard
@@ -56,6 +57,7 @@ fun HomeScreen(
     onOpenGoldValueDetails: () -> Unit,
     onToggleBalanceVisibility: () -> Unit,
     onOpenSavingsDetails: () -> Unit,
+    onOpenSavingsSetup: (String, HomeSipMandate?) -> Unit,
     onOpenTransaction: (com.habit.gold.feature.home.domain.model.HomeRecentTransactionPreview) -> Unit,
     onOpenSupport: () -> Unit,
     modifier: Modifier = Modifier,
@@ -132,7 +134,7 @@ fun HomeScreen(
                             item("gold-savings") {
                                 GoldSavingsPlansCard(
                                     mandates = summary.sipMandates,
-                                    onOpenSavingsScreen = onOpenSavingsDetails,
+                                    onOpenSavingsScreen = onOpenSavingsSetup,
                                 )
                             }
                             item("recent-activity") {
@@ -177,7 +179,7 @@ fun HomeScreen(
                             item("gold-savings") {
                                 GoldSavingsPlansCard(
                                     mandates = summary.sipMandates,
-                                    onOpenSavingsScreen = onOpenSavingsDetails,
+                                    onOpenSavingsScreen = onOpenSavingsSetup,
                                 )
                             }
                             if (summary.sipMandates.isNotEmpty()) {

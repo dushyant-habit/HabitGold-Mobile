@@ -35,8 +35,6 @@ import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_message
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_title
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_savings_message
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_savings_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_view_history
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_amount
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_date
@@ -135,12 +133,10 @@ internal fun HomeDeferredRouteScreen(
     val title = when (target) {
         HomeDeferredTarget.Profile -> stringResource(Res.string.home_route_handoff_profile_title)
         HomeDeferredTarget.Alerts -> stringResource(Res.string.home_route_handoff_alerts_title)
-        HomeDeferredTarget.Savings -> stringResource(Res.string.home_route_handoff_savings_title)
     }
     val message = when (target) {
         HomeDeferredTarget.Profile -> stringResource(Res.string.home_route_handoff_profile_message)
         HomeDeferredTarget.Alerts -> stringResource(Res.string.home_route_handoff_alerts_message)
-        HomeDeferredTarget.Savings -> stringResource(Res.string.home_route_handoff_savings_message)
     }
 
     HomeChildScaffold(
@@ -193,18 +189,6 @@ internal fun HomeDeferredRouteScreen(
                         color = ChildMutedText,
                         textAlign = TextAlign.Center,
                     )
-                    if (target == HomeDeferredTarget.Savings && onOpenHistoryTab != null) {
-                        Button(
-                            onClick = onOpenHistoryTab,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = HabitGoldPalette.plum),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.home_route_handoff_view_history),
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                    }
                 }
             }
         }
