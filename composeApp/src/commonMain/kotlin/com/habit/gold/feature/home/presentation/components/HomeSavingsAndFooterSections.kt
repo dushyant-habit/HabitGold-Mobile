@@ -115,7 +115,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun GoldSavingsPlansCard(
     mandates: List<HomeSipMandate>,
-    onOpenSavingsScreen: () -> Unit,
+    onOpenSavingsScreen: (String, HomeSipMandate?) -> Unit,
 ) {
     val dailyTitle = stringResource(Res.string.home_screen_start_daily_savings)
     val weeklyTitle = stringResource(Res.string.home_screen_start_weekly_savings)
@@ -191,7 +191,7 @@ internal fun GoldSavingsPlansCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(if (planItem.frequency == "Daily") Modifier.homeAnimatedSavingsBorder() else Modifier)
-                        .clickable(onClick = onOpenSavingsScreen),
+                        .clickable(onClick = { onOpenSavingsScreen(planItem.frequency, planItem.mandate) }),
                     color = HomeWhite,
                     shape = RoundedCornerShape(16.dp),
                     border = BorderStroke(1.dp, Slate200.copy(alpha = 0.7f)),

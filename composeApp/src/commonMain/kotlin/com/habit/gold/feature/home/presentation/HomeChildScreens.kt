@@ -26,9 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -419,6 +417,5 @@ internal fun deferredIconFor(homeDeferredTarget: HomeDeferredTarget): ImageVecto
     return when (homeDeferredTarget) {
         HomeDeferredTarget.Profile -> Icons.Default.AccountBalance
         HomeDeferredTarget.Alerts -> Icons.Default.Info
-        HomeDeferredTarget.Savings -> Icons.Default.LocalShipping
     }
 }
