@@ -1,5 +1,8 @@
 package com.habit.gold.feature.auth.domain
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class AuthenticatedUser(
     val id: String? = null,
     val phoneNumber: String,
