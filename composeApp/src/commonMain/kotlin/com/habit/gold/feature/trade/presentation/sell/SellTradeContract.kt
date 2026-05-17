@@ -7,6 +7,7 @@ import com.habit.gold.feature.trade.domain.model.TradePollingSnapshot
 import com.habit.gold.feature.trade.domain.model.TradeSellAvailability
 import com.habit.gold.feature.trade.domain.model.TradeSellOrder
 import com.habit.gold.feature.trade.domain.model.TradeUserVpa
+import org.jetbrains.compose.resources.StringResource
 
 data class SellTradeDraftRequest(
     val grams: Double,
@@ -38,6 +39,7 @@ data class SellTradeState(
     val userVpas: List<TradeUserVpa> = emptyList(),
     val pollingSnapshot: TradePollingSnapshot? = null,
     val errorMessage: String? = null,
+    val errorMessageResource: StringResource? = null,
 ) : MviState
 
 sealed interface SellTradeIntent : MviIntent {

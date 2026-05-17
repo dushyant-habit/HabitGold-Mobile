@@ -59,7 +59,7 @@ internal fun BuyTradeRouteController(
         livePriceState = livePriceState.value,
         onBackClick = onBackToHome,
         onGoToDashboard = exitBuyToDashboard,
-        onHelpClick = { onNavigate(TradeDestination.HelpCenter) },
+        onHelpClick = { onNavigate(TradeDestination.HelpCenter(returnDestination = TradeDestination.Buy())) },
         getTradeInvoiceUseCase = dependencies.getTradeInvoiceUseCase,
         onOpenInvoice = { invoiceUrl ->
             onNavigate(

@@ -36,6 +36,7 @@ import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_gold_price
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_gold_quantity
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_gst
+import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_load_failed
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_net_amount
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_not_found
 import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_order_id
@@ -58,6 +59,7 @@ fun TradeTransactionDetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     val transactionNotFoundMessage = stringResource(Res.string.trade_transaction_details_not_found)
+    val transactionLoadFailedMessage = stringResource(Res.string.trade_transaction_details_load_failed)
     val invalidInvoiceMessage = stringResource(Res.string.trade_invoice_viewer_invalid_url)
     var reloadToken by remember(transactionId) { mutableStateOf(0) }
     var screenState by remember(transactionId) {
@@ -69,10 +71,12 @@ fun TradeTransactionDetailsScreen(
     suspend fun loadTransaction() {
         screenState = TradeTransactionDetailsUiState.Loading
         val loadedTransaction = findTradeTransaction(transactionId, getTradeTransactionsUseCase)
-        screenState = if (loadedTransaction != null) {
-            TradeTransactionDetailsUiState.Content(loadedTransaction)
-        } else {
-            TradeTransactionDetailsUiState.Error(transactionNotFoundMessage)
+        screenState = when (loadedTransaction) {
+            is TradeTransactionLookupResult.Found -> TradeTransactionDetailsUiState.Content(loadedTransaction.transaction)
+            TradeTransactionLookupResult.NotFound -> TradeTransactionDetailsUiState.Error(transactionNotFoundMessage)
+            is TradeTransactionLookupResult.Failure -> TradeTransactionDetailsUiState.Error(
+                loadedTransaction.message.ifBlank { transactionLoadFailedMessage },
+            )
         }
     }
 
@@ -236,23 +240,33 @@ private sealed interface TradeTransactionDetailsUiState {
     data class Error(val message: String) : TradeTransactionDetailsUiState
 }
 
+private sealed interface TradeTransactionLookupResult {
+    data class Found(val transaction: TradeTransactionPreview) : TradeTransactionLookupResult
+    data object NotFound : TradeTransactionLookupResult
+    data class Failure(val message: String) : TradeTransactionLookupResult
+}
+
 private suspend fun findTradeTransaction(
     transactionId: String,
     getTradeTransactionsUseCase: GetTradeTransactionsUseCase,
-): TradeTransactionPreview? {
+): TradeTransactionLookupResult {
     var currentPage = 1
     var totalPages = 1
     while (currentPage <= totalPages) {
         when (val result = getTradeTransactionsUseCase(currentPage, 20)) {
             is ApiResult.Success -> {
-                result.value.data.firstOrNull { it.id == transactionId }?.let { return it }
+                result.value.data.firstOrNull { it.id == transactionId }?.let {
+                    return TradeTransactionLookupResult.Found(it)
+                }
                 totalPages = result.value.totalPages
                 currentPage += 1
             }
-            is ApiResult.Failure -> return null
+            is ApiResult.Failure -> {
+                return TradeTransactionLookupResult.Failure(result.error.message)
+            }
         }
     }
-    return null
+    return TradeTransactionLookupResult.NotFound
 }
 
 private fun canShowTradeInvoice(transaction: TradeTransactionPreview): Boolean {

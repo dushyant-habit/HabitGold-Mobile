@@ -63,7 +63,7 @@ fun TradeRoute(
                         destination.returnDestination?.let(onNavigate) ?: onBackToHome()
                     }
                     TradeDestination.VpaList -> onNavigate(TradeDestination.Sell)
-                    TradeDestination.HelpCenter -> onNavigate(TradeDestination.Buy())
+                    is TradeDestination.HelpCenter -> onNavigate(destination.returnDestination)
                 }
             },
         )
@@ -125,10 +125,10 @@ fun TradeRoute(
             onBackClick = { onNavigate(TradeDestination.Sell) },
             modifier = modifier,
         )
-        TradeDestination.HelpCenter -> TradeDeferredScreen(
+        is TradeDestination.HelpCenter -> TradeDeferredScreen(
             title = stringResource(Res.string.trade_route_help_title),
             message = stringResource(Res.string.trade_route_help_message),
-            onBackClick = { onNavigate(TradeDestination.Buy()) },
+            onBackClick = { onNavigate(destination.returnDestination) },
             modifier = modifier,
         )
     }

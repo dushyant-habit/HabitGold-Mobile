@@ -63,7 +63,12 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_intro_title_go
 import habitgoldmobile.composeapp.generated.resources.home_screen_intro_title_growth
 import habitgoldmobile.composeapp.generated.resources.home_screen_intro_title_liquidity
 import habitgoldmobile.composeapp.generated.resources.home_screen_intro_title_secure
+import habitgoldmobile.composeapp.generated.resources.home_screen_buy_gold
+import habitgoldmobile.composeapp.generated.resources.home_screen_coin_delivery
+import habitgoldmobile.composeapp.generated.resources.home_screen_gold_savings_sip
 import habitgoldmobile.composeapp.generated.resources.home_screen_recent_activity
+import habitgoldmobile.composeapp.generated.resources.home_screen_sell_gold
+import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_generic
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_earn_every_time_description
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_earn_every_time_title
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_free_delivery_description
@@ -357,16 +362,18 @@ private data class RecentActivityConfig(
     val statusTint: Color,
 )
 
+@Composable
 private fun recentActivityConfigFor(item: HomeRecentTransactionPreview): RecentActivityConfig {
     val isBuy = item.type.equals("BUY", ignoreCase = true)
     val isSell = item.type.equals("SELL", ignoreCase = true)
     val isDelivery = item.type.contains("delivery", ignoreCase = true)
     val title = when {
-        item.isSip -> item.sipName?.ifBlank { "Gold Savings SIP" } ?: "Gold Savings SIP"
-        isSell -> "Sell Gold"
-        isDelivery -> "Coin Delivery"
-        isBuy -> "Buy Gold"
-        else -> "Transaction"
+        item.isSip -> item.sipName?.ifBlank { stringResource(Res.string.home_screen_gold_savings_sip) }
+            ?: stringResource(Res.string.home_screen_gold_savings_sip)
+        isSell -> stringResource(Res.string.home_screen_sell_gold)
+        isDelivery -> stringResource(Res.string.home_screen_coin_delivery)
+        isBuy -> stringResource(Res.string.home_screen_buy_gold)
+        else -> stringResource(Res.string.home_screen_transaction_generic)
     }
     val isFailure = item.status.contains("fail", ignoreCase = true) || item.status.contains("cancel", ignoreCase = true)
     return RecentActivityConfig(

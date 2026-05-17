@@ -73,17 +73,28 @@ import habitgoldmobile.composeapp.generated.resources.common_safegold
 import habitgoldmobile.composeapp.generated.resources.common_support_is_available_for_payments_shipping_and_orders
 import habitgoldmobile.composeapp.generated.resources.common_your_gold_is_100percent_secured
 import habitgoldmobile.composeapp.generated.resources.home_screen_auto_invest
+import habitgoldmobile.composeapp.generated.resources.home_screen_active
 import habitgoldmobile.composeapp.generated.resources.home_screen_bank_confirmation_pending
+import habitgoldmobile.composeapp.generated.resources.home_screen_current_savings_cycle
+import habitgoldmobile.composeapp.generated.resources.home_screen_current_savings_day
+import habitgoldmobile.composeapp.generated.resources.home_screen_current_savings_month
+import habitgoldmobile.composeapp.generated.resources.home_screen_current_savings_week
 import habitgoldmobile.composeapp.generated.resources.home_screen_footer_badge_insured
 import habitgoldmobile.composeapp.generated.resources.home_screen_footer_badge_physical
 import habitgoldmobile.composeapp.generated.resources.home_screen_footer_badge_vault
+import habitgoldmobile.composeapp.generated.resources.home_screen_gold_savings_sip
 import habitgoldmobile.composeapp.generated.resources.home_screen_gold_savings_habit
 import habitgoldmobile.composeapp.generated.resources.home_screen_invests_every_day
+import habitgoldmobile.composeapp.generated.resources.home_screen_invests_every_cycle
 import habitgoldmobile.composeapp.generated.resources.home_screen_invests_every_month
 import habitgoldmobile.composeapp.generated.resources.home_screen_invests_every_week
 import habitgoldmobile.composeapp.generated.resources.home_screen_next_debit
+import habitgoldmobile.composeapp.generated.resources.home_screen_paused
 import habitgoldmobile.composeapp.generated.resources.home_screen_powered_by
 import habitgoldmobile.composeapp.generated.resources.home_screen_resume
+import habitgoldmobile.composeapp.generated.resources.home_screen_resume_daily_savings
+import habitgoldmobile.composeapp.generated.resources.home_screen_resume_monthly_savings
+import habitgoldmobile.composeapp.generated.resources.home_screen_resume_weekly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_start_daily_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_start_monthly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_start_weekly_savings
@@ -92,6 +103,9 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_starts_from_mo
 import habitgoldmobile.composeapp.generated.resources.home_screen_starts_from_weekly
 import habitgoldmobile.composeapp.generated.resources.home_screen_started
 import habitgoldmobile.composeapp.generated.resources.home_screen_track_all_savings
+import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_daily_savings
+import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_monthly_savings
+import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_weekly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_view_all
 import habitgoldmobile.composeapp.generated.resources.home_screen_your_savings
 import habitgoldmobile.composeapp.generated.resources.safegold_image
@@ -126,38 +140,20 @@ internal fun GoldSavingsPlansCard(
             mandatesByFrequency
         }
     }
-    val planItems = remember(
-        mandateByFrequency,
-        dailyTitle,
-        weeklyTitle,
-        monthlyTitle,
-        dailySubtitle,
-        weeklySubtitle,
-        monthlySubtitle,
-    ) {
-        listOf(
-            HomeSavingsPlanItem("Daily", dailyTitle, dailySubtitle),
-            HomeSavingsPlanItem("Weekly", weeklyTitle, weeklySubtitle),
-            HomeSavingsPlanItem("Monthly", monthlyTitle, monthlySubtitle),
-        ).map { defaultItem ->
-            val matchingMandate = mandateByFrequency[defaultItem.frequency.uppercase()]
-            val mandateStatusKind = matchingMandate?.let { homeSipMandateStatusKind(it.status) }
-            val actionableMandate = matchingMandate?.takeIf {
-                mandateStatusKind == HomeSipMandateStatusKind.Active || mandateStatusKind == HomeSipMandateStatusKind.Paused
-            }
-            val actionTitle = when (mandateStatusKind) {
-                HomeSipMandateStatusKind.Active -> "Upgrade ${defaultItem.frequency} Savings"
-                HomeSipMandateStatusKind.Paused -> "Resume ${defaultItem.frequency} Savings"
-                else -> defaultItem.defaultTitle
-            }
-            defaultItem.copy(
-                title = actionTitle,
-                subtitle = actionableMandate?.let(::currentSavingsAmountSubtitle) ?: defaultItem.defaultSubtitle,
-                mandate = actionableMandate,
-                statusKind = mandateStatusKind ?: HomeSipMandateStatusKind.Neutral,
-            )
-        }
-    }
+    val planItems = listOf(
+        buildHomeSavingsPlanItem(
+            defaultItem = HomeSavingsPlanItem("Daily", dailyTitle, dailySubtitle),
+            matchingMandate = mandateByFrequency["DAILY"],
+        ),
+        buildHomeSavingsPlanItem(
+            defaultItem = HomeSavingsPlanItem("Weekly", weeklyTitle, weeklySubtitle),
+            matchingMandate = mandateByFrequency["WEEKLY"],
+        ),
+        buildHomeSavingsPlanItem(
+            defaultItem = HomeSavingsPlanItem("Monthly", monthlyTitle, monthlySubtitle),
+            matchingMandate = mandateByFrequency["MONTHLY"],
+        ),
+    )
 
     Column(
         modifier = Modifier
@@ -445,6 +441,39 @@ private data class HomeSavingsPlanItem(
     val statusKind: HomeSipMandateStatusKind = HomeSipMandateStatusKind.Neutral,
 )
 
+@Composable
+private fun buildHomeSavingsPlanItem(
+    defaultItem: HomeSavingsPlanItem,
+    matchingMandate: HomeSipMandate?,
+): HomeSavingsPlanItem {
+    val mandateStatusKind = matchingMandate?.let { homeSipMandateStatusKind(it.status) }
+    val actionableMandate = matchingMandate?.takeIf {
+        mandateStatusKind == HomeSipMandateStatusKind.Active || mandateStatusKind == HomeSipMandateStatusKind.Paused
+    }
+    val actionTitle = when (mandateStatusKind) {
+        HomeSipMandateStatusKind.Active -> when (defaultItem.frequency) {
+            "Daily" -> stringResource(Res.string.home_screen_upgrade_daily_savings)
+            "Weekly" -> stringResource(Res.string.home_screen_upgrade_weekly_savings)
+            "Monthly" -> stringResource(Res.string.home_screen_upgrade_monthly_savings)
+            else -> defaultItem.defaultTitle
+        }
+        HomeSipMandateStatusKind.Paused -> when (defaultItem.frequency) {
+            "Daily" -> stringResource(Res.string.home_screen_resume_daily_savings)
+            "Weekly" -> stringResource(Res.string.home_screen_resume_weekly_savings)
+            "Monthly" -> stringResource(Res.string.home_screen_resume_monthly_savings)
+            else -> defaultItem.defaultTitle
+        }
+        else -> defaultItem.defaultTitle
+    }
+
+    return defaultItem.copy(
+        title = actionTitle,
+        subtitle = actionableMandate?.let { currentSavingsAmountSubtitle(it) } ?: defaultItem.defaultSubtitle,
+        mandate = actionableMandate,
+        statusKind = mandateStatusKind ?: HomeSipMandateStatusKind.Neutral,
+    )
+}
+
 private enum class HomeSipMandateStatusKind {
     Active,
     Paused,
@@ -459,20 +488,37 @@ private data class HomeSipMandateStatusStyle(
     val kind: HomeSipMandateStatusKind,
 )
 
-private fun homeSipMandateStatusKind(status: String): HomeSipMandateStatusKind = homeSipMandateStatusStyle(status).kind
+private fun homeSipMandateStatusKind(status: String): HomeSipMandateStatusKind {
+    return when (status.trim().uppercase()) {
+        "ACTIVE", "COMPLETED", "SUCCESS", "REGISTERED" -> HomeSipMandateStatusKind.Active
+        "PAUSED" -> HomeSipMandateStatusKind.Paused
+        "FAILED_REGISTRATION", "FAILED", "CANCELLED" -> HomeSipMandateStatusKind.Failed
+        else -> HomeSipMandateStatusKind.Neutral
+    }
+}
 
+@Composable
 private fun homeSipMandateStatusStyle(status: String): HomeSipMandateStatusStyle {
-    val normalizedStatus = status.trim().uppercase()
-    return when (normalizedStatus) {
-        "ACTIVE", "COMPLETED", "SUCCESS", "REGISTERED" -> HomeSipMandateStatusStyle("Active", Green25, Green500Soft, HomeSipMandateStatusKind.Active)
-        "PAUSED" -> HomeSipMandateStatusStyle("Paused", GoldSurface, Gold650, HomeSipMandateStatusKind.Paused)
-        "FAILED_REGISTRATION", "FAILED", "CANCELLED" -> HomeSipMandateStatusStyle(
+    return when (homeSipMandateStatusKind(status)) {
+        HomeSipMandateStatusKind.Active -> HomeSipMandateStatusStyle(
+            stringResource(Res.string.home_screen_active),
+            Green25,
+            Green500Soft,
+            HomeSipMandateStatusKind.Active,
+        )
+        HomeSipMandateStatusKind.Paused -> HomeSipMandateStatusStyle(
+            stringResource(Res.string.home_screen_paused),
+            GoldSurface,
+            Gold650,
+            HomeSipMandateStatusKind.Paused,
+        )
+        HomeSipMandateStatusKind.Failed -> HomeSipMandateStatusStyle(
             status.lowercase().replaceFirstChar { it.uppercase() },
             Red25,
             RedTint,
             HomeSipMandateStatusKind.Failed,
         )
-        else -> HomeSipMandateStatusStyle(
+        HomeSipMandateStatusKind.Neutral -> HomeSipMandateStatusStyle(
             status.lowercase().replaceFirstChar { it.uppercase() },
             Blue50Alt,
             Slate700,
@@ -640,7 +686,7 @@ private fun HomeSipMandateCard(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
-                        text = mandate.name.ifBlank { "Gold Savings SIP" },
+                        text = mandate.name.ifBlank { stringResource(Res.string.home_screen_gold_savings_sip) },
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Slate700,
@@ -723,23 +769,24 @@ private fun homeSipCadenceLabel(frequency: String): String {
         "DAILY" -> stringResource(Res.string.home_screen_invests_every_day)
         "WEEKLY" -> stringResource(Res.string.home_screen_invests_every_week)
         "MONTHLY" -> stringResource(Res.string.home_screen_invests_every_month)
-        else -> frequency.replaceFirstChar { it.uppercase() }
+        else -> stringResource(Res.string.home_screen_invests_every_cycle)
     }
 }
 
+@Composable
 private fun currentSavingsAmountSubtitle(mandate: HomeSipMandate): String {
-    val cadenceLabel = when (mandate.frequency.trim().uppercase()) {
-        "DAILY" -> "day"
-        "WEEKLY" -> "week"
-        "MONTHLY" -> "month"
-        else -> "cycle"
-    }
     val rawAmount = mandate.billing?.currentAmount
         ?: mandate.billingCurrentAmount
         ?: mandate.billing?.nextExecutionAmount
         ?: mandate.billingNextExecutionAmount
         ?: mandate.amount
-    return "Current Savings ${formatHomeSavingsPlanAmount(rawAmount)}/$cadenceLabel"
+    val formattedAmount = formatHomeSavingsPlanAmount(rawAmount).removePrefix("₹")
+    return when (mandate.frequency.trim().uppercase()) {
+        "DAILY" -> stringResource(Res.string.home_screen_current_savings_day, formattedAmount)
+        "WEEKLY" -> stringResource(Res.string.home_screen_current_savings_week, formattedAmount)
+        "MONTHLY" -> stringResource(Res.string.home_screen_current_savings_month, formattedAmount)
+        else -> stringResource(Res.string.home_screen_current_savings_cycle, formattedAmount)
+    }
 }
 
 @Composable

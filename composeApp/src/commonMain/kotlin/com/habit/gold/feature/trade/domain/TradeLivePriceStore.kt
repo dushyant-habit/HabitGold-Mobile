@@ -29,8 +29,10 @@ data class TradeLivePriceState(
 
 class TradeLivePriceStore(
     private val tradeRepository: TradeRepository,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val now: () -> Instant = { Clock.System.now() },
+    private val stalePriceRetrySeconds: Long = STALE_PRICE_RETRY_SECONDS,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val _state = MutableStateFlow(TradeLivePriceState())
     val state: StateFlow<TradeLivePriceState> = _state.asStateFlow()
 
@@ -134,17 +136,17 @@ class TradeLivePriceStore(
             try {
                 val buyExpiry = Instant.parse(buyValidUntil)
                 val sellExpiry = Instant.parse(sellValidUntil)
-                val buyInitialRemaining = max((buyExpiry - Clock.System.now()).inWholeSeconds.toInt(), 0)
-                val sellInitialRemaining = max((sellExpiry - Clock.System.now()).inWholeSeconds.toInt(), 0)
+                val buyInitialRemaining = max((buyExpiry - now()).inWholeSeconds.toInt(), 0)
+                val sellInitialRemaining = max((sellExpiry - now()).inWholeSeconds.toInt(), 0)
 
                 if (minOf(buyInitialRemaining, sellInitialRemaining) <= 0) {
                     _state.value = _state.value.copy(
-                        buyRefreshWindowSeconds = STALE_PRICE_RETRY_SECONDS.toInt(),
-                        sellRefreshWindowSeconds = STALE_PRICE_RETRY_SECONDS.toInt(),
+                        buyRefreshWindowSeconds = stalePriceRetrySeconds.toInt(),
+                        sellRefreshWindowSeconds = stalePriceRetrySeconds.toInt(),
                         buyRemainingSeconds = 0,
                         sellRemainingSeconds = 0,
                     )
-                    delay(STALE_PRICE_RETRY_SECONDS * 1000)
+                    delay(stalePriceRetrySeconds * 1000)
                     refreshPrices(force = true)
                     return@launch
                 }
@@ -157,9 +159,9 @@ class TradeLivePriceStore(
                 )
 
                 while (true) {
-                    val now = Clock.System.now()
-                    val buyRemaining = max((buyExpiry - now).inWholeSeconds.toInt(), 0)
-                    val sellRemaining = max((sellExpiry - now).inWholeSeconds.toInt(), 0)
+                    val currentTime = now()
+                    val buyRemaining = max((buyExpiry - currentTime).inWholeSeconds.toInt(), 0)
+                    val sellRemaining = max((sellExpiry - currentTime).inWholeSeconds.toInt(), 0)
                     if (minOf(buyRemaining, sellRemaining) <= 0) {
                         _state.value = _state.value.copy(
                             buyRemainingSeconds = 0,
@@ -179,12 +181,12 @@ class TradeLivePriceStore(
                 throw error
             } catch (_: Exception) {
                 _state.value = _state.value.copy(
-                    buyRefreshWindowSeconds = 30,
-                    sellRefreshWindowSeconds = 30,
+                    buyRefreshWindowSeconds = RETRY_AFTER_TIMER_FAILURE_SECONDS.toInt(),
+                    sellRefreshWindowSeconds = RETRY_AFTER_TIMER_FAILURE_SECONDS.toInt(),
                     buyRemainingSeconds = 0,
                     sellRemainingSeconds = 0,
                 )
-                delay(30000)
+                delay(RETRY_AFTER_TIMER_FAILURE_SECONDS * 1000)
                 refreshPrices(force = true)
             }
         }
@@ -192,11 +194,12 @@ class TradeLivePriceStore(
 
     private fun hasExpired(validUntil: String): Boolean {
         return runCatching {
-            Instant.parse(validUntil) <= Clock.System.now()
+            Instant.parse(validUntil) <= now()
         }.getOrElse { true }
     }
 
     private companion object {
         const val STALE_PRICE_RETRY_SECONDS = 5L
+        const val RETRY_AFTER_TIMER_FAILURE_SECONDS = 30L
     }
 }

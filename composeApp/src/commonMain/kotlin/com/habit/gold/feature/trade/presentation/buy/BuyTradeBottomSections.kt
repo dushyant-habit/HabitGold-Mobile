@@ -61,6 +61,8 @@ import com.habit.gold.feature.trade.presentation.formatMoney
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
 import habitgoldmobile.composeapp.generated.resources.trade_buy_available_coupons_title
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_estimate_summary
+import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_locked
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_empty
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_subtitle
 import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_label
@@ -126,7 +128,11 @@ internal fun BuyCouponSheet(
                     val isApplicable = isBuyCouponApplicable(coupon, estimateAmount)
                     val subtitle = buyCouponDisabledReason(coupon, estimateAmount)
                         ?: coupon.description?.takeIf { it.isNotBlank() }
-                        ?: "Est. ${coupon.estimatedSaving} · ${coupon.type.name.replace('_', ' ')}"
+                        ?: stringResource(
+                            Res.string.trade_buy_coupon_estimate_summary,
+                            coupon.estimatedSaving,
+                            coupon.type.name.replace('_', ' '),
+                        )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -169,7 +175,7 @@ internal fun BuyCouponSheet(
                             )
                         } else if (!isApplicable) {
                             Text(
-                                text = "LOCKED",
+                                text = stringResource(Res.string.trade_buy_coupon_locked),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = BuySlate400,
