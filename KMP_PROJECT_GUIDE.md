@@ -324,6 +324,11 @@ Final code-quality gate:
 - dependency ownership
   - route-level DI should stay obvious
   - composables should not hide dependency lookup or platform behavior
+- phase slicing
+- for Savings, keep `manage autopay` separate from `setup / upgrade` instead of collapsing both into one generic screen
+- for Home-driven Savings setup, first-paint rendering should come from route data unless Android explicitly blocks on a fetch
+- Savings parity audit must explicitly list hero images/assets, not just composables and copy
+  - once a real downstream feature route exists, do not fall back to a placeholder handoff card for that flow
 - state clarity
   - loading, polling, success, failure, pending, and reset behavior should be easy to trace
   - re-entry into a flow should not accidentally restore stale terminal state
