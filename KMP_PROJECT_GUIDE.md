@@ -328,6 +328,7 @@ Final code-quality gate:
 - for Savings, keep `manage autopay` separate from `setup / upgrade` instead of collapsing both into one generic screen
 - for Home-driven Savings setup, first-paint rendering should come from route data unless Android explicitly blocks on a fetch
 - Savings parity audit must explicitly list hero images/assets, not just composables and copy
+- once the shared Savings setup slice is live, treat remaining work as parity hardening first, not as an excuse to add more Phase 8 scope
   - once a real downstream feature route exists, do not fall back to a placeholder handoff card for that flow
 - state clarity
   - loading, polling, success, failure, pending, and reset behavior should be easy to trace

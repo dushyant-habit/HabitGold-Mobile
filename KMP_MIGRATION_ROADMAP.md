@@ -263,7 +263,7 @@ Deferred review backlog before Phase 7 can be called complete:
 
 ### Phase 8: SIP / Savings
 
-Status: `Audit complete, shared Savings setup and mandate-management slices live`
+Status: `Shared Savings setup and mandate-management slices live, parity still pending`
 
 - [x] Create `feature/savings` structure
 - [x] Port shared savings plan setup/update DTOs and mandate APIs
@@ -278,7 +278,7 @@ Status: `Audit complete, shared Savings setup and mandate-management slices live
 - [x] Add shared setup / polling regression coverage
 - [ ] Finish exact compounding bottom-sheet parity
 - [ ] Finish final setup spacing / density micro-parity
-- [ ] Port savings-specific coupon and promo handling
+- [ ] Finish savings-specific coupon and promo UX refinement
 - [ ] Finish manage-autopay strict visual parity
 - [ ] Rebuild deferred execution-history / detail surfaces if product needs them
 - [ ] Run final end-to-end Savings QA
@@ -289,7 +289,7 @@ Phase 8 slicing rule:
 - the first shipped shared slice is mandate management
 - the second shipped shared slice is setup / upgrade plus savings-specific payment and polling behavior
 - the remaining slice is parity polish plus any deferred savings detail surfaces
-- if setup parity drifts, stop implementation and redo the route-entry, logic, UI, and asset audit before continuing
+- if setup parity drifts, correct it against the Savings audit and Android surface map before adding new Phase 8 scope
 
 ### Phase 9: Profile And Security
 
