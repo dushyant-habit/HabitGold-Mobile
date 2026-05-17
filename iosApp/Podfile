@@ -1,0 +1,15 @@
+platform :ios, '18.2'
+
+target 'iosApp' do
+  use_frameworks!
+
+  pod 'HyperSDK', '2.2.5'
+end
+
+post_install do |installer|
+  fuse_path = "./Pods/HyperSDK/Fuse.rb"
+  clean_assets = false
+  if File.exist?(fuse_path)
+    system("ruby", fuse_path.to_s, clean_assets.to_s)
+  end
+end

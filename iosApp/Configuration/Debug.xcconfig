@@ -4,3 +4,4 @@ PRODUCT_NAME=HabitGoldMobile Staging
 APP_ENV=staging
 API_BASE_URL=https:$(SLASH)/staging.habitgold.com/v1/
 ENABLE_NETWORK_LOGS=YES
+JUSPAY_ENVIRONMENT=sandbox

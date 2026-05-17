@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://maven.juspay.in/jp-build-packages/hyper-sdk/")
+    }
+    dependencies {
+        classpath("in.juspay:hypersdk.plugin:2.0.7")
+    }
+}
+
 plugins {
     // this is necessary to avoid the plugins to be loaded multiple times
     // in each subproject's classloader

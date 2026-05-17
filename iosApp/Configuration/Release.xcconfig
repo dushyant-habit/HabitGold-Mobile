@@ -4,3 +4,4 @@ PRODUCT_NAME=HabitGoldMobile
 APP_ENV=prod
 API_BASE_URL=https:$(SLASH)/api.habitgold.com/v1/
 ENABLE_NETWORK_LOGS=NO
+JUSPAY_ENVIRONMENT=production
