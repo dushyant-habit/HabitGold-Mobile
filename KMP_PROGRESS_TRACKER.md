@@ -12,8 +12,9 @@ Use this together with:
 ## Current Status
 
 - Current phase: `Phase 7`
+- Phase 7 status: `checkpointed, not fully closed`
 - Current focus: `checkpoint the verified Trade foundation, Buy/Sell/Withdrawal flows, and Juspay bridges while deferring transaction-details, invoice-viewer, VPA-management, and help parity to a later review pass`
-- Next milestone: `record the deferred Trade review backlog clearly, commit the current Phase 7 checkpoint, and resume the remaining parity work afterward`
+- Next milestone: `resume the deferred Trade review backlog and close the remaining parity work before marking Phase 7 complete`
 
 ## Phase Status
 
@@ -337,6 +338,8 @@ Immediate tasks:
 - [x] add tests for auth reducers/viewmodels/repositories
 
 ### Phase 7: Trade
+
+Status: `Checkpointed, not fully closed`
 
 Status: `In progress with end-to-end Buy and Sell flows live, Android+iOS Juspay binding in place, and remaining detail-route parity still underway`
 
