@@ -190,17 +190,22 @@ These are tracked explicitly so major product flows do not get lost inside broad
 
 ### Phase 6: Home And Portfolio
 
-- [ ] Create `feature/home` structure
-- [ ] Port dashboard repository logic
-- [ ] Port recent transactions summary logic
-- [ ] Port force-update check logic
-- [ ] Create home MVI state
-- [ ] Rebuild Home top bar, balance card, and zero-balance start-journey states
+- [x] Complete strict Android parity audit for shell, toolbar, section order, and linked flows
+- [x] Create `feature/home` structure
+- [x] Port dashboard repository logic
+- [x] Port recent transactions summary logic
+- [x] Port force-update check logic
+- [x] Create home MVI state
+- [x] Rebuild Home top bar, balance card, and zero-balance start-journey states
+- [x] Rebuild Home trust highlights and first recent-activity slice
+- [x] Rebuild Home savings cards, active savings pager, Why HabitGold cards, and secured footer card sections
+- [x] Rebuild Home gold-price chart sheet and Why HabitGold intro pager
 - [ ] Rebuild Home recent-activity drilldown into transaction details
-- [ ] Rebuild Home savings cards, coupon handoff, and SIP verification dialog
+- [ ] Rebuild Home coupon handoff and SIP verification dialog
 - [ ] Rebuild Home gold value details, support/help, and editorial entry points
-- [ ] Rebuild home UI in small sections instead of one giant file
-- [ ] Add tests for dashboard mapping and home state transitions
+- [ ] Replace temporary Home pending-action handoffs with real feature routes as later phases land
+- [ ] Rebuild Home UI in Android-matching small sections instead of one giant file
+- [x] Add tests for dashboard mapping and home state transitions
 
 ### Phase 7: Trade
 

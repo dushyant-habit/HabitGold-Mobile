@@ -279,9 +279,10 @@ private object TestAppStrings : AppStrings {
     override val shellSessionLoggedOut = "Logged out"
     override val shellProfileComplete = "Complete"
     override val shellProfilePending = "Pending"
-    override val shellTransactionsTitle = "Transactions shell"
-    override val shellTransactionsDescription = "This placeholder keeps the bottom-navigation contract real while we migrate transaction history, status, invoices, and related drilldowns."
-    override val shellProfileTitle = "Profile shell"
+    override val shellRewardsTitle = "Rewards migration in progress"
+    override val shellRewardsDescription = "Rewards stays on the bottom bar in Android. We are keeping that product flow intact while the rewards and referral screens are rebuilt."
+    override val shellHistoryTitle = "History migration in progress"
+    override val shellHistoryDescription = "History stays on the bottom bar in Android. Transactions, status drilldowns, and invoices will be restored here next."
     override val shellPhoneLabel = "Phone"
     override val shellEmailLabel = "Email"
     override val shellPinCodeLabel = "Pincode"
@@ -301,8 +302,8 @@ private object TestAppStrings : AppStrings {
     override fun mainTabLabel(tab: MainTab): String {
         return when (tab) {
             MainTab.Home -> "Home"
-            MainTab.Transactions -> "Transactions"
-            MainTab.Profile -> "Profile"
+            MainTab.Rewards -> "Rewards"
+            MainTab.History -> "History"
         }
     }
 }

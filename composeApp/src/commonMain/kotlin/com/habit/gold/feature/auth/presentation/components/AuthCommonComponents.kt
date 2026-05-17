@@ -8,11 +8,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,6 +34,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +44,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -49,6 +53,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -271,6 +276,7 @@ internal fun AuthTermsFooter(
     onOpenUrl: (String) -> Unit,
 ) {
     val strings = appStrings
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     val termsText = buildAnnotatedString {
         append(strings.authTermsFooterPrefix)
         append("\n")
@@ -299,18 +305,23 @@ internal fun AuthTermsFooter(
         pop()
     }
 
-    ClickableText(
+    Text(
         text = termsText,
-        onClick = { offset ->
-            termsText.getStringAnnotations(start = offset, end = offset)
-                .firstOrNull()
-                ?.let { onOpenUrl(it.item) }
-        },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(termsText, textLayoutResult) {
+                detectTapGestures { position ->
+                    val offset = textLayoutResult?.getOffsetForPosition(position) ?: return@detectTapGestures
+                    termsText.getStringAnnotations(start = offset, end = offset)
+                        .firstOrNull()
+                        ?.let { onOpenUrl(it.item) }
+                }
+            },
         style = MaterialTheme.typography.bodySmall.copy(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         ),
+        onTextLayout = { textLayoutResult = it },
     )
 }
 

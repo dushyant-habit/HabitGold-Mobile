@@ -10,6 +10,6 @@ sealed interface AppRoute {
 
 enum class MainTab {
     Home,
-    Transactions,
-    Profile,
+    Rewards,
+    History,
 }

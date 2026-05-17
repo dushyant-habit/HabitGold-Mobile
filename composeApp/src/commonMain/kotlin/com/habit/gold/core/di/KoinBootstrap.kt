@@ -4,6 +4,7 @@ import com.habit.gold.PlatformInfo
 import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.config.platformAppConfig
 import com.habit.gold.feature.auth.di.authModule
+import com.habit.gold.feature.home.di.homeModule
 import com.habit.gold.getPlatformInfo
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
@@ -20,6 +21,7 @@ fun startKoinIfNeeded(
             coreModule(appConfig, platformInfo),
             networkModule,
             authModule,
+            homeModule,
         )
     }.koin
 }
