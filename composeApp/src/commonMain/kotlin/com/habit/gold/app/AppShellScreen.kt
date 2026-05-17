@@ -45,6 +45,14 @@ import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
+import com.habit.gold.feature.savings.domain.usecase.CancelSavingsMandateUseCase
+import com.habit.gold.feature.savings.domain.usecase.CreateSavingsMandateSessionUseCase
+import com.habit.gold.feature.savings.domain.usecase.GetSavingsMandateUseCase
+import com.habit.gold.feature.savings.domain.usecase.GetSavingsMandatesUseCase
+import com.habit.gold.feature.savings.domain.usecase.PauseSavingsMandateUseCase
+import com.habit.gold.feature.savings.domain.usecase.ResumeSavingsMandateUseCase
+import com.habit.gold.feature.savings.domain.usecase.UpdateSavingsMandateSessionUseCase
+import com.habit.gold.feature.savings.presentation.SavingsRouteDependencies
 import com.habit.gold.feature.trade.domain.TradeLivePriceStore
 import com.habit.gold.feature.trade.domain.usecase.CreateBuyOrderUseCase
 import com.habit.gold.feature.trade.domain.usecase.CreateSellOrderUseCase
@@ -94,6 +102,21 @@ fun AppMainShellScreen(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
             appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
             getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
+        )
+    }
+    val savingsDependencies = remember(appKoin) {
+        SavingsRouteDependencies(
+            getSavingsMandatesUseCase = appKoin.get<GetSavingsMandatesUseCase>(),
+            getSavingsMandateUseCase = appKoin.get<GetSavingsMandateUseCase>(),
+            pauseSavingsMandateUseCase = appKoin.get<PauseSavingsMandateUseCase>(),
+            resumeSavingsMandateUseCase = appKoin.get<ResumeSavingsMandateUseCase>(),
+            cancelSavingsMandateUseCase = appKoin.get<CancelSavingsMandateUseCase>(),
+            createSavingsMandateSessionUseCase = appKoin.get<CreateSavingsMandateSessionUseCase>(),
+            updateSavingsMandateSessionUseCase = appKoin.get<UpdateSavingsMandateSessionUseCase>(),
+            getTradeAvailableCouponsUseCase = appKoin.get<GetTradeAvailableCouponsUseCase>(),
+            validateTradeCouponUseCase = appKoin.get<ValidateTradeCouponUseCase>(),
+            paymentLauncher = paymentLauncher,
+            livePriceStore = appKoin.get<TradeLivePriceStore>(),
         )
     }
     val tradeDependencies = remember(appKoin, paymentLauncher) {
@@ -158,6 +181,7 @@ fun AppMainShellScreen(
             when (selectedTab) {
                 MainTab.Home -> HomeRoute(
                     dependencies = homeDependencies,
+                    savingsDependencies = savingsDependencies,
                     tradeDependencies = tradeDependencies,
                     session = session,
                     onSelectTab = onSelectTab,

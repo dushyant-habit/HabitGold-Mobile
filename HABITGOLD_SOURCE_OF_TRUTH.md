@@ -293,6 +293,14 @@ High-priority flows:
 - SIP
 - delivery
 
+Savings rule:
+
+- treat `manage autopay` and `setup / upgrade` as separate migration slices even though both belong to SIP
+- do not reintroduce a placeholder handoff once a real shared savings route exists
+- for Home-driven savings setup, do not block first paint on a mandate-detail fetch when Home already passed enough route data to render the setup screen
+- savings audit must include an explicit asset ledger for frequency-specific hero illustrations before UI implementation starts
+- once setup / upgrade is live, finish micro-parity and manage-autopay review before expanding Phase 8 scope further
+
 ## 7. Network Standard
 
 Use one shared network approach across the app.

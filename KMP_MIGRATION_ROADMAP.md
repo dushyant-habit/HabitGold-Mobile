@@ -263,16 +263,33 @@ Deferred review backlog before Phase 7 can be called complete:
 
 ### Phase 8: SIP / Savings
 
-- [ ] Create `feature/sip` structure
-- [ ] Port savings plan setup/update APIs
-- [ ] Port savings polling/status logic
-- [ ] Create SIP MVI state
-- [ ] Port Daily, Weekly, and Monthly savings setup variants
-- [ ] Port SIP upgrade flow from Home existing-plan cards
-- [ ] Port SIP resume flow triggered from Home
-- [ ] Port UPI Autopay manage flow: list, filter, pause, resume, cancel
-- [ ] Rebuild savings setup screens
-- [ ] Add tests for SIP setup/status transitions
+Status: `Shared Savings setup and mandate-management slices live, parity still pending`
+
+- [x] Create `feature/savings` structure
+- [x] Port shared savings plan setup/update DTOs and mandate APIs
+- [x] Port savings polling/status logic for setup and post-payment confirmation
+- [x] Create first shared Savings state and route for mandate management
+- [x] Port Daily, Weekly, and Monthly savings setup variants
+- [x] Port SIP upgrade flow from Home existing-plan cards
+- [x] Port SIP resume flow triggered from Home
+- [x] Port UPI Autopay manage flow: list, filter, pause, resume, cancel
+- [x] Rebuild savings setup / upgrade screens
+- [x] Add first shared tests for mandate-management repository and state transitions
+- [x] Add shared setup / polling regression coverage
+- [ ] Finish exact compounding bottom-sheet parity
+- [ ] Finish final setup spacing / density micro-parity
+- [ ] Finish savings-specific coupon and promo UX refinement
+- [ ] Finish manage-autopay strict visual parity
+- [ ] Rebuild deferred execution-history / detail surfaces if product needs them
+- [ ] Run final end-to-end Savings QA
+
+Phase 8 slicing rule:
+
+- `setup / upgrade` and `manage autopay` belong to the same phase but should not be treated as one generic screen
+- the first shipped shared slice is mandate management
+- the second shipped shared slice is setup / upgrade plus savings-specific payment and polling behavior
+- the remaining slice is parity polish plus any deferred savings detail surfaces
+- if setup parity drifts, correct it against the Savings audit and Android surface map before adding new Phase 8 scope
 
 ### Phase 9: Profile And Security
 
@@ -332,6 +349,7 @@ These notes came from a deeper pass through the Android app and are here to prev
 - `Sell` depends on `WithdrawalMode` and on saved verified VPAs. It has a two-step create-then-execute flow, a very short polling window, a pending fallback that relies on History, and locked-gold messaging tied to sell availability.
 - `Delivery / Get Coin` includes catalog, shortfall-to-buy bridge, shared address book, add/edit/delete address, address OTP verification, pincode serviceability, quote creation, payment launch, payment verification polling, order placed, and delivery tracking.
 - `SIP` exists in three places: Home cards, Buy tab, and dedicated savings setup screens. It also has a separate autopay-management flow for pause/resume/cancel.
+- `Savings` should be migrated in two intentional slices: mandate management first, then setup / upgrade with payment and post-payment states.
 - `Refer & Earn` is broader than one screen: rewards home, refer detail, rewards history, rewards redeem, and referral status/history.
 - `ReferralStatusScreen` and `ReferralHistoryScreen` currently look non-production or disconnected. `ReferralHistory` has a route but no obvious live navigation entry, and `ReferralStatusScreen` is driven by hardcoded dummy data. Treat both as redesign candidates unless product confirms they still matter.
 - `TransactionDetails` is shared by trade and delivery because invoice rules differ between trade orders and delivery orders.

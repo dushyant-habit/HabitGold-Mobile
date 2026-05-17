@@ -11,10 +11,10 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 7`
-- Phase 7 status: `checkpointed, not fully closed`
-- Current focus: `checkpoint the verified Trade foundation, Buy/Sell/Withdrawal flows, and Juspay bridges while deferring transaction-details, invoice-viewer, VPA-management, and help parity to a later review pass`
-- Next milestone: `resume the deferred Trade review backlog and close the remaining parity work before marking Phase 7 complete`
+- Current phase: `Phase 8`
+- Phase 8 status: `shared Savings setup and mandate-management slices live, parity still pending`
+- Current focus: `finish setup micro-parity, promo refinement, and manage-autopay parity before closing Phase 8`
+- Next milestone: `close setup sheet/detail parity, complete manage-autopay review, and run final Savings QA`
 
 ## Phase Status
 
@@ -79,6 +79,24 @@ Use this together with:
 - [x] Finish strict Android visual parity for `Buy`
 - [x] Finish strict Android visual parity for `Sell`
 - [ ] Finish strict Android visual parity for trade-owned transaction details and invoice viewer in the later Trade review pass
+
+## Phase 8: SIP / Savings
+
+- [x] Complete strict Android audit for savings setup, upgrade, mandate management, and API ownership
+- [x] Create `feature/savings` structure
+- [x] Port shared savings DTOs, remote data source, repository, and use-case foundation
+- [x] Replace the Home savings placeholder with a real shared mandate-management route
+- [x] Add shared mandate list, status filter, and pause / resume / cancel actions
+- [x] Add first shared Savings tests for repository and viewmodel coverage
+- [x] Rebuild daily / weekly / monthly setup and upgrade screens
+- [x] Port savings execution-day selectors and mandate-session payment handoff
+- [x] Port savings polling, pending, success, and failure states
+- [ ] Finish exact compounding bottom-sheet parity
+- [ ] Finish final setup spacing / density micro-parity
+- [ ] Finish savings-specific coupon and promo UX refinement
+- [ ] Finish manage-autopay strict visual parity
+- [ ] Rebuild any deferred savings detail / execution-history surfaces if product needs them
+- [ ] Run final end-to-end Savings QA
 
 ## Feature Flow Coverage
 
@@ -432,6 +450,7 @@ The next execution order should be:
 - `Home`, `Buy`, and `Delivery` are broader than their top-level route names suggest.
 - `Sell` depends on `WithdrawalMode`, saved VPAs, and History for pending outcomes.
 - `SIP` spans Home, Buy, dedicated savings setup, and autopay management.
+- `Savings` setup / upgrade and mandate-management should be migrated as separate slices even though they belong to the same phase.
 - `RewardsRedeem` is a trade checkout variant, not a standalone payment system.
 - `ReferralStatusScreen` and `ReferralHistoryScreen` need product confirmation before faithful migration.
 - Android app network error handling was inconsistent, so KMP must use a stricter shared error model from the start.

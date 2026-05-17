@@ -13,11 +13,17 @@ import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
+import com.habit.gold.feature.savings.presentation.SavingsDestination
+import com.habit.gold.feature.savings.presentation.SavingsRoute
+import com.habit.gold.feature.savings.presentation.SavingsRouteDependencies
 import com.habit.gold.feature.trade.presentation.TradeDestination
 import com.habit.gold.feature.trade.presentation.TradeRoute
 import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 
 data class HomeRouteDependencies(
     val loadHomeSummaryUseCase: LoadHomeSummaryUseCase,
@@ -28,6 +34,7 @@ data class HomeRouteDependencies(
 @Composable
 fun HomeRoute(
     dependencies: HomeRouteDependencies,
+    savingsDependencies: SavingsRouteDependencies,
     tradeDependencies: TradeRouteDependencies,
     session: AuthSession,
     onSelectTab: (MainTab) -> Unit,
@@ -70,7 +77,18 @@ fun HomeRoute(
                 destination = HomeDestination.GoldValueDetails(uiState.value.summary?.dashboard)
             },
             onToggleBalanceVisibility = { homeViewModel.onIntent(HomeIntent.ToggleBalanceVisibility) },
-            onOpenSavingsDetails = { destination = HomeDestination.Deferred(HomeDeferredTarget.Savings) },
+            onOpenSavingsDetails = { destination = HomeDestination.Savings(SavingsDestination.Manage) },
+            onOpenSavingsSetup = { frequency, mandate ->
+                destination = HomeDestination.Savings(
+                    SavingsDestination.Setup(
+                        frequency = frequency,
+                        initialAmount = mandate?.let(::homeSavingsRouteAmount),
+                        mandateId = mandate?.id,
+                        initialExecutionDay = mandate?.let(::homeSavingsRouteExecutionDay),
+                        initialStatus = mandate?.status,
+                    ),
+                )
+            },
             onOpenTransaction = { item -> destination = HomeDestination.TransactionDetails(item) },
             onOpenSupport = { destination = HomeDestination.HelpCenter },
             modifier = modifier,
@@ -87,6 +105,13 @@ fun HomeRoute(
         is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
             transactionPreview = activeDestination.item,
             onBackClick = { destination = HomeDestination.Dashboard },
+        )
+        is HomeDestination.Savings -> SavingsRoute(
+            dependencies = savingsDependencies,
+            destination = activeDestination.destination,
+            onBackToHome = { destination = HomeDestination.Dashboard },
+            onOpenHelp = { destination = HomeDestination.HelpCenter },
+            modifier = modifier,
         )
         is HomeDestination.Trade -> TradeRoute(
             dependencies = tradeDependencies,
@@ -105,5 +130,35 @@ fun HomeRoute(
                 onSelectTab(MainTab.History)
             },
         )
+    }
+}
+
+private fun homeSavingsRouteAmount(mandate: HomeSipMandate): String? {
+    return mandate.billing?.currentAmount
+        ?: mandate.billingCurrentAmount
+        ?: mandate.billing?.nextExecutionAmount
+        ?: mandate.billingNextExecutionAmount
+        ?: mandate.amount
+}
+
+private fun homeSavingsRouteExecutionDay(mandate: HomeSipMandate): Int? {
+    val rawDate = mandate.nextExecutionDate?.takeIf { it.isNotBlank() } ?: return null
+    val parsedDate = runCatching { LocalDate.parse(rawDate.take(10)) }.getOrNull() ?: return null
+    return when (mandate.frequency.trim().uppercase()) {
+        "WEEKLY" -> parsedDate.dayOfWeek.homeIsoDayNumber()
+        "MONTHLY" -> parsedDate.day
+        else -> null
+    }
+}
+
+private fun DayOfWeek.homeIsoDayNumber(): Int {
+    return when (this) {
+        DayOfWeek.MONDAY -> 1
+        DayOfWeek.TUESDAY -> 2
+        DayOfWeek.WEDNESDAY -> 3
+        DayOfWeek.THURSDAY -> 4
+        DayOfWeek.FRIDAY -> 5
+        DayOfWeek.SATURDAY -> 6
+        DayOfWeek.SUNDAY -> 7
     }
 }
