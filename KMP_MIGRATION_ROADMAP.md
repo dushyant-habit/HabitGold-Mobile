@@ -96,8 +96,8 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Home / Portfolio Flow
 - [x] Buy Gold Flow
 - [x] Sell Gold Flow
-- [ ] Transactions List Flow
-- [ ] Transaction Details / Status Flow
+- [x] Transactions List Flow
+- [x] Transaction Details / Status Flow
 - [ ] SIP / Savings Flow
 - [ ] Profile Flow
 - [ ] Personal Info Flow
@@ -106,9 +106,9 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [ ] Security / App Lock Flow
 - [ ] UPI Autopay Management Flow
 - [ ] UPI ID Management Flow
-- [ ] Rewards Flow
+- [x] Rewards Flow
 - [ ] Referral Flow
-- [ ] Alerts Flow
+- [x] Alerts Flow
 - [ ] Delivery / Get Coin Flow
 
 ### Phase 0: Project Scaffold
@@ -323,7 +323,7 @@ Status: `Checkpointed, not fully closed`
 
 ### Phase 10: History, Rewards, Referral, Alerts
 
-Status: `In progress`
+Status: `Checkpointed through shared History, Alerts, and Rewards`
 
 - Phase 10 rule: keep code quality in focus while implementing, not only at the end
 - do not make a Phase 10 commit without an explicit pre-commit code-quality pass
@@ -370,11 +370,10 @@ Locked audit decisions:
 - referral attribution should become a shared contract, while Install Referrer and deep-link capture remain platform-owned
 - `ReferralStatusScreen` and `ReferralHistoryScreen` are redesign candidates, not automatic faithful migration targets
 
-Recommended implementation order:
+Remaining order:
 
-1. rewards home/history/detail/redeem
-2. referral decision work
-3. final Rewards micro-parity + maintainability cleanup before commit
+1. referral decision work
+2. final Rewards micro-parity + maintainability cleanup before closure
 
 ### Phase 11: Delivery / Get Coin
 

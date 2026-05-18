@@ -51,11 +51,11 @@ Those two Android screens are dummy/local-state driven and remain deferred until
 
 1. referral status/history product decision
 2. final micro-parity pass on rewards home / refer detail / redeem
-3. maintainability cleanup for oversized Rewards UI files before commit
+3. maintainability cleanup for oversized Rewards UI files before Phase 10 closure
 
 ## Quality Rule
 
-Before any Phase 10 Rewards commit:
+Before Phase 10 Rewards is marked complete:
 
 - keep file-size and responsibility under control while writing
 - avoid inventing extra sections or placeholder cards not present in Android
@@ -66,5 +66,5 @@ Before any Phase 10 Rewards commit:
   - preserve gradient stop order and direction
   - do not use “close enough” color replacements
 - do not ignore file-size drift:
-  - `RewardsHomeSections.kt` and `RewardsReferDetailSections.kt` still need an explicit maintainability review before commit
+  - `RewardsHomeSections.kt` and `RewardsReferDetailSections.kt` still need an explicit maintainability review before closure
 - keep docs aligned with the verified implementation state
