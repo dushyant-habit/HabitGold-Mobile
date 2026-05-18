@@ -40,11 +40,18 @@ import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.core.storage.SecureStorage
 import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
+import com.habit.gold.feature.profile.domain.usecase.GetProfileSummaryUseCase
+import com.habit.gold.feature.profile.domain.usecase.LogoutProfileUseCase
+import com.habit.gold.feature.profile.domain.usecase.RequestDeleteAccountUseCase
+import com.habit.gold.feature.profile.domain.usecase.UpdateProfileUseCase
+import com.habit.gold.feature.profile.domain.usecase.VerifyProfileKycUseCase
+import com.habit.gold.feature.profile.presentation.ProfileRouteDependencies
 import com.habit.gold.feature.savings.domain.usecase.CancelSavingsMandateUseCase
 import com.habit.gold.feature.savings.domain.usecase.CreateSavingsMandateSessionUseCase
 import com.habit.gold.feature.savings.domain.usecase.GetSavingsMandateUseCase
@@ -64,9 +71,12 @@ import com.habit.gold.feature.trade.domain.usecase.GetTradeStatusUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetTradeTransactionsUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetTradeUserVpasUseCase
 import com.habit.gold.feature.trade.domain.usecase.PollTradeStatusUseCase
+import com.habit.gold.feature.trade.domain.usecase.SetDefaultTradeVpaUseCase
 import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
+import com.habit.gold.feature.trade.domain.usecase.VerifyTradeVpaUseCase
 import com.habit.gold.feature.trade.presentation.rememberPlatformTradePaymentLauncher
 import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
+import io.ktor.client.HttpClient
 import org.koin.core.Koin
 
 private val MainBottomNavShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
@@ -102,6 +112,21 @@ fun AppMainShellScreen(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
             appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
             getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
+        )
+    }
+    val profileDependencies = remember(appKoin) {
+        ProfileRouteDependencies(
+            getProfileSummaryUseCase = appKoin.get<GetProfileSummaryUseCase>(),
+            updateProfileUseCase = appKoin.get<UpdateProfileUseCase>(),
+            verifyProfileKycUseCase = appKoin.get<VerifyProfileKycUseCase>(),
+            logoutProfileUseCase = appKoin.get<LogoutProfileUseCase>(),
+            requestDeleteAccountUseCase = appKoin.get<RequestDeleteAccountUseCase>(),
+            getTradeUserVpasUseCase = appKoin.get<GetTradeUserVpasUseCase>(),
+            setDefaultTradeVpaUseCase = appKoin.get<SetDefaultTradeVpaUseCase>(),
+            verifyTradeVpaUseCase = appKoin.get<VerifyTradeVpaUseCase>(),
+            httpClient = appKoin.get<HttpClient>(),
+            secureStorage = appKoin.get<SecureStorage>(),
+            appVersion = appKoin.get<com.habit.gold.core.config.AppConfig>().appVersion,
         )
     }
     val savingsDependencies = remember(appKoin) {
@@ -181,6 +206,7 @@ fun AppMainShellScreen(
             when (selectedTab) {
                 MainTab.Home -> HomeRoute(
                     dependencies = homeDependencies,
+                    profileDependencies = profileDependencies,
                     savingsDependencies = savingsDependencies,
                     tradeDependencies = tradeDependencies,
                     session = session,

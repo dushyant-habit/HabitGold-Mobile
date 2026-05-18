@@ -3,6 +3,7 @@ package com.habit.gold.feature.savings.presentation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -191,6 +192,37 @@ internal fun SavingsScreen(
         title = stringResource(Res.string.savings_manage_title),
         onBackClick = onBackClick,
         backgroundColor = Color.White,
+        actions = {
+            Surface(
+                modifier = Modifier.padding(end = 8.dp),
+                onClick = { isFilterSheetVisible = true },
+                shape = RoundedCornerShape(14.dp),
+                color = if (state.selectedFilter == null) Color.White else HabitGoldPalette.plum.copy(alpha = 0.08f),
+                border = BorderStroke(
+                    1.dp,
+                    if (state.selectedFilter == null) ChildCardBorder else HabitGoldPalette.plum.copy(alpha = 0.18f),
+                ),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = if (state.selectedFilter == null) ChildPrimaryText else HabitGoldPalette.plum,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = state.selectedFilter?.label() ?: stringResource(Res.string.savings_manage_status),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (state.selectedFilter == null) ChildPrimaryText else HabitGoldPalette.plum,
+                    )
+                }
+            }
+        },
     ) { paddingValues ->
         when {
             state.isLoading && state.mandates.isEmpty() -> {
@@ -222,44 +254,10 @@ internal fun SavingsScreen(
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
                 ) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                Surface(
-                                    onClick = { isFilterSheetVisible = true },
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = if (state.selectedFilter == null) Color.White else HabitGoldPalette.plum.copy(alpha = 0.08f),
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (state.selectedFilter == null) ChildCardBorder else HabitGoldPalette.plum.copy(alpha = 0.18f),
-                                    ),
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Tune,
-                                            contentDescription = null,
-                                            tint = if (state.selectedFilter == null) ChildPrimaryText else HabitGoldPalette.plum,
-                                            modifier = Modifier.size(14.dp),
-                                        )
-                                        Text(
-                                            text = state.selectedFilter?.label() ?: stringResource(Res.string.savings_manage_status),
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = if (state.selectedFilter == null) ChildPrimaryText else HabitGoldPalette.plum,
-                                        )
-                                    }
-                                }
-                            }
-
                             state.actionMessage?.let { actionMessage ->
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
@@ -427,7 +425,11 @@ private fun SavingsMandateCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onToggleExpanded)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onToggleExpanded,
+                )
                 .padding(18.dp),
         ) {
             Row(
@@ -489,34 +491,47 @@ private fun SavingsMandateCard(
                 HorizontalDivider(color = ChildCardBorder.copy(alpha = 0.8f))
                 Spacer(modifier = Modifier.height(18.dp))
 
-                SavingsDetailRow(
-                    label = stringResource(Res.string.savings_manage_frequency),
-                    value = mandate.frequency.replaceFirstChar { it.uppercase() },
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        SavingsDetailCell(
+                            modifier = Modifier.weight(1f),
+                            label = stringResource(Res.string.savings_manage_frequency),
+                            value = mandate.frequency.replaceFirstChar { it.uppercase() },
+                        )
+                        mandate.startDate.takeIf { it.isNotBlank() }?.let {
+                            SavingsDetailCell(
+                                modifier = Modifier.weight(1f),
+                                label = stringResource(Res.string.savings_manage_started_on),
+                                value = formatCreatedAt(it),
+                            )
+                        } ?: Spacer(modifier = Modifier.weight(1f))
+                    }
 
-                mandate.startDate.takeIf { it.isNotBlank() }?.let {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    SavingsDetailRow(
-                        label = stringResource(Res.string.savings_manage_started_on),
-                        value = formatCreatedAt(it),
-                    )
-                }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        mandate.nextExecutionDate?.takeIf { it.isNotBlank() }?.let {
+                            SavingsDetailCell(
+                                modifier = Modifier.weight(1f),
+                                label = stringResource(Res.string.savings_manage_upcoming_execution),
+                                value = formatCreatedAt(it),
+                            )
+                        } ?: Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
 
-                mandate.nextExecutionDate?.takeIf { it.isNotBlank() }?.let {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    SavingsDetailRow(
-                        label = stringResource(Res.string.savings_manage_upcoming_execution),
-                        value = formatCreatedAt(it),
-                    )
-                }
-
-                mandate.juspayMandateId?.takeIf { it.isNotBlank() }?.let {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    SavingsDetailRow(
-                        label = stringResource(Res.string.savings_manage_mandate_id),
-                        value = it,
-                        valueMaxLines = 1,
-                    )
+                    mandate.juspayMandateId?.takeIf { it.isNotBlank() }?.let {
+                        SavingsDetailCell(
+                            modifier = Modifier.fillMaxWidth(),
+                            label = stringResource(Res.string.savings_manage_mandate_id),
+                            value = it,
+                            valueMaxLines = 2,
+                        )
+                    }
                 }
 
                 helperNote?.let {
@@ -592,6 +607,34 @@ private fun SavingsMandateCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SavingsDetailCell(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueMaxLines: Int = 2,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ChildMutedText,
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = ChildPrimaryText,
+            maxLines = valueMaxLines,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

@@ -11,10 +11,10 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 8`
-- Phase 8 status: `shared Savings setup and mandate-management slices live, parity still pending`
-- Current focus: `finish setup micro-parity, promo refinement, and manage-autopay parity before closing Phase 8`
-- Next milestone: `close setup sheet/detail parity, complete manage-autopay review, and run final Savings QA`
+- Current phase: `Phase 9`
+- Phase 9 status: `checkpointed, not fully closed`
+- Current focus: `finish remaining Phase 9 parity and deferred biometric/security review`
+- Next milestone: `close the Phase 9 checkpoint gaps before moving fully into later UI phases`
 
 ## Phase Status
 
@@ -97,6 +97,28 @@ Use this together with:
 - [ ] Finish manage-autopay strict visual parity
 - [ ] Rebuild any deferred savings detail / execution-history surfaces if product needs them
 - [ ] Run final end-to-end Savings QA
+
+## Phase 9: Profile And Security
+
+- [x] Complete strict Android audit for Profile, KYC, Nominee, Security, Logout, UPI Autopay, and UPI ID management
+- [x] Resolve ownership conflict: `Manage Autopay` stays Savings-owned and Profile-linked
+- [x] Resolve ownership boundary: `Manage UPI IDs` stays trade/payments-backed and Profile-routed
+- [x] Create `feature/profile` structure
+- [~] Port shared profile fetch/update/logout foundation
+- profile fetch/update/logout/delete-account foundation is live
+- KYC verify and nominee save request paths are live
+- biometric/security parity is intentionally deferred
+- [x] Rebuild Profile landing hub
+- [x] Rebuild Personal Info flow
+- [x] Rebuild KYC flow
+- [x] Rebuild Nominee flow
+- [ ] Rebuild Security / App Lock setup and verification flows
+- [x] Link Profile to Savings-owned `Manage Autopay`
+- [~] Rebuild trade-backed `Manage UPI IDs` under Profile route ownership
+- Profile route ownership is live; final strict parity is still pending
+- [~] Add tests for profile state transitions, validations, and logout/delete-account rules
+- repository/logout/delete-account and profile input/date tests are live
+- deeper child-flow/state coverage is still pending
 
 ## Feature Flow Coverage
 
