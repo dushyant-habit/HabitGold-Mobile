@@ -9,6 +9,7 @@ data class HomeState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isBalanceVisible: Boolean = true,
+    val hasUnreadAlerts: Boolean = false,
     val summary: HomeSummary? = null,
     val errorMessage: String? = null,
 ) : MviState
@@ -16,6 +17,7 @@ data class HomeState(
 sealed interface HomeIntent : MviIntent {
     data object Load : HomeIntent
     data object Refresh : HomeIntent
+    data object RestorePreferences : HomeIntent
     data object ToggleBalanceVisibility : HomeIntent
 }
 

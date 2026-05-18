@@ -119,6 +119,8 @@ Use this together with:
 - [~] Add tests for profile state transitions, validations, and logout/delete-account rules
 - repository/logout/delete-account and profile input/date tests are live
 - deeper child-flow/state coverage is still pending
+- [ ] Run mandatory Phase 9 hardening and code-quality closure pass before marking the phase done
+- this later pass must cover parity review, deferred biometric/security work, unused-code sweep, duplication review, file-size/ownership review, and final end-to-end QA
 
 ## Feature Flow Coverage
 
@@ -404,7 +406,24 @@ Immediate tasks:
 
 ### Phase 10: History, Rewards, Referral, Alerts
 
-Status: `Not started`
+Status: `In progress`
+
+Mandatory implementation rule:
+
+- keep code-quality review active during Phase 10 implementation, not only during cleanup
+- do not create a Phase 10 commit until a pre-commit code-quality pass has been done
+- color and gradient parity is mandatory for Phase 10 and later UI-heavy phases:
+  - extract exact Android color tokens before implementation
+  - use exact gradients instead of approximate replacements
+  - preserve gradient stop order and direction from Android
+- the mandatory Phase 10 pre-commit pass must cover:
+  - file-size / responsibility review
+  - duplication and shared-helper review
+  - unused-code / stale-route sweep
+  - keyboard/focus behavior review on interactive screens
+  - localization review
+  - color and gradient parity review against Android
+  - docs alignment with the verified implementation
 
 Definition of done:
 
@@ -415,12 +434,34 @@ Definition of done:
 
 Immediate tasks:
 
-- [ ] build Transactions List Flow
-- [ ] build Transaction Details / Status Flow
-- [ ] port rewards flows
-- [ ] port referral flows
-- [ ] port alerts flow
-- [ ] add history/rewards/referral/alerts tests
+- [x] build Transactions List Flow
+- [x] build Transaction Details / Status Flow
+- [x] locate strict Android Rewards source of truth
+- [x] complete strict Rewards/Referral audit from Android project files
+- [x] port rewards flows
+- [~] port referral flows
+- [x] port alerts flow
+- [~] add history/rewards/referral/alerts tests
+
+Audit decisions locked:
+
+- split Phase 10 into four shared feature boundaries:
+  - `feature/history`
+  - `feature/rewards`
+  - `feature/referral`
+  - `feature/alerts`
+- treat `RewardsRedeem` as a rewards-routed Trade checkout variant
+- keep alerts persistence shared/local while leaving push receive bindings platform-specific
+- create a shared referral-attribution contract, but keep Install Referrer and deep-link capture platform-specific
+- do not faithfully port `ReferralStatusScreen` and `ReferralHistoryScreen` until product confirms they should exist in shared form
+
+Recommended implementation order:
+
+1. rewards home/history/detail/redeem
+2. referral decision work
+3. final Rewards micro-parity + maintainability cleanup before commit
+2. rewards redeem
+3. referral decision work
 
 ## Start Here
 

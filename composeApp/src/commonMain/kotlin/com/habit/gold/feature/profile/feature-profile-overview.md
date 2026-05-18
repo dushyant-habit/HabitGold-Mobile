@@ -89,6 +89,7 @@ The biggest remaining Phase 9 gaps are:
 - Manage Autopay remains Savings-owned and still needs final shared visual hardening
 - Manage UPI IDs still needs final strict parity review under the Profile route
 - final end-to-end Phase 9 device QA is still pending
+- a mandatory Phase 9 hardening/code-quality closure pass is still pending before this phase can be called done
 
 ## Implementation Priorities
 
@@ -99,4 +100,9 @@ The implementation order locked by the audit is:
    - Savings-owned Manage Autopay
    - trade-backed UPI ID Management screen
 3. final logout/delete-account/Profile hub micro-parity pass
-4. final Phase 9 parity and QA pass
+4. mandatory Phase 9 hardening/code-quality closure pass
+   - deferred biometric/security work
+   - unused-code sweep
+   - duplication review
+   - file-size and ownership review
+   - final Phase 9 parity and QA pass

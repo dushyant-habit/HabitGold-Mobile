@@ -24,6 +24,7 @@ class HomeViewModel(
                 }
             }
             HomeIntent.Refresh -> loadSummary(isUserRefresh = true)
+            HomeIntent.RestorePreferences -> restorePreferences()
             HomeIntent.ToggleBalanceVisibility -> toggleBalanceVisibility()
         }
     }
@@ -35,7 +36,10 @@ class HomeViewModel(
         viewModelScope.launch {
             val preferences = appPreferencesStorage.readPreferences()
             updateState {
-                it.copy(isBalanceVisible = preferences.isBalanceVisible)
+                it.copy(
+                    isBalanceVisible = preferences.isBalanceVisible,
+                    hasUnreadAlerts = preferences.hasUnreadAlerts,
+                )
             }
         }
     }

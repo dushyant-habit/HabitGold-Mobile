@@ -8,6 +8,7 @@ import com.habit.gold.feature.trade.presentation.TradeDestination
 
 internal sealed interface HomeDestination {
     data object Dashboard : HomeDestination
+    data object Alerts : HomeDestination
     data class GoldValueDetails(val dashboard: HomeDashboardSummary?) : HomeDestination
     data object HelpCenter : HomeDestination
     data class Profile(val destination: ProfileDestination) : HomeDestination

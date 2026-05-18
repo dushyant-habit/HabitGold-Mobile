@@ -42,6 +42,15 @@ internal fun BuyTradeRouteController(
 
     LaunchedEffect(destination) {
         buyTradeViewModel.onIntent(BuyTradeIntent.Load)
+        buyTradeViewModel.onIntent(
+            BuyTradeIntent.ChangeEntryMode(
+                if (destination.oneTimeUseGrams) {
+                    BuyTradeEntryMode.Grams
+                } else {
+                    BuyTradeEntryMode.Rupees
+                },
+            ),
+        )
     }
 
     PlatformBackHandler(
@@ -69,6 +78,8 @@ internal fun BuyTradeRouteController(
                 ),
             )
         },
+        initialAmount = destination.amount,
+        initialOneTimeUseGrams = destination.oneTimeUseGrams,
         onIntent = buyTradeViewModel::onIntent,
         modifier = modifier,
     )

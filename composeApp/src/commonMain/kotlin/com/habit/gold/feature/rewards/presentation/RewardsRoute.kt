@@ -1,0 +1,174 @@
+package com.habit.gold.feature.rewards.presentation
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.habit.gold.core.presentation.PlatformBackHandler
+import com.habit.gold.feature.rewards.domain.usecase.GetReferDetailsUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsHistoryUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsUserFeaturesUseCase
+import com.habit.gold.feature.savings.presentation.SavingsDestination
+import com.habit.gold.feature.savings.presentation.SavingsRoute
+import com.habit.gold.feature.savings.presentation.SavingsRouteDependencies
+import com.habit.gold.feature.trade.presentation.TradeDestination
+import com.habit.gold.feature.trade.presentation.TradeRoute
+import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
+
+data class RewardsRouteDependencies(
+    val getRewardsMilestonesUseCase: GetRewardsMilestonesUseCase,
+    val getRewardsUserFeaturesUseCase: GetRewardsUserFeaturesUseCase,
+    val getRewardsHistoryUseCase: GetRewardsHistoryUseCase,
+    val getReferDetailsUseCase: GetReferDetailsUseCase,
+    val tradeDependencies: TradeRouteDependencies,
+    val savingsDependencies: SavingsRouteDependencies,
+)
+
+private sealed interface RewardsDestination {
+    data object Home : RewardsDestination
+    data object History : RewardsDestination
+    data object ReferDetail : RewardsDestination
+    data object Redeem : RewardsDestination
+    data class TradeFlow(val destination: TradeDestination) : RewardsDestination
+    data class SavingsFlow(val destination: SavingsDestination) : RewardsDestination
+}
+
+@Composable
+fun RewardsRoute(
+    dependencies: RewardsRouteDependencies,
+    onBottomBarVisibilityChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val rewardsViewModel = viewModel {
+        RewardsViewModel(
+            getRewardsMilestonesUseCase = dependencies.getRewardsMilestonesUseCase,
+            getRewardsUserFeaturesUseCase = dependencies.getRewardsUserFeaturesUseCase,
+        )
+    }
+    val historyViewModel = viewModel {
+        RewardsHistoryViewModel(
+            getRewardsHistoryUseCase = dependencies.getRewardsHistoryUseCase,
+        )
+    }
+    val referDetailViewModel = viewModel {
+        RewardsReferDetailViewModel(
+            getReferDetailsUseCase = dependencies.getReferDetailsUseCase,
+        )
+    }
+
+    val rewardsState by rewardsViewModel.state.collectAsStateWithLifecycle()
+    val historyState by historyViewModel.state.collectAsStateWithLifecycle()
+    val referDetailState by referDetailViewModel.state.collectAsStateWithLifecycle()
+    var destination by remember { mutableStateOf<RewardsDestination>(RewardsDestination.Home) }
+    var nestedReturnDestination by remember { mutableStateOf<RewardsDestination>(RewardsDestination.Home) }
+
+    LaunchedEffect(Unit) {
+        rewardsViewModel.onIntent(RewardsHomeIntent.Visible)
+    }
+
+    LaunchedEffect(destination) {
+        onBottomBarVisibilityChange(destination == RewardsDestination.Home)
+    }
+
+    PlatformBackHandler(
+        enabled = destination != RewardsDestination.Home &&
+            destination !is RewardsDestination.TradeFlow &&
+            destination !is RewardsDestination.SavingsFlow,
+        onBack = {
+            destination = when (destination) {
+                RewardsDestination.History -> RewardsDestination.Home
+                RewardsDestination.ReferDetail -> RewardsDestination.Home
+                RewardsDestination.Redeem -> RewardsDestination.Home
+                RewardsDestination.Home -> RewardsDestination.Home
+                is RewardsDestination.TradeFlow,
+                is RewardsDestination.SavingsFlow -> nestedReturnDestination
+            }
+        },
+    )
+
+    when (val currentDestination = destination) {
+        RewardsDestination.Home -> RewardsScreen(
+            state = rewardsState,
+            onRefresh = { rewardsViewModel.onIntent(RewardsHomeIntent.Refresh) },
+            onHistoryClick = { destination = RewardsDestination.History },
+            onReferDetailClick = { destination = RewardsDestination.ReferDetail },
+            onBuyGoldJourneyClick = {
+                nestedReturnDestination = RewardsDestination.Home
+                destination = RewardsDestination.TradeFlow(
+                    TradeDestination.Buy(amount = "0.5", oneTimeUseGrams = true),
+                )
+            },
+            onRedeemSwipe = {
+                nestedReturnDestination = RewardsDestination.Home
+                destination = RewardsDestination.Redeem
+            },
+            modifier = modifier,
+        )
+
+        RewardsDestination.History -> RewardsHistoryScreen(
+            state = historyState,
+            onRefresh = historyViewModel::refresh,
+            onBackClick = { destination = RewardsDestination.Home },
+            modifier = modifier,
+        )
+
+        RewardsDestination.ReferDetail -> RewardsReferDetailScreen(
+            state = referDetailState,
+            onRefresh = referDetailViewModel::refresh,
+            onBackClick = { destination = RewardsDestination.Home },
+            onHistoryClick = { destination = RewardsDestination.History },
+            onBuyNowClick = {
+                nestedReturnDestination = RewardsDestination.ReferDetail
+                destination = RewardsDestination.TradeFlow(
+                    TradeDestination.Buy(amount = "10000", oneTimeUseGrams = false),
+                )
+            },
+            onStartSipClick = {
+                nestedReturnDestination = RewardsDestination.ReferDetail
+                destination = RewardsDestination.SavingsFlow(
+                    SavingsDestination.Setup(
+                        frequency = "Weekly",
+                        initialAmount = "2500",
+                    ),
+                )
+            },
+            modifier = modifier,
+        )
+
+        RewardsDestination.Redeem -> RewardsRedeemRouteController(
+            rewardsState = rewardsState,
+            tradeDependencies = dependencies.tradeDependencies,
+            onBackClick = { destination = nestedReturnDestination },
+            onRefreshRewards = { rewardsViewModel.onIntent(RewardsHomeIntent.Refresh) },
+            modifier = modifier,
+        )
+
+        is RewardsDestination.TradeFlow -> {
+            TradeRoute(
+                dependencies = dependencies.tradeDependencies,
+                destination = currentDestination.destination,
+                onBackToHome = { destination = nestedReturnDestination },
+                onNavigate = { nextTradeDestination ->
+                    destination = RewardsDestination.TradeFlow(nextTradeDestination)
+                },
+                modifier = modifier,
+            )
+        }
+
+        is RewardsDestination.SavingsFlow -> {
+            SavingsRoute(
+                dependencies = dependencies.savingsDependencies,
+                destination = currentDestination.destination,
+                onBackToHome = { destination = nestedReturnDestination },
+                onOpenHelp = { destination = nestedReturnDestination },
+                modifier = modifier,
+            )
+        }
+    }
+}

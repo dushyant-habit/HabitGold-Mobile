@@ -162,6 +162,26 @@ class HomeViewModelTest {
         assertFalse(viewModel.state.value.isBalanceVisible)
         assertFalse(preferencesStorage.readPreferences().isBalanceVisible)
     }
+
+    @Test
+    fun `restore preferences hydrates unread alerts state`() = runTest(dispatcher) {
+        val preferencesStorage = InMemoryAppPreferencesStorage().also {
+            it.writePreferences(it.readPreferences().copy(hasUnreadAlerts = true))
+        }
+        val viewModel = HomeViewModel(
+            loadHomeSummaryUseCase = LoadHomeSummaryUseCase(
+                FakeViewModelHomeRepository(
+                    dashboardResult = ApiResult.Success(viewModelDashboard()),
+                )
+            ),
+            appPreferencesStorage = preferencesStorage,
+        )
+
+        viewModel.onIntent(HomeIntent.RestorePreferences)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.hasUnreadAlerts)
+    }
 }
 
 private class FakeViewModelHomeRepository(

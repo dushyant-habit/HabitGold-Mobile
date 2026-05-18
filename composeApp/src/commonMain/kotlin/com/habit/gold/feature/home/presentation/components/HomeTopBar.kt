@@ -60,6 +60,7 @@ private val HomeToolbarIconSize = 32.dp
 internal fun HomeTopBar(
     user: AuthenticatedUser?,
     liveRate: Double,
+    hasUnreadAlerts: Boolean,
     onProfileClick: () -> Unit,
     onAlertsClick: () -> Unit,
     onOpenGoldPrice: () -> Unit,
@@ -180,6 +181,16 @@ internal fun HomeTopBar(
                     tint = Color.Black.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp),
                 )
+                if (hasUnreadAlerts) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 7.dp, end = 7.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEF4444)),
+                    )
+                }
             }
         }
     }

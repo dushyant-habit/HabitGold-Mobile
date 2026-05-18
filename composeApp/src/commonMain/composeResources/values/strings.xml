@@ -5,8 +5,15 @@
     <string name="common_close">Close</string>
     <string name="common_contact_us">Contact Us</string>
     <string name="common_help">Help</string>
+    <string name="common_just_now">Just now</string>
+    <string name="common_minutes_ago">%1$s min ago</string>
+    <string name="common_hours_ago">%1$s hr ago</string>
+    <string name="common_days_ago">%1$s days ago</string>
     <string name="common_proceed">Proceed</string>
     <string name="common_retry">Retry</string>
+    <string name="alerts_screen_title">Alerts</string>
+    <string name="alerts_screen_empty_title">No alerts yet</string>
+    <string name="alerts_screen_empty_message">Your latest updates and reminders will show up here once they arrive.</string>
     <string name="common_selected">Selected</string>
     <string name="common_transaction_details">Transaction Details</string>
     <string name="common_toggle_visibility">Toggle Visibility</string>
@@ -21,6 +28,7 @@
     <string name="common_your_gold_is_100percent_secured">Your Gold is
 100% Secured</string>
     <string name="common_safegold">SafeGold</string>
+    <string name="common_remove_filter">Remove Filter</string>
 
     <!-- Main Tabs -->
     <string name="main_tab_home">Home</string>
@@ -51,6 +59,39 @@ Invest in Gold</string>
     <string name="shell_pin_code_label">Pincode</string>
     <string name="shell_not_added_yet">Not added yet</string>
     <string name="shell_logout_cta">Log out</string>
+
+    <!-- History -->
+    <string name="history_screen_transactions">Transactions</string>
+    <string name="history_screen_recent_transactions">Recent transactions</string>
+    <string name="history_screen_status">Status</string>
+    <string name="history_screen_status_filter_title">Filter by status</string>
+    <string name="history_screen_status_filter_content_description">Filter transactions by status</string>
+    <string name="history_screen_filter_all">All</string>
+    <string name="history_screen_filter_buy_gold">Buy Gold</string>
+    <string name="history_screen_filter_sell_gold">Sell Gold</string>
+    <string name="history_screen_filter_delivery">Delivery</string>
+    <string name="history_screen_status_success">Success</string>
+    <string name="history_screen_status_refund">Refund</string>
+    <string name="history_screen_status_failed">Failed</string>
+    <string name="history_screen_status_in_progress">In Progress</string>
+    <string name="history_screen_load_failed">Could not load transactions.</string>
+    <string name="history_screen_empty_delivery_default">No delivery orders found yet</string>
+    <string name="history_screen_empty_success">No successful items found</string>
+    <string name="history_screen_empty_refund">No refund items found</string>
+    <string name="history_screen_empty_failed">No failed items found</string>
+    <string name="history_screen_empty_pending">No in progress items found</string>
+    <string name="history_screen_empty_sell_default">No successful, refund, or payout processing items found</string>
+    <string name="history_screen_empty_all_default">No successful, refund, or payout processing sell items found</string>
+    <string name="history_screen_empty_trade_default">No successful or refund items found</string>
+    <string name="history_screen_type_buy">Buy</string>
+    <string name="history_screen_type_sell">Sell</string>
+    <string name="history_screen_type_delivery">Delivery</string>
+    <string name="history_screen_title_gold_purchase">Gold Purchase</string>
+    <string name="history_screen_title_gold_sale">Gold Sale</string>
+    <string name="history_screen_title_gold_delivery">Gold Delivery</string>
+    <string name="history_screen_title_gold_savings">Gold SIP</string>
+    <string name="history_screen_title_reward">Reward</string>
+    <string name="history_screen_title_transaction">Transaction</string>
 
     <!-- Auth: Shared -->
     <string name="auth_tagline">Invest in a Habit. Invest in Gold.</string>
@@ -654,6 +695,30 @@ Invest in Gold</string>
     <string name="profile_vpa_not_verified">Not verified</string>
     <string name="profile_vpa_default">Default</string>
     <string name="profile_vpa_set_default">Set default</string>
+    <string name="rewards_flow_toolbar_rewards">Rewards</string>
+    <string name="rewards_flow_toolbar_rewards_history">Rewards history</string>
+    <string name="rewards_history_screen_helper">Credits add to your balance. Debits show redemptions and expired rewards.</string>
+    <string name="rewards_history_screen_empty">No reward history yet.</string>
+    <string name="rewards_history_screen_error">Could not load rewards history.</string>
+    <string name="refer_earn_screen_buy_half_gram_unlock_rewards">BUY 0.5 GM &amp; UNLOCK REWARDS</string>
+    <string name="refer_earn_screen_unlock_extra_gold">Unlock Extra Gold</string>
+    <string name="refer_earn_screen_refer_and_earn_rewards_when_friends_join">Refer &amp; earn rewards when friends join</string>
+    <string name="refer_earn_screen_total_rewards_earned">TOTAL REWARDS EARNED</string>
+    <string name="refer_earn_screen_gold_purchase_cashback">Gold Purchase Reward</string>
+    <string name="refer_earn_screen_referral_cashback">Referral Reward</string>
+    <string name="refer_earn_screen_refer_now">REFER NOW</string>
+    <string name="refer_earn_screen_start_your_gold_journey">START YOUR GOLD JOURNEY</string>
+    <string name="refer_earn_screen_insured">Insured</string>
+    <string name="refer_earn_screen_insured_vault">INSURED VAULT</string>
+    <string name="refer_earn_screen_no_fees">No Fees</string>
+    <string name="refer_earn_screen_no_hidden_fees">NO HIDDEN FEES</string>
+    <string name="refer_earn_screen_milestone_rewards_path">MILESTONE REWARDS PATH</string>
+    <string name="refer_earn_screen_unlock_booster">UNLOCK BOOSTER</string>
+    <string name="refer_earn_screen_milestones_done_tap_below_to_turn_on_your">Milestones done — tap below to turn on your booster.</string>
+    <string name="refer_earn_screen_extra_cashback_after_you_finish_all_milestones">Extra cashback after you finish all milestones.</string>
+    <string name="common_buy_now">BUY NOW</string>
+    <string name="swipe_to_redeem_track_label">SWIPE TO REDEEM</string>
+    <string name="swipe_to_redeem_track_icon_description">Swipe to redeem</string>
     <string name="common_ok">OK</string>
     <string name="common_delete">Delete</string>
 </resources>

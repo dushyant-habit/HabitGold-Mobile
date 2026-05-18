@@ -42,6 +42,11 @@ import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.storage.SecureStorage
 import com.habit.gold.core.storage.AppPreferencesStorage
+import com.habit.gold.feature.alerts.domain.usecase.GetAlertsUseCase
+import com.habit.gold.feature.alerts.domain.usecase.MarkAllAlertsReadUseCase
+import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
+import com.habit.gold.feature.history.presentation.HistoryRoute
+import com.habit.gold.feature.history.presentation.HistoryRouteDependencies
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
@@ -52,6 +57,12 @@ import com.habit.gold.feature.profile.domain.usecase.RequestDeleteAccountUseCase
 import com.habit.gold.feature.profile.domain.usecase.UpdateProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.VerifyProfileKycUseCase
 import com.habit.gold.feature.profile.presentation.ProfileRouteDependencies
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsHistoryUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetRewardsUserFeaturesUseCase
+import com.habit.gold.feature.rewards.domain.usecase.GetReferDetailsUseCase
+import com.habit.gold.feature.rewards.presentation.RewardsRoute
+import com.habit.gold.feature.rewards.presentation.RewardsRouteDependencies
 import com.habit.gold.feature.savings.domain.usecase.CancelSavingsMandateUseCase
 import com.habit.gold.feature.savings.domain.usecase.CreateSavingsMandateSessionUseCase
 import com.habit.gold.feature.savings.domain.usecase.GetSavingsMandateUseCase
@@ -161,6 +172,28 @@ fun AppMainShellScreen(
             getTradeInvoiceUseCase = appKoin.get<GetTradeInvoiceUseCase>(),
         )
     }
+    val historyDependencies = remember(appKoin) {
+        HistoryRouteDependencies(
+            getTradeTransactionsUseCase = appKoin.get<GetTradeTransactionsUseCase>(),
+            getTradeInvoiceUseCase = appKoin.get<GetTradeInvoiceUseCase>(),
+        )
+    }
+    val rewardsDependencies = remember(appKoin) {
+        RewardsRouteDependencies(
+            getRewardsMilestonesUseCase = appKoin.get<GetRewardsMilestonesUseCase>(),
+            getRewardsUserFeaturesUseCase = appKoin.get<GetRewardsUserFeaturesUseCase>(),
+            getRewardsHistoryUseCase = appKoin.get<GetRewardsHistoryUseCase>(),
+            getReferDetailsUseCase = appKoin.get<GetReferDetailsUseCase>(),
+            tradeDependencies = tradeDependencies,
+            savingsDependencies = savingsDependencies,
+        )
+    }
+    val alertsDependencies = remember(appKoin) {
+        AlertsRouteDependencies(
+            getAlertsUseCase = appKoin.get<GetAlertsUseCase>(),
+            markAllAlertsReadUseCase = appKoin.get<MarkAllAlertsReadUseCase>(),
+        )
+    }
 
     LaunchedEffect(session.isLoggedIn) {
         tradeDependencies.livePriceStore.setLoggedIn(session.isLoggedIn)
@@ -206,6 +239,7 @@ fun AppMainShellScreen(
             when (selectedTab) {
                 MainTab.Home -> HomeRoute(
                     dependencies = homeDependencies,
+                    alertsDependencies = alertsDependencies,
                     profileDependencies = profileDependencies,
                     savingsDependencies = savingsDependencies,
                     tradeDependencies = tradeDependencies,
@@ -216,13 +250,16 @@ fun AppMainShellScreen(
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
-                MainTab.Rewards -> MainPlaceholderPage(
-                    title = appStrings.shellRewardsTitle,
-                    body = appStrings.shellRewardsDescription,
+                MainTab.Rewards -> RewardsRoute(
+                    dependencies = rewardsDependencies,
+                    onBottomBarVisibilityChange = { visible ->
+                        shouldShowBottomBar = visible
+                    },
+                    modifier = Modifier.fillMaxSize(),
                 )
-                MainTab.History -> MainPlaceholderPage(
-                    title = appStrings.shellHistoryTitle,
-                    body = appStrings.shellHistoryDescription,
+                MainTab.History -> HistoryRoute(
+                    dependencies = historyDependencies,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }

@@ -215,11 +215,32 @@ fun BuyTradeScreen(
     onHelpClick: () -> Unit,
     getTradeInvoiceUseCase: GetTradeInvoiceUseCase,
     onOpenInvoice: (String) -> Unit,
+    initialAmount: String? = null,
+    initialOneTimeUseGrams: Boolean = false,
     onIntent: (BuyTradeIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var amountRupees by rememberSaveable { mutableStateOf("50") }
-    var amountGrams by rememberSaveable { mutableStateOf("0.5") }
+    val seededRupeeAmount = remember(initialAmount, initialOneTimeUseGrams) {
+        if (initialOneTimeUseGrams) {
+            "50"
+        } else {
+            initialAmount
+                ?.filter(Char::isDigit)
+                ?.take(6)
+                ?.takeIf { it.isNotBlank() }
+                ?: "50"
+        }
+    }
+    val seededGramAmount = remember(initialAmount, initialOneTimeUseGrams) {
+        if (initialOneTimeUseGrams) {
+            sanitizeGramInput(initialAmount.orEmpty(), fractionDigits = 1).takeIf { it.isNotBlank() } ?: "0.5"
+        } else {
+            "0.5"
+        }
+    }
+
+    var amountRupees by rememberSaveable(initialAmount, initialOneTimeUseGrams) { mutableStateOf(seededRupeeAmount) }
+    var amountGrams by rememberSaveable(initialAmount, initialOneTimeUseGrams) { mutableStateOf(seededGramAmount) }
     var validationMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var showAmountBreakdown by rememberSaveable { mutableStateOf(false) }
     var couponDraft by rememberSaveable { mutableStateOf("") }
