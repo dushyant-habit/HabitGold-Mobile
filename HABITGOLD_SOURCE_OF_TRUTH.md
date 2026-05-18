@@ -458,6 +458,8 @@ Environment rule:
 - iOS should mirror those environments with schemes / build configurations, not ad hoc hardcoded values
 - no feature API validation is complete until Android and iOS are confirmed against the intended environment
 - when storing URLs in `.xcconfig`, do not write raw `https://...` directly because `//` is treated as a comment; use an xcconfig-safe pattern like `https:$(SLASH)/...`
+- `UPI Autopay` remains a SIP concern even when launched from Profile; do not duplicate it under Profile ownership
+- `Manage UPI IDs` can be launched from Profile, but its backend ownership stays with the payments/trade boundary
 
 ## 10. Git And Workflow Standard
 
@@ -616,14 +618,14 @@ Already in place:
 
 Next major focus:
 
-- Phase 5 auth cleanup and migration review
+- Phase 9 profile/security parity hardening and checkpoint cleanup
 
 That means:
 
-- review current auth structure against MVI and architecture rules
-- extract remaining hardcoded auth/app-shell strings
-- tighten feature boundaries
-- expand auth tests
+- finish the remaining Phase 9 parity gaps and deferred biometric/security review
+- keep Profile-linked UPI surfaces honest about ownership boundaries
+- expand Profile child-flow and linked-route test coverage
+- update docs as each Phase 9 checkpoint moves forward
 
 ## 14. How To Use This File
 

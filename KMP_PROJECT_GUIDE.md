@@ -329,7 +329,11 @@ Final code-quality gate:
 - for Home-driven Savings setup, first-paint rendering should come from route data unless Android explicitly blocks on a fetch
 - Savings parity audit must explicitly list hero images/assets, not just composables and copy
 - once the shared Savings setup slice is live, treat remaining work as parity hardening first, not as an excuse to add more Phase 8 scope
+- for Phase 9, treat Profile as a hub route with child flows, not as a flat one-screen settings page
+- keep `setup security` and `security verification` as separate shared surfaces
+- when a Profile screen links into another feature-owned flow like `Manage Autopay`, keep the route ownership explicit instead of cloning the feature under Profile
   - once a real downstream feature route exists, do not fall back to a placeholder handoff card for that flow
+- if biometric/security parity is unstable during a Phase 9 checkpoint, defer it explicitly in docs and keep the rest of the Profile slice honest about that gap
 - state clarity
   - loading, polling, success, failure, pending, and reset behavior should be easy to trace
   - re-entry into a flow should not accidentally restore stale terminal state

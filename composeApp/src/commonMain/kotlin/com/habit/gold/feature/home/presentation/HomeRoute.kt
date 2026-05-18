@@ -16,6 +16,9 @@ import com.habit.gold.core.session.AuthSession
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
+import com.habit.gold.feature.profile.presentation.ProfileDestination
+import com.habit.gold.feature.profile.presentation.ProfileRoute
+import com.habit.gold.feature.profile.presentation.ProfileRouteDependencies
 import com.habit.gold.feature.savings.presentation.SavingsDestination
 import com.habit.gold.feature.savings.presentation.SavingsRoute
 import com.habit.gold.feature.savings.presentation.SavingsRouteDependencies
@@ -34,6 +37,7 @@ data class HomeRouteDependencies(
 @Composable
 fun HomeRoute(
     dependencies: HomeRouteDependencies,
+    profileDependencies: ProfileRouteDependencies,
     savingsDependencies: SavingsRouteDependencies,
     tradeDependencies: TradeRouteDependencies,
     session: AuthSession,
@@ -69,7 +73,7 @@ fun HomeRoute(
             uiState = uiState.value,
             onRefresh = { homeViewModel.onIntent(HomeIntent.Refresh) },
             getHomePriceHistoryUseCase = dependencies.getHomePriceHistoryUseCase,
-            onOpenProfile = { destination = HomeDestination.Deferred(HomeDeferredTarget.Profile) },
+            onOpenProfile = { destination = HomeDestination.Profile(ProfileDestination.Hub) },
             onOpenAlerts = { destination = HomeDestination.Deferred(HomeDeferredTarget.Alerts) },
             onOpenBuyGold = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
             onOpenSellGold = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
@@ -77,16 +81,22 @@ fun HomeRoute(
                 destination = HomeDestination.GoldValueDetails(uiState.value.summary?.dashboard)
             },
             onToggleBalanceVisibility = { homeViewModel.onIntent(HomeIntent.ToggleBalanceVisibility) },
-            onOpenSavingsDetails = { destination = HomeDestination.Savings(SavingsDestination.Manage) },
+            onOpenSavingsDetails = {
+                destination = HomeDestination.Savings(
+                    destination = SavingsDestination.Manage,
+                    returnDestination = HomeDestination.Dashboard,
+                )
+            },
             onOpenSavingsSetup = { frequency, mandate ->
                 destination = HomeDestination.Savings(
-                    SavingsDestination.Setup(
+                    destination = SavingsDestination.Setup(
                         frequency = frequency,
                         initialAmount = mandate?.let(::homeSavingsRouteAmount),
                         mandateId = mandate?.id,
                         initialExecutionDay = mandate?.let(::homeSavingsRouteExecutionDay),
                         initialStatus = mandate?.status,
                     ),
+                    returnDestination = HomeDestination.Dashboard,
                 )
             },
             onOpenTransaction = { item -> destination = HomeDestination.TransactionDetails(item) },
@@ -102,6 +112,22 @@ fun HomeRoute(
         HomeDestination.HelpCenter -> HomeHelpCenterScreen(
             onBackClick = { destination = HomeDestination.Dashboard },
         )
+        is HomeDestination.Profile -> ProfileRoute(
+            dependencies = profileDependencies,
+            destination = activeDestination.destination,
+            session = session,
+            onBackToHome = { destination = HomeDestination.Dashboard },
+            onNavigate = { nextProfileDestination ->
+                destination = HomeDestination.Profile(nextProfileDestination)
+            },
+            onOpenAutopay = {
+                destination = HomeDestination.Savings(
+                    destination = SavingsDestination.Manage,
+                    returnDestination = HomeDestination.Profile(ProfileDestination.Hub),
+                )
+            },
+            modifier = modifier,
+        )
         is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
             transactionPreview = activeDestination.item,
             onBackClick = { destination = HomeDestination.Dashboard },
@@ -109,7 +135,7 @@ fun HomeRoute(
         is HomeDestination.Savings -> SavingsRoute(
             dependencies = savingsDependencies,
             destination = activeDestination.destination,
-            onBackToHome = { destination = HomeDestination.Dashboard },
+            onBackToHome = { destination = activeDestination.returnDestination },
             onOpenHelp = { destination = HomeDestination.HelpCenter },
             modifier = modifier,
         )

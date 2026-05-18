@@ -85,6 +85,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+            implementation("androidx.biometric:biometric:1.1.0")
             implementation("androidx.fragment:fragment-ktx:1.6.2")
         }
         commonMain.dependencies {

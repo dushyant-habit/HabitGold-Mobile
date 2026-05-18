@@ -293,20 +293,31 @@ Phase 8 slicing rule:
 
 ### Phase 9: Profile And Security
 
-- [ ] Create `feature/profile` structure
-- [ ] Port profile fetch/update/logout
-- [ ] Port KYC and nominee flows
-- [ ] Create `feature/security` shared contracts
+Status: `Checkpointed, not fully closed`
+
+- [x] Complete strict Android audit for Profile, KYC, Nominee, Security, Logout, UPI Autopay, and UPI ID management
+- [x] Lock ownership: `UPI Autopay` remains Savings-owned with Profile linkage
+- [x] Lock ownership: `UPI ID Management` remains trade/payments-backed with Profile route ownership
+- [x] Create `feature/profile` structure
+- [~] Port profile fetch/update/logout
+- shared profile fetch/update/logout/delete-account foundation is live
+- KYC verify and nominee save request paths are live
+- biometric/security logic is intentionally deferred for a later hardening pass
+- [x] Port KYC and nominee flows
+- [ ] Port or wrap security setup / verification state under `feature/profile/security`
 - [ ] Add platform biometric bindings behind interfaces
-- [ ] Build Profile Flow
-- [ ] Build Personal Info Flow
-- [ ] Build Nominee Flow
-- [ ] Build KYC Flow
+- [x] Build Profile Flow
+- [x] Build Personal Info Flow
+- [x] Build Nominee Flow
+- [x] Build KYC Flow
 - [ ] Build Security / App Lock Flow
-- [ ] Build UPI Autopay Management Flow
-- [ ] Build UPI ID Management Flow
-- [ ] Rebuild profile and security screens
-- [ ] Add tests for profile state transitions and logout rules
+- [x] Link Profile to Savings-owned UPI Autopay Management flow
+- [~] Build UPI ID Management Flow
+- Profile route ownership is live; final parity and polish are still pending
+- [~] Rebuild profile and security screens
+- shared Profile hub and core child screens are live; final micro-parity is still pending
+- [~] Add tests for profile state transitions and logout rules
+- hub/repository/date/input tests are live; deeper child-flow validation/state tests are still pending
 
 ### Phase 10: History, Rewards, Referral, Alerts
 
