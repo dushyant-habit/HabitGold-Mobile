@@ -46,6 +46,8 @@ fun HomeRoute(
     session: AuthSession,
     onSelectTab: (MainTab) -> Unit,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
+    onDashboardVisibilityChange: (Boolean) -> Unit = {},
+    onBiometricStateChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val homeViewModel = viewModel {
@@ -63,6 +65,7 @@ fun HomeRoute(
 
     LaunchedEffect(destination) {
         onBottomBarVisibilityChange(destination is HomeDestination.Dashboard)
+        onDashboardVisibilityChange(destination is HomeDestination.Dashboard)
         if (destination is HomeDestination.Dashboard) {
             homeViewModel.onIntent(HomeIntent.RestorePreferences)
         }
@@ -79,7 +82,12 @@ fun HomeRoute(
             uiState = uiState.value,
             onRefresh = { homeViewModel.onIntent(HomeIntent.Refresh) },
             getHomePriceHistoryUseCase = dependencies.getHomePriceHistoryUseCase,
-            onOpenProfile = { destination = HomeDestination.Profile(ProfileDestination.Hub) },
+            onOpenProfile = {
+                destination = HomeDestination.Profile(
+                    destination = ProfileDestination.Hub,
+                    returnDestination = HomeDestination.Dashboard,
+                )
+            },
             onOpenAlerts = { destination = HomeDestination.Alerts },
             onOpenBuyGold = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
             onOpenSellGold = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
@@ -106,7 +114,12 @@ fun HomeRoute(
                 )
             },
             onOpenTransaction = { item -> destination = HomeDestination.TransactionDetails(item) },
-            onOpenSupport = { destination = HomeDestination.HelpCenter },
+            onOpenSupport = {
+                destination = HomeDestination.Profile(
+                    destination = ProfileDestination.HelpCenter(),
+                    returnDestination = HomeDestination.Dashboard,
+                )
+            },
             modifier = modifier,
         )
         HomeDestination.Alerts -> AlertsRoute(
@@ -120,23 +133,27 @@ fun HomeRoute(
             onBuyGoldClick = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
             onSellGoldClick = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
         )
-        HomeDestination.HelpCenter -> HomeHelpCenterScreen(
-            onBackClick = { destination = HomeDestination.Dashboard },
-        )
         is HomeDestination.Profile -> ProfileRoute(
             dependencies = profileDependencies,
             destination = activeDestination.destination,
             session = session,
-            onBackToHome = { destination = HomeDestination.Dashboard },
+            onBackToHome = { destination = activeDestination.returnDestination },
             onNavigate = { nextProfileDestination ->
-                destination = HomeDestination.Profile(nextProfileDestination)
+                destination = HomeDestination.Profile(
+                    destination = nextProfileDestination,
+                    returnDestination = activeDestination.returnDestination,
+                )
             },
             onOpenAutopay = {
                 destination = HomeDestination.Savings(
                     destination = SavingsDestination.Manage,
-                    returnDestination = HomeDestination.Profile(ProfileDestination.Hub),
+                    returnDestination = HomeDestination.Profile(
+                        destination = ProfileDestination.Hub,
+                        returnDestination = activeDestination.returnDestination,
+                    ),
                 )
             },
+            onBiometricStateChanged = onBiometricStateChanged,
             modifier = modifier,
         )
         is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
@@ -147,7 +164,12 @@ fun HomeRoute(
             dependencies = savingsDependencies,
             destination = activeDestination.destination,
             onBackToHome = { destination = activeDestination.returnDestination },
-            onOpenHelp = { destination = HomeDestination.HelpCenter },
+            onOpenHelp = {
+                destination = HomeDestination.Profile(
+                    destination = ProfileDestination.HelpCenter(),
+                    returnDestination = activeDestination,
+                )
+            },
             modifier = modifier,
         )
         is HomeDestination.Trade -> TradeRoute(
@@ -156,6 +178,12 @@ fun HomeRoute(
             onBackToHome = { destination = HomeDestination.Dashboard },
             onNavigate = { nextTradeDestination ->
                 destination = HomeDestination.Trade(nextTradeDestination)
+            },
+            onOpenHelp = {
+                destination = HomeDestination.Profile(
+                    destination = ProfileDestination.HelpCenter(),
+                    returnDestination = activeDestination,
+                )
             },
             modifier = modifier,
         )

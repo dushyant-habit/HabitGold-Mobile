@@ -11,7 +11,7 @@ internal sealed interface ProfileBiometricAuthResult {
 internal interface ProfileBiometricAuthenticator {
     val label: String
 
-    suspend fun enable(
+    suspend fun authenticate(
         promptTitle: String,
         promptSubtitle: String,
         cancelLabel: String,

@@ -21,8 +21,6 @@ import com.habit.gold.feature.trade.presentation.sell.SellTradeRouteController
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.trade_route_get_coin_message
 import habitgoldmobile.composeapp.generated.resources.trade_route_get_coin_title
-import habitgoldmobile.composeapp.generated.resources.trade_route_help_message
-import habitgoldmobile.composeapp.generated.resources.trade_route_help_title
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_message
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_title
 import org.jetbrains.compose.resources.stringResource
@@ -49,6 +47,7 @@ fun TradeRoute(
     destination: TradeDestination,
     onBackToHome: () -> Unit,
     onNavigate: (TradeDestination) -> Unit,
+    onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (destination !is TradeDestination.Buy && destination != TradeDestination.Sell && destination !is TradeDestination.SellPayout) {
@@ -63,7 +62,6 @@ fun TradeRoute(
                         destination.returnDestination?.let(onNavigate) ?: onBackToHome()
                     }
                     TradeDestination.VpaList -> onNavigate(TradeDestination.Sell)
-                    is TradeDestination.HelpCenter -> onNavigate(destination.returnDestination)
                 }
             },
         )
@@ -81,6 +79,7 @@ fun TradeRoute(
             destination = destination,
             onBackToHome = onBackToHome,
             onNavigate = onNavigate,
+            onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
         TradeDestination.Sell,
@@ -89,6 +88,7 @@ fun TradeRoute(
             destination = destination,
             onNavigate = onNavigate,
             onBackToHome = onBackToHome,
+            onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
         TradeDestination.GetCoinCatalog -> TradeDeferredScreen(
@@ -123,12 +123,6 @@ fun TradeRoute(
             title = stringResource(Res.string.trade_route_vpa_title),
             message = stringResource(Res.string.trade_route_vpa_message),
             onBackClick = { onNavigate(TradeDestination.Sell) },
-            modifier = modifier,
-        )
-        is TradeDestination.HelpCenter -> TradeDeferredScreen(
-            title = stringResource(Res.string.trade_route_help_title),
-            message = stringResource(Res.string.trade_route_help_message),
-            onBackClick = { onNavigate(destination.returnDestination) },
             modifier = modifier,
         )
     }

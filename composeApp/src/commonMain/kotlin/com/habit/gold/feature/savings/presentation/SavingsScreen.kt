@@ -1,5 +1,6 @@
 package com.habit.gold.feature.savings.presentation
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -94,6 +95,7 @@ import habitgoldmobile.composeapp.generated.resources.savings_manage_pause_note
 import habitgoldmobile.composeapp.generated.resources.savings_manage_remove_filter
 import habitgoldmobile.composeapp.generated.resources.savings_manage_resume
 import habitgoldmobile.composeapp.generated.resources.savings_manage_started_on
+import habitgoldmobile.composeapp.generated.resources.savings_manage_started_time
 import habitgoldmobile.composeapp.generated.resources.savings_manage_status
 import habitgoldmobile.composeapp.generated.resources.savings_manage_status_cancelled
 import habitgoldmobile.composeapp.generated.resources.savings_manage_status_failed
@@ -102,6 +104,9 @@ import habitgoldmobile.composeapp.generated.resources.savings_manage_status_succ
 import habitgoldmobile.composeapp.generated.resources.savings_manage_title
 import habitgoldmobile.composeapp.generated.resources.savings_manage_upcoming_execution
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 private val SavingsPendingTint = Color(0xFF5B35C5)
 private val SavingsPendingContainer = Color(0xFFF3EEFF)
@@ -254,7 +259,7 @@ internal fun SavingsScreen(
                         .padding(paddingValues)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                    contentPadding = PaddingValues(top = 0.dp, bottom = 24.dp),
                 ) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -417,7 +422,9 @@ private fun SavingsMandateCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, ChildCardBorder),
@@ -491,7 +498,9 @@ private fun SavingsMandateCard(
                 HorizontalDivider(color = ChildCardBorder.copy(alpha = 0.8f))
                 Spacer(modifier = Modifier.height(18.dp))
 
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                val startedAt = remember(mandate.startDate) { mandate.startDate.takeIf { it.isNotBlank() }?.let(::formatSavingsDateTimeParts) }
+
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -501,27 +510,39 @@ private fun SavingsMandateCard(
                             label = stringResource(Res.string.savings_manage_frequency),
                             value = mandate.frequency.replaceFirstChar { it.uppercase() },
                         )
-                        mandate.startDate.takeIf { it.isNotBlank() }?.let {
+                        startedAt?.let { (dateText, _) ->
                             SavingsDetailCell(
                                 modifier = Modifier.weight(1f),
                                 label = stringResource(Res.string.savings_manage_started_on),
-                                value = formatCreatedAt(it),
+                                value = dateText,
                             )
                         } ?: Spacer(modifier = Modifier.weight(1f))
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        mandate.nextExecutionDate?.takeIf { it.isNotBlank() }?.let {
+                    startedAt?.let { (_, timeText) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            SavingsDetailCell(
+                                modifier = Modifier.weight(1f),
+                                label = stringResource(Res.string.savings_manage_started_time),
+                                value = timeText,
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    } ?: mandate.nextExecutionDate?.takeIf { it.isNotBlank() }?.let {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
                             SavingsDetailCell(
                                 modifier = Modifier.weight(1f),
                                 label = stringResource(Res.string.savings_manage_upcoming_execution),
                                 value = formatCreatedAt(it),
                             )
-                        } ?: Spacer(modifier = Modifier.weight(1f))
-                        Spacer(modifier = Modifier.weight(1f))
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
 
                     mandate.juspayMandateId?.takeIf { it.isNotBlank() }?.let {
@@ -529,7 +550,7 @@ private fun SavingsMandateCard(
                             modifier = Modifier.fillMaxWidth(),
                             label = stringResource(Res.string.savings_manage_mandate_id),
                             value = it,
-                            valueMaxLines = 2,
+                            valueMaxLines = 1,
                         )
                     }
                 }
@@ -663,30 +684,6 @@ private fun SavingsStatusChip(style: SavingsStatusStyle) {
                 fontWeight = FontWeight.Medium,
             )
         }
-    }
-}
-
-@Composable
-private fun SavingsDetailRow(
-    label: String,
-    value: String,
-    valueMaxLines: Int = Int.MAX_VALUE,
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = ChildMutedText,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = ChildPrimaryText,
-            maxLines = valueMaxLines,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -920,6 +917,25 @@ private fun SavingsStatusBucket.style(): SavingsStatusStyle {
             primaryActionBorderColor = SavingsPendingBorder,
         )
     }
+}
+
+private fun formatSavingsDateTimeParts(raw: String): Pair<String, String>? {
+    return runCatching {
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val day = local.day.toString().padStart(2, '0')
+        val month = monthAbbreviation(local.month.name)
+        val hour24 = local.hour
+        val minute = local.minute.toString().padStart(2, '0')
+        val meridiem = if (hour24 >= 12) "PM" else "AM"
+        val hour12 = ((hour24 + 11) % 12 + 1).toString()
+        "$day $month" to "$hour12:$minute $meridiem"
+    }.getOrNull()
+}
+
+private fun monthAbbreviation(monthName: String): String {
+    return monthName.lowercase()
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        .take(3)
 }
 
 @Composable

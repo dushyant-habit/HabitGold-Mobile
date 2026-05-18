@@ -79,8 +79,8 @@ private fun generateRewardsQrCodeImage(
         )
 
         val context = CIContext()
-        val cgImage = context.createCGImage(scaledImage, fromRect = scaledImage.extent) ?: return null
-        UIImage.imageWithCGImage(cgImage)
+        val cgImage = context.createCGImage(scaledImage, fromRect = scaledImage.extent)
+        cgImage?.let { UIImage.imageWithCGImage(it) } ?: UIImage.imageWithCIImage(scaledImage)
     }.getOrNull()
 }
 

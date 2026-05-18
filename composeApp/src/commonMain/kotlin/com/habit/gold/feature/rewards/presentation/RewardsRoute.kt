@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.habit.gold.core.presentation.PlatformBackHandler
+import com.habit.gold.feature.profile.presentation.ProfileContactUsScreen
+import com.habit.gold.feature.profile.presentation.ProfileHelpCenterScreen
 import com.habit.gold.feature.rewards.domain.usecase.GetReferDetailsUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsHistoryUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
@@ -20,6 +22,7 @@ import com.habit.gold.feature.savings.presentation.SavingsRouteDependencies
 import com.habit.gold.feature.trade.presentation.TradeDestination
 import com.habit.gold.feature.trade.presentation.TradeRoute
 import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
+import io.ktor.client.HttpClient
 
 data class RewardsRouteDependencies(
     val getRewardsMilestonesUseCase: GetRewardsMilestonesUseCase,
@@ -28,6 +31,7 @@ data class RewardsRouteDependencies(
     val getReferDetailsUseCase: GetReferDetailsUseCase,
     val tradeDependencies: TradeRouteDependencies,
     val savingsDependencies: SavingsRouteDependencies,
+    val httpClient: HttpClient,
 )
 
 private sealed interface RewardsDestination {
@@ -35,6 +39,8 @@ private sealed interface RewardsDestination {
     data object History : RewardsDestination
     data object ReferDetail : RewardsDestination
     data object Redeem : RewardsDestination
+    data class HelpCenter(val returnDestination: RewardsDestination) : RewardsDestination
+    data class ContactUs(val returnDestination: RewardsDestination) : RewardsDestination
     data class TradeFlow(val destination: TradeDestination) : RewardsDestination
     data class SavingsFlow(val destination: SavingsDestination) : RewardsDestination
 }
@@ -81,10 +87,13 @@ fun RewardsRoute(
             destination !is RewardsDestination.TradeFlow &&
             destination !is RewardsDestination.SavingsFlow,
         onBack = {
-            destination = when (destination) {
+            val activeDestination = destination
+            destination = when (activeDestination) {
                 RewardsDestination.History -> RewardsDestination.Home
                 RewardsDestination.ReferDetail -> RewardsDestination.Home
                 RewardsDestination.Redeem -> RewardsDestination.Home
+                is RewardsDestination.HelpCenter -> activeDestination.returnDestination
+                is RewardsDestination.ContactUs -> activeDestination.returnDestination
                 RewardsDestination.Home -> RewardsDestination.Home
                 is RewardsDestination.TradeFlow,
                 is RewardsDestination.SavingsFlow -> nestedReturnDestination
@@ -149,6 +158,27 @@ fun RewardsRoute(
             modifier = modifier,
         )
 
+        is RewardsDestination.HelpCenter -> ProfileHelpCenterScreen(
+            onBackClick = { destination = currentDestination.returnDestination },
+            onOpenContactUs = {
+                destination = RewardsDestination.ContactUs(
+                    returnDestination = currentDestination,
+                )
+            },
+            modifier = modifier,
+        )
+
+        is RewardsDestination.ContactUs -> ProfileContactUsScreen(
+            httpClient = dependencies.httpClient,
+            userName = "",
+            userPhone = "",
+            userEmail = "",
+            userGender = "",
+            userDob = "",
+            onBackClick = { destination = currentDestination.returnDestination },
+            modifier = modifier,
+        )
+
         is RewardsDestination.TradeFlow -> {
             TradeRoute(
                 dependencies = dependencies.tradeDependencies,
@@ -156,6 +186,11 @@ fun RewardsRoute(
                 onBackToHome = { destination = nestedReturnDestination },
                 onNavigate = { nextTradeDestination ->
                     destination = RewardsDestination.TradeFlow(nextTradeDestination)
+                },
+                onOpenHelp = {
+                    destination = RewardsDestination.HelpCenter(
+                        returnDestination = currentDestination,
+                    )
                 },
                 modifier = modifier,
             )
@@ -166,7 +201,11 @@ fun RewardsRoute(
                 dependencies = dependencies.savingsDependencies,
                 destination = currentDestination.destination,
                 onBackToHome = { destination = nestedReturnDestination },
-                onOpenHelp = { destination = nestedReturnDestination },
+                onOpenHelp = {
+                    destination = RewardsDestination.HelpCenter(
+                        returnDestination = currentDestination,
+                    )
+                },
                 modifier = modifier,
             )
         }

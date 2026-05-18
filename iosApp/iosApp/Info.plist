@@ -22,6 +22,8 @@
 	<string>$(JUSPAY_ROUTING_ID)</string>
 	<key>JUSPAY_SDK_VERSION</key>
 	<string>$(JUSPAY_SDK_VERSION)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>HabitGold uses Face ID to securely unlock your account when biometric protection is enabled.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

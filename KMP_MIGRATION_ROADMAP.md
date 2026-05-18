@@ -320,6 +320,9 @@ Status: `Checkpointed, not fully closed`
 - hub/repository/date/input tests are live; deeper child-flow validation/state tests are still pending
 - [ ] Run mandatory Phase 9 hardening and code-quality closure pass before phase sign-off
 - this pass must include deferred biometric/security work, parity hardening, code-quality review, unused-code cleanup, duplication review, maintainability review, and final device QA
+- [ ] Evaluate scoped left-edge swipe-back as a later navigation improvement
+- if added later, enable it only for child/pushed screens and keep root tab screens out of scope by default
+- verify swipe-back carefully on screens with horizontal gestures such as carousels, sheets, and swipe CTAs before wider rollout
 
 ### Phase 10: History, Rewards, Referral, Alerts
 

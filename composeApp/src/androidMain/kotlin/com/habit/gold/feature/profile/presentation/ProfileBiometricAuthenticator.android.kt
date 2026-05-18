@@ -24,7 +24,7 @@ private class AndroidProfileBiometricAuthenticator(
 
     override val label: String = "Fingerprint"
 
-    override suspend fun enable(
+    override suspend fun authenticate(
         promptTitle: String,
         promptSubtitle: String,
         cancelLabel: String,

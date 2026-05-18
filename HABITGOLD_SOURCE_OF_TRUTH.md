@@ -627,6 +627,8 @@ That means:
 - expand Profile child-flow and linked-route test coverage
 - update docs as each Phase 9 checkpoint moves forward
 - do not mark Phase 9 complete without a dedicated hardening/code-quality closure pass after the checkpoint work
+- later navigation improvement candidate: add LinkedIn-style left-edge swipe-back only for child/pushed screens, not for root tab screens
+- if swipe-back is added later, explicitly test it against horizontal gestures such as carousels, sheets, and swipe CTAs before broad rollout
 - for Phase 10 and later UI-heavy phases, keep code quality in focus during implementation and do not commit the phase work until the explicit pre-commit quality gate has been reviewed
 - for Phase 10 and later UI-heavy phases, color and gradient parity is mandatory:
   - audit exact Android color tokens before implementing

@@ -30,12 +30,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconButtonDefaults.filledTonalIconButtonColors
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -60,6 +56,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.feature.home.presentation.formatInr
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.common_close
+import habitgoldmobile.composeapp.generated.resources.common_share
+import habitgoldmobile.composeapp.generated.resources.common_try_again
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_active_friends
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_booster_active
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_booster_inactive
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_copy_referral_code
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_days_left
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_estimate_earnings
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_calculator_hint
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_extend_your_booster
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_friends_purchase
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_friends_count
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_lifetime_earnings
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_my_qr
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_number_of_friends
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_refer_and_earn_rewards_when_friends_join
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_rewards
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_scan_to_share_code
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_win_assured_cashback_upto
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_you_get_total
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_your_referral_code
+import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
+
+private const val REFER_EARN_CALCULATOR_MIN_PURCHASE = 10_000f
+private const val REFER_EARN_CALCULATOR_DEFAULT_EARNINGS = 100_000f
+private const val REFER_EARN_CALCULATOR_MAX_PURCHASE_MULTIPLIER = 2f
+private const val REFER_EARN_CALCULATOR_DEFAULT_FRIENDS = 50f
+private const val REFER_EARN_CALCULATOR_MAX_FRIENDS = 50f
 
 @Composable
 internal fun RewardsDetailTopWinCard(
@@ -93,7 +120,7 @@ internal fun RewardsDetailTopWinCard(
                 ) {
                     Column(modifier = Modifier.weight(1f, fill = false)) {
                         Text(
-                            text = "WIN ASSURED CASHBACK UPTO",
+                            text = stringResource(Res.string.refer_earn_screen_win_assured_cashback_upto),
                             color = White.copy(alpha = 0.92f),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -109,7 +136,7 @@ internal fun RewardsDetailTopWinCard(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "For every friend you refer",
+                            text = stringResource(Res.string.refer_earn_screen_refer_and_earn_rewards_when_friends_join),
                             color = White.copy(alpha = 0.85f),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
@@ -117,21 +144,9 @@ internal fun RewardsDetailTopWinCard(
                         )
                     }
 
-                    IconButton(
-                        onClick = onShareClick,
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = White.copy(alpha = 0.22f),
-                            contentColor = White,
-                        ),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(White.copy(alpha = 0.22f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share",
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    FilledIconShareButton(onClick = onShareClick)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -148,7 +163,7 @@ internal fun RewardsDetailTopWinCard(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "LIFETIME EARNINGS",
+                            text = stringResource(Res.string.refer_earn_screen_lifetime_earnings),
                             color = White.copy(alpha = 0.82f),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
@@ -185,7 +200,7 @@ internal fun RewardsDetailTopWinCard(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "ACTIVE FRIENDS",
+                                text = stringResource(Res.string.refer_earn_screen_active_friends),
                                 color = White.copy(alpha = 0.82f),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -203,6 +218,25 @@ internal fun RewardsDetailTopWinCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FilledIconShareButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(White.copy(alpha = 0.22f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Share,
+            contentDescription = stringResource(Res.string.common_share),
+            tint = White,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
@@ -249,7 +283,11 @@ internal fun RewardsBoosterCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (ui.boosterIsActive) "BOOSTER ACTIVE" else "BOOSTER INACTIVE",
+                            text = if (ui.boosterIsActive) {
+                                stringResource(Res.string.refer_earn_screen_booster_active)
+                            } else {
+                                stringResource(Res.string.refer_earn_screen_booster_inactive)
+                            },
                             color = Slate800,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Black,
@@ -274,7 +312,7 @@ internal fun RewardsBoosterCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "REWARDS",
+                            text = stringResource(Res.string.refer_earn_screen_rewards),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Slate400,
@@ -311,7 +349,7 @@ internal fun RewardsBoosterCard(
                             color = Slate800,
                         )
                         Text(
-                            text = "DAYS LEFT",
+                            text = stringResource(Res.string.refer_earn_screen_days_left),
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = Slate400,
@@ -333,7 +371,7 @@ internal fun RewardsBoosterCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "EXTEND YOUR BOOSTER",
+                    text = stringResource(Res.string.refer_earn_screen_extend_your_booster),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Slate400,
@@ -446,21 +484,32 @@ internal fun RewardsEarningsCalculator(
 ) {
     val maxPurchaseAmount = remember(cashbackFraction) {
         if (cashbackFraction > 0f) {
-            (((100_000f / (cashbackFraction * 100f)) * 2f).coerceAtLeast(10_000f))
+            (
+                (
+                    REFER_EARN_CALCULATOR_DEFAULT_EARNINGS /
+                        (cashbackFraction * REFER_EARN_CALCULATOR_MAX_FRIENDS)
+                    ) * REFER_EARN_CALCULATOR_MAX_PURCHASE_MULTIPLIER
+                )
+                    .coerceAtLeast(REFER_EARN_CALCULATOR_MIN_PURCHASE)
         } else {
-            10_000f
+            REFER_EARN_CALCULATOR_MIN_PURCHASE
         }
     }
     val defaultPurchaseAmount = remember(cashbackFraction, maxPurchaseAmount) {
         if (cashbackFraction > 0f) {
-            ((100_000f / (cashbackFraction * 100f)).coerceAtLeast(10_000f).coerceAtMost(maxPurchaseAmount))
+            (
+                REFER_EARN_CALCULATOR_DEFAULT_EARNINGS /
+                    (cashbackFraction * REFER_EARN_CALCULATOR_DEFAULT_FRIENDS)
+                )
+                .coerceAtLeast(REFER_EARN_CALCULATOR_MIN_PURCHASE)
+                .coerceAtMost(maxPurchaseAmount)
         } else {
-            10_000f
+            REFER_EARN_CALCULATOR_MIN_PURCHASE
         }
     }
     var annualSpend by rememberSaveable(defaultPurchaseAmount) { mutableFloatStateOf(defaultPurchaseAmount) }
-    var friendsReferred by rememberSaveable { mutableFloatStateOf(100f) }
-    val referralEarnings = ((annualSpend * cashbackFraction * friendsReferred.toInt()).toInt()).coerceAtMost(100_000)
+    var friendsReferred by rememberSaveable { mutableFloatStateOf(REFER_EARN_CALCULATOR_DEFAULT_FRIENDS) }
+    val referralEarnings = (annualSpend * cashbackFraction * friendsReferred.toInt()).roundToInt()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -477,7 +526,7 @@ internal fun RewardsEarningsCalculator(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Estimate your earnings",
+                        text = stringResource(Res.string.refer_earn_screen_estimate_earnings),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Slate800,
@@ -485,7 +534,7 @@ internal fun RewardsEarningsCalculator(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Drag sliders to see potential rewards",
+                        text = stringResource(Res.string.refer_earn_screen_calculator_hint),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = Slate400,
@@ -521,7 +570,7 @@ internal fun RewardsEarningsCalculator(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "YOU GET TOTAL",
+                        text = stringResource(Res.string.refer_earn_screen_you_get_total),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = Slate400,
@@ -546,7 +595,7 @@ internal fun RewardsEarningsCalculator(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "FRIEND'S PURCHASE",
+                    text = stringResource(Res.string.refer_earn_screen_friends_purchase),
                     fontSize = 10.sp,
                     color = Slate400,
                     fontWeight = FontWeight.Bold,
@@ -570,8 +619,8 @@ internal fun RewardsEarningsCalculator(
             Slider(
                 value = annualSpend,
                 onValueChange = { annualSpend = it.coerceAtMost(maxPurchaseAmount) },
-                valueRange = 10_000f..maxPurchaseAmount,
-                enabled = maxPurchaseAmount > 10_000f,
+                valueRange = REFER_EARN_CALCULATOR_MIN_PURCHASE..maxPurchaseAmount,
+                enabled = maxPurchaseAmount > REFER_EARN_CALCULATOR_MIN_PURCHASE,
                 colors = SliderDefaults.colors(
                     thumbColor = White,
                     activeTrackColor = Purple700,
@@ -595,7 +644,7 @@ internal fun RewardsEarningsCalculator(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "NUMBER OF FRIENDS",
+                    text = stringResource(Res.string.refer_earn_screen_number_of_friends),
                     fontSize = 10.sp,
                     color = Slate400,
                     fontWeight = FontWeight.Bold,
@@ -608,7 +657,10 @@ internal fun RewardsEarningsCalculator(
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                 ) {
                     Text(
-                        text = "${friendsReferred.toInt()} Friends",
+                        text = stringResource(
+                            Res.string.refer_earn_screen_friends_count,
+                            friendsReferred.toInt(),
+                        ),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Purple700,
@@ -618,9 +670,8 @@ internal fun RewardsEarningsCalculator(
 
             Slider(
                 value = friendsReferred,
-                onValueChange = { friendsReferred = it },
-                valueRange = 1f..100f,
-                steps = 98,
+                onValueChange = { friendsReferred = it.roundToInt().toFloat() },
+                valueRange = 1f..REFER_EARN_CALCULATOR_MAX_FRIENDS,
                 colors = SliderDefaults.colors(
                     thumbColor = White,
                     activeTrackColor = Purple700,
@@ -659,7 +710,7 @@ internal fun RewardsReferralCodeCard(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "YOUR REFERRAL CODE",
+                text = stringResource(Res.string.refer_earn_screen_your_referral_code),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Slate400,
@@ -678,18 +729,19 @@ internal fun RewardsReferralCodeCard(
                     letterSpacing = 3.sp,
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                FilledTonalIconButton(
-                    onClick = onCopyClick,
-                    colors = filledTonalIconButtonColors(containerColor = Purple100, contentColor = Purple700),
+                Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    shape = RoundedCornerShape(12.dp),
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Purple100)
+                        .clickable(onClick = onCopyClick),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = "Copy referral code",
+                        contentDescription = stringResource(Res.string.refer_earn_screen_copy_referral_code),
                         modifier = Modifier.size(20.dp),
+                        tint = Purple700,
                     )
                 }
             }
@@ -723,7 +775,11 @@ internal fun RewardsInlineRetryCard(
             )
             Spacer(modifier = Modifier.height(10.dp))
             TextButton(onClick = onRetry) {
-                Text("Try again", color = Purple700, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = stringResource(Res.string.common_try_again),
+                    color = Purple700,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }
@@ -740,7 +796,11 @@ internal fun RewardsReferralQrDialog(
         containerColor = White,
         shape = RoundedCornerShape(24.dp),
         title = {
-            Text("My QR", fontWeight = FontWeight.Bold, color = Slate800)
+            Text(
+                text = stringResource(Res.string.refer_earn_screen_my_qr),
+                fontWeight = FontWeight.Bold,
+                color = Slate800,
+            )
         },
         text = {
             Column(
@@ -763,7 +823,7 @@ internal fun RewardsReferralQrDialog(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Scan to share your referral code",
+                    text = stringResource(Res.string.refer_earn_screen_scan_to_share_code),
                     color = Slate500,
                     fontSize = 13.sp,
                 )
@@ -792,10 +852,18 @@ internal fun RewardsReferralQrDialog(
                         tint = Slate500,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Share", color = Slate800, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(Res.string.common_share),
+                        color = Slate800,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
                 TextButton(onClick = onDismiss) {
-                    Text("Close", color = Slate500, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(Res.string.common_close),
+                        color = Slate500,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
         },

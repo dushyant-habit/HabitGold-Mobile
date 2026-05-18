@@ -15,6 +15,7 @@ internal fun SellTradeRouteController(
     destination: TradeDestination,
     onNavigate: (TradeDestination) -> Unit,
     onBackToHome: () -> Unit,
+    onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sellTradeViewModel = viewModel {
@@ -67,7 +68,7 @@ internal fun SellTradeRouteController(
                 else -> onBackToHome()
             }
         },
-        onHelpClick = { onNavigate(TradeDestination.HelpCenter(returnDestination = destination)) },
+        onHelpClick = onOpenHelp,
         onGoToDashboard = exitSellToDashboard,
         getTradeInvoiceUseCase = dependencies.getTradeInvoiceUseCase,
         onOpenInvoice = { invoiceUrl ->

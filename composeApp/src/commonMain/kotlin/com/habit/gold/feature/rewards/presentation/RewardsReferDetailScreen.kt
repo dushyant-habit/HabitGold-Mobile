@@ -38,12 +38,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_code_copied
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_history
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_my_qr
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_share_invite
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_title
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RewardsReferDetailScreen(
@@ -55,12 +60,13 @@ fun RewardsReferDetailScreen(
     onStartSipClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = rememberRewardsClipboard()
     val shareLauncher = rememberRewardsShareLauncher()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showQrDialog by rememberSaveable { mutableStateOf(false) }
     val inviteMessage = remember(state.ui.referralCode) { referralInviteMessage(state.ui.referralCode) }
+    val copiedMessage = stringResource(Res.string.refer_earn_screen_code_copied)
     val shareInvite: () -> Unit = {
         shareLauncher.launch(inviteMessage)
     }
@@ -78,13 +84,13 @@ fun RewardsReferDetailScreen(
                     .statusBarsPadding(),
             ) {
                 RewardsCenterTitleTopBar(
-                    title = "Refer & Earn",
+                    title = stringResource(Res.string.refer_earn_screen_title),
                     onBackClick = onBackClick,
                     trailing = {
                         IconButton(onClick = onHistoryClick) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "Rewards history",
+                                contentDescription = stringResource(Res.string.refer_earn_screen_history),
                                 tint = Slate800,
                             )
                         }
@@ -121,7 +127,11 @@ fun RewardsReferDetailScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Share Invite", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text(
+                            text = stringResource(Res.string.refer_earn_screen_share_invite),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                        )
                     }
 
                     Button(
@@ -144,7 +154,11 @@ fun RewardsReferDetailScreen(
                             tint = Slate500,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("My QR", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text(
+                            text = stringResource(Res.string.refer_earn_screen_my_qr),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                        )
                     }
                 }
             }
@@ -191,8 +205,8 @@ fun RewardsReferDetailScreen(
                     RewardsReferralCodeCard(
                         code = state.ui.referralCode,
                         onCopyClick = {
-                            clipboardManager.setText(AnnotatedString(state.ui.referralCode))
-                            scope.launch { snackbarHostState.showSnackbar("Referral code copied") }
+                            clipboard.copy(state.ui.referralCode)
+                            scope.launch { snackbarHostState.showSnackbar(copiedMessage) }
                         },
                     )
                 }

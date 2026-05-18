@@ -55,11 +55,11 @@ import habitgoldmobile.composeapp.generated.resources.common_days_ago
 import habitgoldmobile.composeapp.generated.resources.common_hours_ago
 import habitgoldmobile.composeapp.generated.resources.common_just_now
 import habitgoldmobile.composeapp.generated.resources.common_minutes_ago
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 private val AlertsBackground = Color(0xFFF8FAFC)
 private val AlertsCardBorder = Color(0xFFE2E8F0)
