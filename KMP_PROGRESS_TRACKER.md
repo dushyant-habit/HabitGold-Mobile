@@ -11,10 +11,11 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 9`
+- Current phase: `Phase 10`
 - Phase 9 status: `checkpointed, not fully closed`
-- Current focus: `finish remaining Phase 9 parity and deferred biometric/security review`
-- Next milestone: `close the Phase 9 checkpoint gaps before moving fully into later UI phases`
+- Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
+- Current focus: `land the Phase 10 checkpoint and defer unresolved referral product decisions explicitly`
+- Next milestone: `merge the Phase 10 checkpoint, then decide whether to finish referral work or move to Phase 11`
 
 ## Phase Status
 
@@ -132,13 +133,13 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Home / Portfolio Flow
 - [x] Buy Gold Flow
 - [x] Sell Gold Flow
-- [ ] Transactions List Flow
-- [ ] Transaction Details / Status Flow
+- [x] Transactions List Flow
+- [x] Transaction Details / Status Flow
 - [ ] SIP / Savings Flow
 - [ ] Profile / KYC / Logout Flow
-- [ ] Rewards Flow
+- [x] Rewards Flow
 - [ ] Referral Flow
-- [ ] Alerts Flow
+- [x] Alerts Flow
 - [ ] Delivery / Get Coin Flow
 
 ### Hidden Subflows To Preserve
@@ -146,8 +147,8 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Home savings create / upgrade / resume handoff
 - [x] Withdrawal Mode gateway
 - [x] Trade polling-driven payment launch and status transitions
-- [ ] Rewards Redeem Flow
-- [ ] Rewards History Flow
+- [x] Rewards Redeem Flow
+- [x] Rewards History Flow
 - [ ] Referral Status / History decision
 - [ ] Delivery address OTP + serviceability flow
 - [ ] Delivery pending-checkout restore flow
@@ -406,7 +407,7 @@ Immediate tasks:
 
 ### Phase 10: History, Rewards, Referral, Alerts
 
-Status: `In progress`
+Status: `Checkpointed through shared History, Alerts, and Rewards`
 
 Mandatory implementation rule:
 
@@ -429,7 +430,8 @@ Definition of done:
 
 - Transactions List Flow works
 - Transaction Details / Status Flow works
-- rewards, referral, and alerts flows are implemented
+- rewards and alerts flows are implemented
+- referral status/history decision is explicitly documented
 - history-related state handling is tested
 
 Immediate tasks:
@@ -455,13 +457,10 @@ Audit decisions locked:
 - create a shared referral-attribution contract, but keep Install Referrer and deep-link capture platform-specific
 - do not faithfully port `ReferralStatusScreen` and `ReferralHistoryScreen` until product confirms they should exist in shared form
 
-Recommended implementation order:
+Remaining order:
 
-1. rewards home/history/detail/redeem
-2. referral decision work
-3. final Rewards micro-parity + maintainability cleanup before commit
-2. rewards redeem
-3. referral decision work
+1. referral decision work
+2. final Rewards micro-parity + maintainability cleanup before closure
 
 ## Start Here
 
