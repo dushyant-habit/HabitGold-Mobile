@@ -626,6 +626,13 @@ That means:
 - keep Profile-linked UPI surfaces honest about ownership boundaries
 - expand Profile child-flow and linked-route test coverage
 - update docs as each Phase 9 checkpoint moves forward
+- do not mark Phase 9 complete without a dedicated hardening/code-quality closure pass after the checkpoint work
+- for Phase 10 and later UI-heavy phases, keep code quality in focus during implementation and do not commit the phase work until the explicit pre-commit quality gate has been reviewed
+- for Phase 10 and later UI-heavy phases, color and gradient parity is mandatory:
+  - audit exact Android color tokens before implementing
+  - use exact Android gradients, stop order, and direction instead of approximations
+  - do not substitute “close enough” purples, golds, chip colors, or card backgrounds
+  - treat colors and gradients as first-class parity requirements, not late polish
 
 ## 14. How To Use This File
 

@@ -281,6 +281,15 @@ Rules:
 
 Maintain code quality during each migration step, not only in a final cleanup phase.
 
+For Phase 10 and later UI-heavy phases, this is mandatory:
+
+- keep code-quality review active while writing the code, not only during the wrap-up pass
+- treat route ownership, file growth, duplication, unused helpers, keyboard/focus behavior, and localization drift as active implementation concerns
+- do not defer obvious maintainability issues just because the screen is “working”
+- audit and preserve exact Android colors and gradients during implementation
+- do not approximate brand purples, golds, chip fills, icon tints, or hero gradients when the Android source defines them explicitly
+- treat gradient stop colors, stop order, and direction as implementation requirements, not visual cleanup
+
 Rules:
 
 - do not allow a feature to “work” while silently accumulating giant files
@@ -308,6 +317,15 @@ Definition-of-done addition:
 - no stale placeholder logic or unused migration residue should remain in completed phase scope
 
 Final commit stage rule:
+
+- do not create a Phase 10 commit until you have done an explicit code-quality pass for the touched scope
+- that Phase 10 pre-commit pass must review:
+  - oversized files and split opportunities
+  - duplication and missing shared helpers
+  - unused code / stale params / dead routes
+  - keyboard and focus behavior on interactive screens
+  - localization completeness
+  - docs matching the actual verified state
 
 - before making the final commit for a feature or phase, run a short code-quality gate in addition to UI/API/manual QA
 

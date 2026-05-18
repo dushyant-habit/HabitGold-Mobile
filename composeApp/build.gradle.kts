@@ -87,6 +87,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation("androidx.biometric:biometric:1.1.0")
             implementation("androidx.fragment:fragment-ktx:1.6.2")
+            implementation("com.google.zxing:core:3.5.4")
         }
         commonMain.dependencies {
             implementation(libs.androidx.lifecycle.runtimeCompose)

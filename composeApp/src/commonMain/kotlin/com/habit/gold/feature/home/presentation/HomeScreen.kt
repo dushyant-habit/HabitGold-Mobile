@@ -80,6 +80,7 @@ fun HomeScreen(
             HomeTopBar(
                 user = session.user,
                 liveRate = dashboard?.liveBuyPricePerGram ?: 0.0,
+                hasUnreadAlerts = uiState.hasUnreadAlerts,
                 onProfileClick = onOpenProfile,
                 onAlertsClick = onOpenAlerts,
                 onOpenGoldPrice = { activeSheet = HomeBottomSheetState.GoldPrice },

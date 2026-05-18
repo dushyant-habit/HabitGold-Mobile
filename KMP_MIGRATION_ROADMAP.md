@@ -318,25 +318,63 @@ Status: `Checkpointed, not fully closed`
 - shared Profile hub and core child screens are live; final micro-parity is still pending
 - [~] Add tests for profile state transitions and logout rules
 - hub/repository/date/input tests are live; deeper child-flow validation/state tests are still pending
+- [ ] Run mandatory Phase 9 hardening and code-quality closure pass before phase sign-off
+- this pass must include deferred biometric/security work, parity hardening, code-quality review, unused-code cleanup, duplication review, maintainability review, and final device QA
 
 ### Phase 10: History, Rewards, Referral, Alerts
 
-- [ ] Create `feature/history`
-- [ ] Create `feature/rewards`
+Status: `In progress`
+
+- Phase 10 rule: keep code quality in focus while implementing, not only at the end
+- do not make a Phase 10 commit without an explicit pre-commit code-quality pass
+- color and gradient parity is mandatory for Phase 10 and later UI-heavy phases:
+  - extract exact Android color tokens before building UI
+  - use exact gradients instead of approximations
+  - preserve stop order and direction from Android
+- the mandatory Phase 10 pre-commit pass must cover:
+  - file-size / responsibility review
+  - duplication and shared-helper review
+  - unused-code / stale-route sweep
+  - keyboard/focus behavior review on interactive screens
+  - localization review
+  - color and gradient parity review against Android
+  - docs alignment with the verified implementation
+
+- [x] Create `feature/history`
+- [x] Create `feature/rewards`
 - [ ] Create `feature/referral`
-- [ ] Create `feature/alerts`
-- [ ] Build Transactions List Flow
-- [ ] Port transaction history/details
-- [ ] Port rewards milestones/history/redeem
-- [ ] Port refer-and-earn flows
-- [ ] Port Rewards history and Rewards redeem as separate subflows
-- [ ] Port Refer & Earn detail, booster extension prompts, and buy/SIP deep links
+- [x] Create `feature/alerts`
+- [x] Build Transactions List Flow
+- [x] Port transaction history/details
+- [x] Locate Android Rewards source of truth and complete strict audit before implementation
+- [x] Port rewards milestones/history/redeem
+- [x] Port refer-and-earn flows
+- [x] Port Rewards history and Rewards redeem as separate subflows
+- [x] Port Refer & Earn detail, booster extension prompts, QR/share, and buy/SIP deep links
 - [ ] Port Referral status/history flows or intentionally redesign them
 - [ ] Define shared referral-attribution contract and map Install Referrer ownership to the Android platform layer
 - [ ] Port referral/attribution submission rules so shared code owns backend-facing attribution behavior
-- [ ] Port alerts state and persistence behavior
+- [x] Port alerts state and persistence behavior
 - [ ] Define shared push-token registration and notification-preferences contract so FCM/APNs bindings stay platform-specific
 - [ ] Add tests for each feature's core state and mapping
+
+Locked audit decisions:
+
+- create four shared feature boundaries:
+  - `feature/history`
+  - `feature/rewards`
+  - `feature/referral`
+  - `feature/alerts`
+- `RewardsRedeem` is rewards-routed but should reuse shared Trade buy/payment foundations
+- alerts should use shared local persistence plus platform-specific push bindings
+- referral attribution should become a shared contract, while Install Referrer and deep-link capture remain platform-owned
+- `ReferralStatusScreen` and `ReferralHistoryScreen` are redesign candidates, not automatic faithful migration targets
+
+Recommended implementation order:
+
+1. rewards home/history/detail/redeem
+2. referral decision work
+3. final Rewards micro-parity + maintainability cleanup before commit
 
 ### Phase 11: Delivery / Get Coin
 

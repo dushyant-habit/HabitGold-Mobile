@@ -13,6 +13,8 @@ import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.session.AuthSession
+import com.habit.gold.feature.alerts.presentation.AlertsRoute
+import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
@@ -37,6 +39,7 @@ data class HomeRouteDependencies(
 @Composable
 fun HomeRoute(
     dependencies: HomeRouteDependencies,
+    alertsDependencies: AlertsRouteDependencies,
     profileDependencies: ProfileRouteDependencies,
     savingsDependencies: SavingsRouteDependencies,
     tradeDependencies: TradeRouteDependencies,
@@ -60,6 +63,9 @@ fun HomeRoute(
 
     LaunchedEffect(destination) {
         onBottomBarVisibilityChange(destination is HomeDestination.Dashboard)
+        if (destination is HomeDestination.Dashboard) {
+            homeViewModel.onIntent(HomeIntent.RestorePreferences)
+        }
     }
 
     PlatformBackHandler(
@@ -74,7 +80,7 @@ fun HomeRoute(
             onRefresh = { homeViewModel.onIntent(HomeIntent.Refresh) },
             getHomePriceHistoryUseCase = dependencies.getHomePriceHistoryUseCase,
             onOpenProfile = { destination = HomeDestination.Profile(ProfileDestination.Hub) },
-            onOpenAlerts = { destination = HomeDestination.Deferred(HomeDeferredTarget.Alerts) },
+            onOpenAlerts = { destination = HomeDestination.Alerts },
             onOpenBuyGold = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
             onOpenSellGold = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
             onOpenGoldValueDetails = {
@@ -101,6 +107,11 @@ fun HomeRoute(
             },
             onOpenTransaction = { item -> destination = HomeDestination.TransactionDetails(item) },
             onOpenSupport = { destination = HomeDestination.HelpCenter },
+            modifier = modifier,
+        )
+        HomeDestination.Alerts -> AlertsRoute(
+            dependencies = alertsDependencies,
+            onBackClick = { destination = HomeDestination.Dashboard },
             modifier = modifier,
         )
         is HomeDestination.GoldValueDetails -> HomeGoldValueDetailsScreen(

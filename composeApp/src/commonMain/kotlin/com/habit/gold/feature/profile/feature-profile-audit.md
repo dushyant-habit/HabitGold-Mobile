@@ -76,6 +76,7 @@ Still pending from this audit:
 - biometric / security parity and crash hardening
 - final micro-parity for Profile hub, child routes, and linked UPI surfaces
 - final end-to-end Phase 9 device QA
+- mandatory Phase 9 hardening/code-quality closure before final sign-off
 
 ## Ownership Decision
 
@@ -493,6 +494,12 @@ Phase 9 should be implemented in this order:
    - nominee validation
    - security verification state
    - logout/delete-account state effects
+12. run a mandatory Phase 9 hardening/code-quality closure pass before marking the phase done:
+   - deferred biometric/security work
+   - unused-code and stale-route cleanup
+   - duplication review
+   - file-size and ownership review
+   - final parity hardening and device QA
 
 ## Roadmap Corrections Locked By This Audit
 
