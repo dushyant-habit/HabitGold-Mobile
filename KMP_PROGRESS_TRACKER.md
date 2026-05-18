@@ -122,6 +122,9 @@ Use this together with:
 - deeper child-flow/state coverage is still pending
 - [ ] Run mandatory Phase 9 hardening and code-quality closure pass before marking the phase done
 - this later pass must cover parity review, deferred biometric/security work, unused-code sweep, duplication review, file-size/ownership review, and final end-to-end QA
+- [ ] Evaluate scoped edge-swipe back as a later navigation improvement
+- if added later, apply it only to child/pushed screens such as Help, Contact Us, detail screens, and nested flows
+- do not apply swipe-back to root tab screens by default, and verify gesture conflicts on screens with horizontal interactions
 
 ## Feature Flow Coverage
 

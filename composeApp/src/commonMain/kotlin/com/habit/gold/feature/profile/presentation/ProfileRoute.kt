@@ -55,6 +55,7 @@ fun ProfileRoute(
     onBackToHome: () -> Unit,
     onNavigate: (ProfileDestination) -> Unit,
     onOpenAutopay: () -> Unit,
+    onBiometricStateChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
@@ -118,6 +119,7 @@ fun ProfileRoute(
                     if (!enabled) {
                         securityStore.setBiometricEnabled(false)
                         biometricEnabled = false
+                        onBiometricStateChanged(false)
                         return@ProfileScreen ProfileBiometricToggleResult(
                             enabled = false,
                             message = biometricDisabledMessage,
@@ -125,7 +127,7 @@ fun ProfileRoute(
                     }
 
                     when (
-                        val result = biometricAuthenticator.enable(
+                        val result = biometricAuthenticator.authenticate(
                             promptTitle = biometricTitle,
                             promptSubtitle = biometricPromptSubtitle,
                             cancelLabel = cancelLabel,
@@ -134,6 +136,7 @@ fun ProfileRoute(
                         ProfileBiometricAuthResult.Success -> {
                             securityStore.setBiometricEnabled(true)
                             biometricEnabled = true
+                            onBiometricStateChanged(true)
                             ProfileBiometricToggleResult(
                                 enabled = true,
                                 message = biometricEnabledMessage,
@@ -155,8 +158,17 @@ fun ProfileRoute(
                 onOpenVpaList = { onNavigate(ProfileDestination.VpaList) },
                 onOpenTrackOrder = { onNavigate(ProfileDestination.TrackOrder) },
                 onOpenSavedAddresses = { onNavigate(ProfileDestination.SavedAddresses) },
-                onOpenHelpCenter = { onNavigate(ProfileDestination.HelpCenter) },
-                onOpenContactUs = { onNavigate(ProfileDestination.ContactUs(state.value.summary)) },
+                onOpenHelpCenter = {
+                    onNavigate(ProfileDestination.HelpCenter(returnDestination = ProfileDestination.Hub))
+                },
+                onOpenContactUs = {
+                    onNavigate(
+                        ProfileDestination.ContactUs(
+                            seedSummary = state.value.summary,
+                            returnDestination = ProfileDestination.Hub,
+                        ),
+                    )
+                },
                 onConfirmLogout = { viewModel.onIntent(ProfileIntent.Logout) },
                 onConfirmDeleteAccount = { viewModel.onIntent(ProfileIntent.DeleteAccount) },
                 modifier = modifier,
@@ -202,15 +214,13 @@ fun ProfileRoute(
             )
         }
 
-        ProfileDestination.Security -> {
-            LaunchedEffect(Unit) {
-                onNavigate(ProfileDestination.Hub)
-            }
-        }
-
-        ProfileDestination.HelpCenter -> ProfileHelpCenterScreen(
-            onBackClick = { onNavigate(ProfileDestination.Hub) },
-            onOpenContactUs = { onNavigate(ProfileDestination.ContactUs()) },
+        is ProfileDestination.HelpCenter -> ProfileHelpCenterScreen(
+            onBackClick = {
+                destination.returnDestination?.let(onNavigate) ?: onBackToHome()
+            },
+            onOpenContactUs = {
+                onNavigate(ProfileDestination.ContactUs(returnDestination = destination))
+            },
             modifier = modifier,
         )
 
@@ -235,7 +245,9 @@ fun ProfileRoute(
             userEmail = destination.seedSummary?.user?.email.orEmpty().ifBlank { session.user?.email.orEmpty() },
             userGender = destination.seedSummary?.user?.gender.orEmpty(),
             userDob = formatDateOfBirthForDisplay(destination.seedSummary?.user?.dateOfBirth),
-            onBackClick = { onNavigate(ProfileDestination.Hub) },
+            onBackClick = {
+                destination.returnDestination?.let(onNavigate) ?: onBackToHome()
+            },
             modifier = modifier,
         )
 

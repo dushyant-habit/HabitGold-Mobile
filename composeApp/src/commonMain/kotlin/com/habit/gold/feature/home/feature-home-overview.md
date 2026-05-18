@@ -90,7 +90,6 @@ feature/home/
       HomeTrustAndActivitySections.kt
     HomeChildScreens.kt
     HomeDestination.kt
-    HomeHelpCenterScreen.kt
     HomeTransactionAndHandoffScreens.kt
   feature-home-audit.md
   feature-home-overview.md

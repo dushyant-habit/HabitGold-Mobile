@@ -17,7 +17,6 @@ internal data class SavingsCompoundingSummary(
     val totalInvested: Double,
     val totalValue: Double,
     val estimatedEarnings: Double,
-    val yearlyValues: List<Double>,
     val highlightText: String,
 )
 
@@ -69,7 +68,6 @@ internal fun calculateCompoundingSummary(monthlyInvestment: Double): SavingsComp
         totalInvested = totalInvested,
         totalValue = totalValue,
         estimatedEarnings = totalValue - totalInvested,
-        yearlyValues = (1..projectionYears).map { year -> maturity(year * 12) },
         highlightText = "₹${formatTwoDecimals(estimatedLakhs)}L in $projectionYears years",
     )
 }
@@ -88,6 +86,16 @@ internal fun SavingsSetupUiState.nextDebitLabel(
     today: LocalDate = currentSavingsDate(),
 ): String {
     return nextPaymentLabel(frequency, executionDay, today)
+}
+
+internal fun SavingsSetupUiState.nextDebitLabelOrNull(
+    today: LocalDate = currentSavingsDate(),
+): String? {
+    return when (frequency) {
+        SavingsFrequency.Daily -> nextPaymentLabel(frequency, 0, today)
+        SavingsFrequency.Weekly,
+        SavingsFrequency.Monthly -> selectedExecutionDay?.let { nextPaymentLabel(frequency, it, today) }
+    }
 }
 
 internal fun nextPaymentLabel(

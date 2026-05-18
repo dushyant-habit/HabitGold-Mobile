@@ -637,6 +637,10 @@ Rules:
 - feature flows should own their local navigation state cleanly
 - app-level navigation should be centralized
 - auth state, onboarding state, and logged-in state should be explicit
+- treat edge-swipe back as a scoped navigation enhancement, not a global default
+- if added later, use left-edge swipe-back only on child or pushed screens
+- do not enable swipe-back on root tab screens where it can conflict with tab ownership or horizontal gestures
+- verify swipe-back carefully on screens with carousels, bottom sheets, swipe CTAs, or other horizontal interactions
 
 ## Data And Networking Standard
 

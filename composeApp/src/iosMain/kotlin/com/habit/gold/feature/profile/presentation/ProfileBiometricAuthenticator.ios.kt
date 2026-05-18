@@ -27,7 +27,7 @@ private class IosProfileBiometricAuthenticator : ProfileBiometricAuthenticator {
         get() = labelFor(createContext())
 
     @OptIn(ExperimentalForeignApi::class)
-    override suspend fun enable(
+    override suspend fun authenticate(
         promptTitle: String,
         promptSubtitle: String,
         cancelLabel: String,

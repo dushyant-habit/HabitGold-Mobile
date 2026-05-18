@@ -31,6 +31,16 @@ class SavingsSetupDisplayTest {
     }
 
     @Test
+    fun `daily next payment label is available without execution day`() {
+        val state = SavingsSetupUiState(
+            frequency = SavingsFrequency.Daily,
+            selectedExecutionDay = null,
+        )
+
+        assertEquals("Tomorrow, 18 May, 2026", state.nextDebitLabelOrNull(today = LocalDate(2026, 5, 17)))
+    }
+
+    @Test
     fun `compounding summary returns expected 10 year highlight`() {
         val summary = calculateCompoundingSummary(2500.0)
 

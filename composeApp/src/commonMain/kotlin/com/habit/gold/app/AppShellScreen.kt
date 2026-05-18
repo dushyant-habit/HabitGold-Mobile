@@ -6,11 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardGiftcard
@@ -21,20 +23,29 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
@@ -56,7 +67,11 @@ import com.habit.gold.feature.profile.domain.usecase.LogoutProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.RequestDeleteAccountUseCase
 import com.habit.gold.feature.profile.domain.usecase.UpdateProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.VerifyProfileKycUseCase
+import com.habit.gold.feature.profile.presentation.ProfileBiometricAuthResult
+import com.habit.gold.feature.profile.presentation.ProfileBiometricLockScreen
 import com.habit.gold.feature.profile.presentation.ProfileRouteDependencies
+import com.habit.gold.feature.profile.presentation.ProfileSecurityStore
+import com.habit.gold.feature.profile.presentation.rememberProfileBiometricAuthenticator
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsHistoryUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsUserFeaturesUseCase
@@ -87,8 +102,16 @@ import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import com.habit.gold.feature.trade.domain.usecase.VerifyTradeVpaUseCase
 import com.habit.gold.feature.trade.presentation.rememberPlatformTradePaymentLauncher
 import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.common_cancel
+import habitgoldmobile.composeapp.generated.resources.profile_biometric_disabled
+import habitgoldmobile.composeapp.generated.resources.profile_biometric_lock_prompt_subtitle
+import habitgoldmobile.composeapp.generated.resources.profile_biometric_lock_prompt_title
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.core.Koin
+import org.jetbrains.compose.resources.stringResource
 
 private val MainBottomNavShape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
 private val MainBottomNavBorder = Color(0x26000000)
@@ -112,6 +135,24 @@ fun AppMainShellScreen(
     modifier: Modifier = Modifier,
 ) {
     var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
+    val biometricAuthenticator = rememberProfileBiometricAuthenticator()
+    val biometricSecurityStore = remember(appKoin) { ProfileSecurityStore(appKoin.get<SecureStorage>()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val biometricCancelLabel = stringResource(Res.string.common_cancel)
+    val biometricPromptTitle = stringResource(Res.string.profile_biometric_lock_prompt_title)
+    val biometricPromptSubtitle = stringResource(Res.string.profile_biometric_lock_prompt_subtitle)
+    val biometricDisabledMessage = stringResource(
+        Res.string.profile_biometric_disabled,
+        biometricAuthenticator.label,
+    )
+    val biometricSnackbarHostState = remember { SnackbarHostState() }
+    val biometricScope = rememberCoroutineScope()
+    var biometricEnabled by rememberSaveable { mutableStateOf(false) }
+    var biometricAuthenticated by rememberSaveable { mutableStateOf(true) }
+    var biometricPromptInFlight by remember { mutableStateOf(false) }
+    var shouldRearmBiometricOnForeground by rememberSaveable { mutableStateOf(false) }
+    var showBiometricUnlockOverlay by remember { mutableStateOf(false) }
+    val biometricPromptInFlightState by rememberUpdatedState(biometricPromptInFlight)
     PlatformBackHandler(
         enabled = selectedTab != MainTab.Home,
         onBack = { onSelectTab(MainTab.Home) },
@@ -186,6 +227,7 @@ fun AppMainShellScreen(
             getReferDetailsUseCase = appKoin.get<GetReferDetailsUseCase>(),
             tradeDependencies = tradeDependencies,
             savingsDependencies = savingsDependencies,
+            httpClient = appKoin.get<HttpClient>(),
         )
     }
     val alertsDependencies = remember(appKoin) {
@@ -199,9 +241,91 @@ fun AppMainShellScreen(
         tradeDependencies.livePriceStore.setLoggedIn(session.isLoggedIn)
     }
 
+    LaunchedEffect(biometricSecurityStore) {
+        biometricEnabled = biometricSecurityStore.read().biometricEnabled
+        biometricAuthenticated = !biometricEnabled
+        shouldRearmBiometricOnForeground = false
+        showBiometricUnlockOverlay = false
+    }
+
     LaunchedEffect(selectedTab) {
         if (selectedTab != MainTab.Home) {
             shouldShowBottomBar = true
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, biometricEnabled) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    if (biometricEnabled && !biometricPromptInFlightState) {
+                        shouldRearmBiometricOnForeground = true
+                    }
+                }
+
+                Lifecycle.Event.ON_START -> {
+                    if (biometricEnabled && shouldRearmBiometricOnForeground && !biometricPromptInFlightState) {
+                        biometricAuthenticated = false
+                        shouldRearmBiometricOnForeground = false
+                        showBiometricUnlockOverlay = false
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    suspend fun requestBiometricAuthentication(force: Boolean = false) {
+        if (!biometricEnabled || biometricPromptInFlight) return
+        if (!force && biometricAuthenticated) return
+
+        showBiometricUnlockOverlay = false
+        biometricPromptInFlight = true
+        try {
+            delay(if (force) 120 else 250)
+            val result = runCatching {
+                biometricAuthenticator.authenticate(
+                    promptTitle = biometricPromptTitle,
+                    promptSubtitle = biometricPromptSubtitle,
+                    cancelLabel = biometricCancelLabel,
+                )
+            }.getOrElse { throwable ->
+                ProfileBiometricAuthResult.Error(
+                    throwable.message ?: "Unable to start biometric authentication right now.",
+                )
+            }
+
+            when (result) {
+                ProfileBiometricAuthResult.Success -> {
+                    biometricAuthenticated = true
+                    showBiometricUnlockOverlay = false
+                }
+
+                is ProfileBiometricAuthResult.Unavailable -> {
+                    biometricSecurityStore.setBiometricEnabled(false)
+                    biometricEnabled = false
+                    biometricAuthenticated = true
+                    showBiometricUnlockOverlay = false
+                    biometricSnackbarHostState.showSnackbar(result.message.ifBlank { biometricDisabledMessage })
+                }
+
+                is ProfileBiometricAuthResult.Error -> {
+                    showBiometricUnlockOverlay = true
+                }
+            }
+        } finally {
+            biometricPromptInFlight = false
+        }
+    }
+
+    LaunchedEffect(selectedTab, biometricEnabled, biometricAuthenticated, showBiometricUnlockOverlay) {
+        if (biometricEnabled && !biometricAuthenticated && !showBiometricUnlockOverlay) {
+            requestBiometricAuthentication()
         }
     }
 
@@ -209,6 +333,7 @@ fun AppMainShellScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = MainShellBackground,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        snackbarHost = { SnackbarHost(hostState = biometricSnackbarHostState) },
         bottomBar = {
             AnimatedVisibility(
                 visible = shouldShowBottomBar,
@@ -230,35 +355,83 @@ fun AppMainShellScreen(
             }
         },
     ) { innerPadding ->
+        val interactionSource = remember { MutableInteractionSource() }
+        val shouldLockShell = biometricEnabled && !biometricAuthenticated
+        val shouldShowUnlockCard = shouldLockShell && showBiometricUnlockOverlay && !biometricPromptInFlight
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MainShellBackground)
                 .padding(innerPadding),
         ) {
-            when (selectedTab) {
-                MainTab.Home -> HomeRoute(
-                    dependencies = homeDependencies,
-                    alertsDependencies = alertsDependencies,
-                    profileDependencies = profileDependencies,
-                    savingsDependencies = savingsDependencies,
-                    tradeDependencies = tradeDependencies,
-                    session = session,
-                    onSelectTab = onSelectTab,
-                    onBottomBarVisibilityChange = { visible ->
-                        shouldShowBottomBar = visible
-                    },
-                    modifier = Modifier.fillMaxSize(),
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (shouldLockShell) {
+                            Modifier.blur(18.dp)
+                        } else {
+                            Modifier
+                        },
+                    ),
+            ) {
+                when (selectedTab) {
+                    MainTab.Home -> HomeRoute(
+                        dependencies = homeDependencies,
+                        alertsDependencies = alertsDependencies,
+                        profileDependencies = profileDependencies,
+                        savingsDependencies = savingsDependencies,
+                        tradeDependencies = tradeDependencies,
+                        session = session,
+                        onSelectTab = onSelectTab,
+                        onBottomBarVisibilityChange = { visible ->
+                            shouldShowBottomBar = visible
+                        },
+                        onBiometricStateChanged = { enabled ->
+                            biometricScope.launch {
+                                biometricEnabled = enabled
+                                biometricAuthenticated = true
+                                shouldRearmBiometricOnForeground = enabled
+                                showBiometricUnlockOverlay = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    MainTab.Rewards -> RewardsRoute(
+                        dependencies = rewardsDependencies,
+                        onBottomBarVisibilityChange = { visible ->
+                            shouldShowBottomBar = visible
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    MainTab.History -> HistoryRoute(
+                        dependencies = historyDependencies,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+
+            if (shouldLockShell) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x8A09090B))
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                        ) {},
                 )
-                MainTab.Rewards -> RewardsRoute(
-                    dependencies = rewardsDependencies,
-                    onBottomBarVisibilityChange = { visible ->
-                        shouldShowBottomBar = visible
+            }
+
+            if (shouldShowUnlockCard) {
+                ProfileBiometricLockScreen(
+                    label = biometricAuthenticator.label,
+                    onUnlock = {
+                        biometricScope.launch {
+                            showBiometricUnlockOverlay = false
+                            requestBiometricAuthentication(force = true)
+                        }
                     },
-                    modifier = Modifier.fillMaxSize(),
-                )
-                MainTab.History -> HistoryRoute(
-                    dependencies = historyDependencies,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -307,40 +480,6 @@ private fun MainBottomNavigationBar(
                     unselectedTextColor = MainBottomNavUnselected,
                 ),
             )
-        }
-    }
-}
-
-@Composable
-private fun MainPlaceholderPage(
-    title: String,
-    body: String,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-    ) {
-        androidx.compose.material3.Card(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(18.dp),
-            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
-            elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp),
-        ) {
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = title,
-                    style = androidx.compose.material3.MaterialTheme.typography.headlineSmall,
-                )
-                Text(
-                    text = body,
-                    style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
