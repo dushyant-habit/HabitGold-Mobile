@@ -10,6 +10,7 @@ import com.habit.gold.feature.profile.di.profileModule
 import com.habit.gold.feature.rewards.di.rewardsModule
 import com.habit.gold.feature.savings.di.savingsModule
 import com.habit.gold.feature.trade.di.tradeModule
+import com.habit.gold.feature.delivery.di.deliveryModule
 import com.habit.gold.getPlatformInfo
 import org.koin.core.Koin
 import org.koin.core.context.startKoin
@@ -32,6 +33,7 @@ fun startKoinIfNeeded(
             rewardsModule,
             savingsModule,
             tradeModule,
+            deliveryModule,
         )
     }.koin
 }

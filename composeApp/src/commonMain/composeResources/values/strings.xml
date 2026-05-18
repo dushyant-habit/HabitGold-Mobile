@@ -835,4 +835,95 @@ Invest in Gold</string>
     <string name="common_ok">OK</string>
     <string name="common_delete">Delete</string>
     <string name="common_share">Share</string>
+
+    <!-- Physical Delivery Feature Strings -->
+    <!-- AddEditAddressScreen -->
+    <string name="add_edit_address_title_edit">Edit Address</string>
+    <string name="add_edit_address_title_add">Add New Address</string>
+    <string name="add_edit_address_save">Save Address</string>
+    <string name="add_edit_address_full_name">Full Name</string>
+    <string name="add_edit_address_phone">Phone Number</string>
+    <string name="add_edit_address_pincode">Pincode</string>
+    <string name="add_edit_address_city">City</string>
+    <string name="add_edit_address_state">State</string>
+    <string name="add_edit_address_address_line1">Flat / House no. / Building</string>
+    <string name="add_edit_address_address_line2">Area / Street / Sector</string>
+    <string name="add_edit_address_landmark">Landmark (Optional)</string>
+
+    <!-- DeliveryCatalogScreen -->
+    <string name="delivery_catalog_choose_coin">Choose your gold coin</string>
+    <string name="delivery_catalog_no_products">No coins currently available for delivery.</string>
+    <string name="delivery_catalog_total_gold_available">Total available gold</string>
+    <string name="delivery_catalog_not_enough_gold">Insufficient gold balance</string>
+    <string name="delivery_catalog_buy_more_prompt">You need more gold in your locker to redeem this coin.</string>
+    <string name="delivery_catalog_coin_weight">Coin weight</string>
+    <string name="delivery_catalog_redeemable_gold">Redeemable gold</string>
+    <string name="delivery_catalog_buy_more">Buy Gold</string>
+    <string name="delivery_catalog_buy">GET COIN</string>
+    <string name="delivery_catalog_est_dispatch">Est. dispatch in %1$s days</string>
+
+    <!-- DeliveryAddressScreen -->
+    <string name="delivery_address_title">Delivery Address</string>
+    <string name="delivery_address_continue">PROCEED TO CHECKOUT</string>
+    <string name="delivery_address_add_new">ADD NEW ADDRESS</string>
+    <string name="delivery_address_delete">Delete Address</string>
+    <string name="delivery_address_no_addresses">No saved addresses found</string>
+    <string name="delivery_address_check_serviceability">Checking serviceability...</string>
+    <string name="delivery_address_verify_number">Verify mobile number</string>
+    <string name="delivery_address_verify_otp">Verify OTP</string>
+
+    <!-- DeliveryTrackingScreen -->
+    <string name="delivery_tracking_title">Track Order</string>
+    <string name="delivery_tracking_empty">No active deliveries found to track.</string>
+    <string name="delivery_tracking_retry">RETRY TRACKING</string>
+    <string name="delivery_tracking_error">Failed to load orders. Please try again.</string>
+
+    <!-- PaymentVerificationScreen -->
+    <string name="delivery_cart_verifying_payment">Verifying payment...</string>
+
+    <!-- DeliveryCartScreen -->
+    <string name="delivery_cart_summary">Delivery Cart</string>
+    <string name="delivery_cart_add_address">ADD DELIVERY ADDRESS</string>
+    <string name="delivery_cart_select_serviceable">SELECT SERVICEABLE ADDRESS</string>
+    <string name="delivery_cart_review_delivery">REVIEW DELIVERY DETAILS</string>
+    <string name="delivery_cart_empty_cart">Your delivery cart is empty.</string>
+    <string name="delivery_cart_coupon_code">Apply Coupon</string>
+    <string name="delivery_cart_remove">Remove</string>
+    <string name="delivery_cart_apply">Apply</string>
+    <string name="delivery_cart_total_gold_available">Available Balance: %1$s</string>
+    <string name="delivery_cart_payment_details">Payment details</string>
+    <string name="delivery_cart_grams_available">Locker Balance</string>
+    <string name="delivery_cart_gold_used">Gold used</string>
+    <string name="delivery_cart_delivery_charges">Delivery charges</string>
+    <string name="delivery_cart_discount">Discount</string>
+    <string name="delivery_cart_insurance_charge">Insurance charges</string>
+    <string name="delivery_cart_free">FREE</string>
+    <string name="delivery_cart_net_payable">Net payable</string>
+    <string name="delivery_cart_gold_balance_covers">Locker balance covers delivery charge</string>
+    <string name="delivery_cart_loading_address">Loading delivery addresses...</string>
+    <string name="delivery_cart_add_delivery_address">Add a delivery address</string>
+    <string name="delivery_cart_select_where_to_deliver">Select where we should deliver your gold coin</string>
+    <string name="delivery_cart_review_order">Review order</string>
+    <string name="delivery_cart_quote_ready">Quote secured</string>
+    <string name="delivery_cart_verified">Serviceable</string>
+    <string name="delivery_cart_unavailable">Unserviceable</string>
+    <string name="delivery_cart_est_dispatch">Estimated dispatch</string>
+    <string name="delivery_cart_days">%1$s days</string>
+    <string name="delivery_cart_quote_valid">Quote valid for</string>
+    <string name="delivery_cart_payable_now">Amount payable now</string>
+    <string name="delivery_cart_pay_amount">PAY %1$s</string>
+    <string name="delivery_cart_confirm_order">CONFIRM ORDER</string>
+
+    <!-- DeliveryOrderSummaryScreen -->
+    <string name="order_summary_title">Order Summary</string>
+    <string name="order_summary_track">Track Delivery</string>
+    <string name="order_summary_done">Back to Dashboard</string>
+    <string name="order_summary_order_id">Order ID</string>
+    <string name="order_summary_delivery_to">Delivering to</string>
+    <string name="order_summary_coin_details">Coin details</string>
+    <string name="order_summary_gold_weight">Gold weight</string>
+    <string name="order_summary_making_charge">Making charge</string>
+    <string name="order_summary_discount">Discount</string>
+    <string name="order_summary_total">Total paid</string>
 </resources>
+

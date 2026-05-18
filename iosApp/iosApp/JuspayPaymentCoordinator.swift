@@ -4,10 +4,16 @@ import HyperSDK
 import ComposeApp
 
 private enum JuspayBridgeKeys {
-    static let launchNotificationName = Notification.Name("HabitGoldTradePaymentLaunch")
+    static let tradeLaunchNotificationName = Notification.Name("HabitGoldTradePaymentLaunch")
+    static let deliveryLaunchNotificationName = Notification.Name("HabitGoldDeliveryPaymentLaunch")
     static let requestId = "requestId"
     static let payloadJson = "payloadJson"
     static let preferredUpiPackage = "preferredUpiPackage"
+}
+
+private enum PaymentOrigin {
+    case trade
+    case delivery
 }
 
 private enum JuspayPaymentStatus: String {
@@ -43,8 +49,10 @@ final class JuspayPaymentCoordinator {
     private let hyperServices = HyperServices()
     private let config = JuspayConfig.current()
 
-    private var notificationObserver: NSObjectProtocol?
+    private var tradeNotificationObserver: NSObjectProtocol?
+    private var deliveryNotificationObserver: NSObjectProtocol?
     private var currentRequestId: String?
+    private var currentOrigin: PaymentOrigin?
     private var pendingProcessPayload: [String: Any]?
     private var isInitiated = false
     private var isInitiating = false
@@ -61,13 +69,23 @@ final class JuspayPaymentCoordinator {
     }
 
     func startObserving() {
-        guard notificationObserver == nil else { return }
-        notificationObserver = NotificationCenter.default.addObserver(
-            forName: JuspayBridgeKeys.launchNotificationName,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            self?.handleLaunchNotification(notification)
+        if tradeNotificationObserver == nil {
+            tradeNotificationObserver = NotificationCenter.default.addObserver(
+                forName: JuspayBridgeKeys.tradeLaunchNotificationName,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                self?.handleLaunchNotification(notification, origin: .trade)
+            }
+        }
+        if deliveryNotificationObserver == nil {
+            deliveryNotificationObserver = NotificationCenter.default.addObserver(
+                forName: JuspayBridgeKeys.deliveryLaunchNotificationName,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                self?.handleLaunchNotification(notification, origin: .delivery)
+            }
         }
     }
 
@@ -79,11 +97,16 @@ final class JuspayPaymentCoordinator {
     }
 
     func invalidate() {
-        if let notificationObserver {
-            NotificationCenter.default.removeObserver(notificationObserver)
-            self.notificationObserver = nil
+        if let tradeNotificationObserver {
+            NotificationCenter.default.removeObserver(tradeNotificationObserver)
+            self.tradeNotificationObserver = nil
+        }
+        if let deliveryNotificationObserver {
+            NotificationCenter.default.removeObserver(deliveryNotificationObserver)
+            self.deliveryNotificationObserver = nil
         }
         currentRequestId = nil
+        currentOrigin = nil
         pendingProcessPayload = nil
         if isInitiated || isInitiating {
             hyperServices.terminate()
@@ -92,12 +115,13 @@ final class JuspayPaymentCoordinator {
         isInitiating = false
     }
 
-    private func handleLaunchNotification(_ notification: Notification) {
+    private func handleLaunchNotification(_ notification: Notification, origin: PaymentOrigin) {
         guard config.enabled else {
             completeFailure(
                 requestId: notification.requestId,
                 status: "juspay_disabled",
-                message: "Juspay is disabled in this build."
+                message: "Juspay is disabled in this build.",
+                origin: origin
             )
             return
         }
@@ -106,7 +130,8 @@ final class JuspayPaymentCoordinator {
             completeFailure(
                 requestId: notification.requestId,
                 status: "juspay_not_configured",
-                message: "Juspay merchant configuration is missing in this build."
+                message: "Juspay merchant configuration is missing in this build.",
+                origin: origin
             )
             return
         }
@@ -116,7 +141,8 @@ final class JuspayPaymentCoordinator {
             completeFailure(
                 requestId: requestId,
                 status: "payment_in_progress",
-                message: "Another payment is already in progress."
+                message: "Another payment is already in progress.",
+                origin: origin
             )
             return
         }
@@ -126,12 +152,14 @@ final class JuspayPaymentCoordinator {
             completeFailure(
                 requestId: requestId,
                 status: "invalid_payload",
-                message: "Invalid payment payload."
+                message: "Invalid payment payload.",
+                origin: origin
             )
             return
         }
 
         currentRequestId = requestId
+        currentOrigin = origin
         startCheckout(with: processPayload)
     }
 
@@ -140,7 +168,8 @@ final class JuspayPaymentCoordinator {
             completeFailure(
                 requestId: currentRequestId,
                 status: "host_unavailable",
-                message: "Payment screen is not ready."
+                message: "Payment screen is not ready.",
+                origin: currentOrigin ?? .trade
             )
             return
         }
@@ -194,7 +223,8 @@ final class JuspayPaymentCoordinator {
             completeFailure(
                 requestId: requestId,
                 status: "initiate_failed",
-                message: message
+                message: message,
+                origin: currentOrigin ?? .trade
             )
             return
         }
@@ -208,41 +238,73 @@ final class JuspayPaymentCoordinator {
 
     private func handleProcessResult(_ data: [String: Any]) {
         guard let requestId = currentRequestId else { return }
+        let origin = currentOrigin ?? .trade
         currentRequestId = nil
+        currentOrigin = nil
         let result = parseProcessResult(data)
 
-        switch result {
-        case .success(let status):
-            IosTradePaymentBridgeApi.shared.completeSuccess(
-                requestId: requestId,
-                status: status
-            )
-        case .failure(let status, let message, let shouldPoll):
-            IosTradePaymentBridgeApi.shared.completeFailure(
-                requestId: requestId,
-                status: status,
-                message: message,
-                shouldPollOrderStatus: shouldPoll
-            )
-        case .backPressed:
-            IosTradePaymentBridgeApi.shared.completeBackPressed(requestId: requestId)
+        switch origin {
+        case .trade:
+            switch result {
+            case .success(let status):
+                IosTradePaymentBridgeApi.shared.completeSuccess(
+                    requestId: requestId,
+                    status: status
+                )
+            case .failure(let status, let message, let shouldPoll):
+                IosTradePaymentBridgeApi.shared.completeFailure(
+                    requestId: requestId,
+                    status: status,
+                    message: message,
+                    shouldPollOrderStatus: shouldPoll
+                )
+            case .backPressed:
+                IosTradePaymentBridgeApi.shared.completeBackPressed(requestId: requestId)
+            }
+        case .delivery:
+            switch result {
+            case .success(let status):
+                IosDeliveryPaymentBridgeApi.shared.completeSuccess(
+                    requestId: requestId,
+                    status: status
+                )
+            case .failure(let status, let message, _):
+                IosDeliveryPaymentBridgeApi.shared.completeFailure(
+                    requestId: requestId,
+                    status: status,
+                    message: message
+                )
+            case .backPressed:
+                IosDeliveryPaymentBridgeApi.shared.completeBackPressed(requestId: requestId)
+            }
         }
     }
 
     private func completeFailure(
         requestId: String?,
         status: String,
-        message: String
+        message: String,
+        origin: PaymentOrigin
     ) {
         guard let requestId else { return }
         currentRequestId = nil
+        currentOrigin = nil
         pendingProcessPayload = nil
-        IosTradePaymentBridgeApi.shared.completeFailure(
-            requestId: requestId,
-            status: status,
-            message: message,
-            shouldPollOrderStatus: false
-        )
+        switch origin {
+        case .trade:
+            IosTradePaymentBridgeApi.shared.completeFailure(
+                requestId: requestId,
+                status: status,
+                message: message,
+                shouldPollOrderStatus: false
+            )
+        case .delivery:
+            IosDeliveryPaymentBridgeApi.shared.completeFailure(
+                requestId: requestId,
+                status: status,
+                message: message
+            )
+        }
     }
 
     private func buildInitiatePayload() -> [String: Any] {

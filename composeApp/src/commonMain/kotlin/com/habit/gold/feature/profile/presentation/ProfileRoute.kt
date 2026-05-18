@@ -20,6 +20,7 @@ import com.habit.gold.feature.profile.domain.usecase.LogoutProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.RequestDeleteAccountUseCase
 import com.habit.gold.feature.profile.domain.usecase.UpdateProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.VerifyProfileKycUseCase
+import com.habit.gold.feature.delivery.presentation.DeliveryDestination
 import com.habit.gold.feature.trade.domain.usecase.GetTradeUserVpasUseCase
 import com.habit.gold.feature.trade.domain.usecase.SetDefaultTradeVpaUseCase
 import com.habit.gold.feature.trade.domain.usecase.VerifyTradeVpaUseCase
@@ -56,6 +57,7 @@ fun ProfileRoute(
     onNavigate: (ProfileDestination) -> Unit,
     onOpenAutopay: () -> Unit,
     onBiometricStateChanged: (Boolean) -> Unit = {},
+    onOpenDelivery: (DeliveryDestination) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     when (destination) {
@@ -251,19 +253,17 @@ fun ProfileRoute(
             modifier = modifier,
         )
 
-        ProfileDestination.TrackOrder -> ProfilePlaceholderScreen(
-            title = "Track Order",
-            message = "Delivery tracking remains part of the later delivery phase.",
-            onBackClick = { onNavigate(ProfileDestination.Hub) },
-            modifier = modifier,
-        )
+        ProfileDestination.TrackOrder -> {
+            LaunchedEffect(Unit) {
+                onOpenDelivery(DeliveryDestination.Tracking)
+            }
+        }
 
-        ProfileDestination.SavedAddresses -> ProfilePlaceholderScreen(
-            title = "Saved Addresses",
-            message = "Address management remains part of the later delivery phase.",
-            onBackClick = { onNavigate(ProfileDestination.Hub) },
-            modifier = modifier,
-        )
+        ProfileDestination.SavedAddresses -> {
+            LaunchedEffect(Unit) {
+                onOpenDelivery(DeliveryDestination.AddressList)
+            }
+        }
     }
 }
 

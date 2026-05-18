@@ -15,6 +15,9 @@ import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.feature.alerts.presentation.AlertsRoute
 import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
+import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
+import com.habit.gold.feature.delivery.presentation.DeliveryRoute
+import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
@@ -34,6 +37,8 @@ data class HomeRouteDependencies(
     val loadHomeSummaryUseCase: LoadHomeSummaryUseCase,
     val appPreferencesStorage: AppPreferencesStorage,
     val getHomePriceHistoryUseCase: GetHomePriceHistoryUseCase,
+    val deliveryCatalogViewModelFactory: () -> DeliveryCatalogViewModel,
+    val deliveryTrackingViewModelFactory: () -> DeliveryTrackingViewModel,
 )
 
 @Composable
@@ -72,7 +77,8 @@ fun HomeRoute(
     }
 
     PlatformBackHandler(
-        enabled = destination !is HomeDestination.Dashboard && destination !is HomeDestination.Trade,
+        enabled = destination !is HomeDestination.Dashboard && destination !is HomeDestination.Trade
+            && destination !is HomeDestination.Delivery,
         onBack = { destination = HomeDestination.Dashboard },
     )
 
@@ -154,6 +160,12 @@ fun HomeRoute(
                 )
             },
             onBiometricStateChanged = onBiometricStateChanged,
+            onOpenDelivery = { deliveryDestination ->
+                destination = HomeDestination.Delivery(
+                    destination = deliveryDestination,
+                    returnDestination = HomeDestination.Profile(ProfileDestination.Hub),
+                )
+            },
             modifier = modifier,
         )
         is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
@@ -185,8 +197,22 @@ fun HomeRoute(
                     returnDestination = activeDestination,
                 )
             },
+            onNavigateToDelivery = { destination = HomeDestination.Delivery() },
             modifier = modifier,
         )
+        is HomeDestination.Delivery -> {
+            val catalogViewModel = viewModel { dependencies.deliveryCatalogViewModelFactory() }
+            val trackingViewModel = viewModel { dependencies.deliveryTrackingViewModelFactory() }
+            DeliveryRoute(
+                catalogViewModel = catalogViewModel,
+                trackingViewModel = trackingViewModel,
+                initialDestination = activeDestination.destination,
+                onBackToHome = { destination = activeDestination.returnDestination },
+                onNavigateToBuyGold = { shortfall ->
+                    destination = HomeDestination.Trade(TradeDestination.Buy())
+                },
+            )
+        }
         is HomeDestination.Deferred -> HomeDeferredRouteScreen(
             target = activeDestination.target,
             onBackClick = { destination = HomeDestination.Dashboard },

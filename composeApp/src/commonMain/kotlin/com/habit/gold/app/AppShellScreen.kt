@@ -164,6 +164,8 @@ fun AppMainShellScreen(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
             appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
             getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
+            deliveryCatalogViewModelFactory = { appKoin.get<com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel>() },
+            deliveryTrackingViewModelFactory = { appKoin.get<com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel>() },
         )
     }
     val profileDependencies = remember(appKoin) {
