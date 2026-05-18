@@ -251,3 +251,14 @@ private fun defaultMessageFor(
         NetworkErrorKind.Unknown -> fallbackMessage
     }
 }
+
+inline fun <T, R> ApiResult<T>.fold(
+    onSuccess: (value: T) -> R,
+    onFailure: (exception: NetworkError) -> R
+): R {
+    return when (this) {
+        is ApiResult.Success -> onSuccess(value)
+        is ApiResult.Failure -> onFailure(error)
+    }
+}
+

@@ -9,11 +9,7 @@ internal fun roundToMoney(value: Double): Double = ((value * 100).roundToInt() /
 internal fun roundToGoldScale(value: Double): Double = ((value * 10_000).roundToInt() / 10_000.0)
 
 internal fun formatMoney(value: Double): String {
-    val rounded = roundToMoney(value)
-    val scaled = (rounded * 100).roundToInt()
-    val whole = scaled / 100
-    val fraction = (scaled % 100).toString().removePrefix("-").padStart(2, '0')
-    return "$whole.$fraction"
+    return com.habit.gold.core.util.formatMoneyCeil(value)
 }
 
 internal fun formatPercent(value: Double): String {
@@ -45,14 +41,7 @@ internal fun sanitizeGramInput(raw: String, fractionDigits: Int): String {
 
 internal fun formatGoldQuantity(
     value: Double,
-    unitsPerGram: Long = 10_000L,
+    unitsPerGram: Long = 10_000L, // Kept for compatibility, but ignored in favor of global standard.
 ): String {
-    val scaledUnits = (max(value, 0.0) * unitsPerGram.toDouble()).roundToLong()
-    val whole = scaledUnits / unitsPerGram
-    val fraction = (scaledUnits % unitsPerGram).toString().padStart(unitsPerGram.toString().length - 1, '0').trimEnd('0')
-    return if (fraction.isEmpty()) {
-        whole.toString()
-    } else {
-        "$whole.$fraction"
-    }
+    return com.habit.gold.core.util.formatGramsTruncatePlain(value)
 }

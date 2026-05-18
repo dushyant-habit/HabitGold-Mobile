@@ -270,12 +270,7 @@ private fun formatInrCompact(raw: String?): String {
 
 internal fun formatGramsQuantityForDisplay(grams: Float): String {
     if (grams <= 0f || grams.isNaN()) return "0"
-    return when {
-        grams < 0.01f -> formatPositiveDecimal(grams, 4)
-        grams < 1f -> formatPositiveDecimal(grams, 3)
-        kotlin.math.abs(grams - grams.toInt().toFloat()) < 0.0005f -> return grams.toInt().toString()
-        else -> formatPositiveDecimal(grams, 2)
-    }
+    return com.habit.gold.core.util.formatGramsTruncatePlain(grams.toDouble())
 }
 
 private fun normalizeRewardsToken(raw: String): String {

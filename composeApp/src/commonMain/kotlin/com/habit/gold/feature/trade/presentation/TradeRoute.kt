@@ -48,6 +48,7 @@ fun TradeRoute(
     onBackToHome: () -> Unit,
     onNavigate: (TradeDestination) -> Unit,
     onOpenHelp: () -> Unit,
+    onNavigateToDelivery: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (destination !is TradeDestination.Buy && destination != TradeDestination.Sell && destination !is TradeDestination.SellPayout) {
@@ -91,12 +92,12 @@ fun TradeRoute(
             onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
-        TradeDestination.GetCoinCatalog -> TradeDeferredScreen(
-            title = stringResource(Res.string.trade_route_get_coin_title),
-            message = stringResource(Res.string.trade_route_get_coin_message),
-            onBackClick = { onNavigate(TradeDestination.WithdrawalMode) },
-            modifier = modifier,
-        )
+        TradeDestination.GetCoinCatalog -> {
+            // Navigate back to WithdrawalMode so that when the user returns
+            // from the delivery flow they land on the expected screen,
+            // then delegate to the real DeliveryRoute via the parent.
+            onNavigateToDelivery()
+        }
         is TradeDestination.TransactionDetails -> TradeTransactionDetailsScreen(
             transactionId = destination.transactionId,
             getTradeTransactionsUseCase = dependencies.getTradeTransactionsUseCase,
