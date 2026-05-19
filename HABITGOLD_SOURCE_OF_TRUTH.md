@@ -625,6 +625,11 @@ That means:
   - Android OTP auto-read
   - shared token/referral bridge state
   - Android/iOS push and referral entry hooks
+- carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
+  - delivery affordability uses `redeemableGoldGrams`
+  - serviceability requires `PINCODE_SERVICEABLE`
+  - shortfall-to-buy rounds up to the next `0.5g`
+  - buy-back should return to Delivery / Get Coin, not Home
 - finish the remaining iOS secure-storage and project-level push/deep-link parity
 - finish the remaining Firebase / crash / performance parity decisions
 - keep notification, deep-link, install-referrer, and OTP behavior platform-owned but contract-driven

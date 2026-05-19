@@ -1,6 +1,7 @@
 package com.habit.gold.feature.trade.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.feature.trade.domain.TradePaymentLauncher
@@ -48,6 +49,7 @@ fun TradeRoute(
     onBackToHome: () -> Unit,
     onNavigate: (TradeDestination) -> Unit,
     onOpenHelp: () -> Unit,
+    onNavigateToDelivery: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (destination !is TradeDestination.Buy && destination != TradeDestination.Sell && destination !is TradeDestination.SellPayout) {
@@ -91,12 +93,9 @@ fun TradeRoute(
             onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
-        TradeDestination.GetCoinCatalog -> TradeDeferredScreen(
-            title = stringResource(Res.string.trade_route_get_coin_title),
-            message = stringResource(Res.string.trade_route_get_coin_message),
-            onBackClick = { onNavigate(TradeDestination.WithdrawalMode) },
-            modifier = modifier,
-        )
+        TradeDestination.GetCoinCatalog -> LaunchedEffect(destination) {
+            onNavigateToDelivery()
+        }
         is TradeDestination.TransactionDetails -> TradeTransactionDetailsScreen(
             transactionId = destination.transactionId,
             getTradeTransactionsUseCase = dependencies.getTradeTransactionsUseCase,

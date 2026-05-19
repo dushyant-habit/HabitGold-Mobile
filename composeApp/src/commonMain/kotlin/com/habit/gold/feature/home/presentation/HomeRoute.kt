@@ -15,6 +15,8 @@ import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.feature.alerts.presentation.AlertsRoute
 import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
+import com.habit.gold.feature.delivery.presentation.DeliveryRoute
+import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
@@ -34,6 +36,7 @@ data class HomeRouteDependencies(
     val loadHomeSummaryUseCase: LoadHomeSummaryUseCase,
     val appPreferencesStorage: AppPreferencesStorage,
     val getHomePriceHistoryUseCase: GetHomePriceHistoryUseCase,
+    val deliveryRouteDependencies: DeliveryRouteDependencies,
 )
 
 @Composable
@@ -72,7 +75,8 @@ fun HomeRoute(
     }
 
     PlatformBackHandler(
-        enabled = destination !is HomeDestination.Dashboard && destination !is HomeDestination.Trade,
+        enabled = destination !is HomeDestination.Dashboard && destination !is HomeDestination.Trade
+            && destination !is HomeDestination.Delivery,
         onBack = { destination = HomeDestination.Dashboard },
     )
 
@@ -89,8 +93,18 @@ fun HomeRoute(
                 )
             },
             onOpenAlerts = { destination = HomeDestination.Alerts },
-            onOpenBuyGold = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
-            onOpenSellGold = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
+            onOpenBuyGold = {
+                destination = HomeDestination.Trade(
+                    destination = TradeDestination.Buy(),
+                    returnDestination = HomeDestination.Dashboard,
+                )
+            },
+            onOpenSellGold = {
+                destination = HomeDestination.Trade(
+                    destination = TradeDestination.WithdrawalMode,
+                    returnDestination = HomeDestination.Dashboard,
+                )
+            },
             onOpenGoldValueDetails = {
                 destination = HomeDestination.GoldValueDetails(uiState.value.summary?.dashboard)
             },
@@ -130,8 +144,18 @@ fun HomeRoute(
         is HomeDestination.GoldValueDetails -> HomeGoldValueDetailsScreen(
             dashboard = activeDestination.dashboard,
             onBackClick = { destination = HomeDestination.Dashboard },
-            onBuyGoldClick = { destination = HomeDestination.Trade(TradeDestination.Buy()) },
-            onSellGoldClick = { destination = HomeDestination.Trade(TradeDestination.WithdrawalMode) },
+            onBuyGoldClick = {
+                destination = HomeDestination.Trade(
+                    destination = TradeDestination.Buy(),
+                    returnDestination = HomeDestination.GoldValueDetails(activeDestination.dashboard),
+                )
+            },
+            onSellGoldClick = {
+                destination = HomeDestination.Trade(
+                    destination = TradeDestination.WithdrawalMode,
+                    returnDestination = HomeDestination.GoldValueDetails(activeDestination.dashboard),
+                )
+            },
         )
         is HomeDestination.Profile -> ProfileRoute(
             dependencies = profileDependencies,
@@ -154,6 +178,12 @@ fun HomeRoute(
                 )
             },
             onBiometricStateChanged = onBiometricStateChanged,
+            onOpenDelivery = { deliveryDestination ->
+                destination = HomeDestination.Delivery(
+                    destination = deliveryDestination,
+                    returnDestination = HomeDestination.Profile(ProfileDestination.Hub),
+                )
+            },
             modifier = modifier,
         )
         is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
@@ -175,9 +205,12 @@ fun HomeRoute(
         is HomeDestination.Trade -> TradeRoute(
             dependencies = tradeDependencies,
             destination = activeDestination.destination,
-            onBackToHome = { destination = HomeDestination.Dashboard },
+            onBackToHome = { destination = activeDestination.returnDestination },
             onNavigate = { nextTradeDestination ->
-                destination = HomeDestination.Trade(nextTradeDestination)
+                destination = HomeDestination.Trade(
+                    destination = nextTradeDestination,
+                    returnDestination = activeDestination.returnDestination,
+                )
             },
             onOpenHelp = {
                 destination = HomeDestination.Profile(
@@ -185,8 +218,29 @@ fun HomeRoute(
                     returnDestination = activeDestination,
                 )
             },
+            onNavigateToDelivery = {
+                destination = HomeDestination.Delivery(
+                        returnDestination = HomeDestination.Trade(TradeDestination.WithdrawalMode),
+                )
+            },
             modifier = modifier,
         )
+        is HomeDestination.Delivery -> {
+            DeliveryRoute(
+                dependencies = dependencies.deliveryRouteDependencies,
+                initialDestination = activeDestination.destination,
+                onBackToHome = { destination = activeDestination.returnDestination },
+                onNavigateToBuyGold = { shortfall ->
+                    destination = HomeDestination.Trade(
+                        destination = TradeDestination.Buy(
+                            amount = formatDeliveryShortfallGrams(shortfall),
+                            oneTimeUseGrams = true,
+                        ),
+                        returnDestination = activeDestination,
+                    )
+                },
+            )
+        }
         is HomeDestination.Deferred -> HomeDeferredRouteScreen(
             target = activeDestination.target,
             onBackClick = { destination = HomeDestination.Dashboard },
@@ -195,6 +249,15 @@ fun HomeRoute(
                 onSelectTab(MainTab.History)
             },
         )
+    }
+}
+
+private fun formatDeliveryShortfallGrams(value: Double): String {
+    val roundedUpHalfStep = kotlin.math.ceil(value * 2.0) / 2.0
+    return if (roundedUpHalfStep % 1.0 == 0.0) {
+        roundedUpHalfStep.toInt().toString()
+    } else {
+        roundedUpHalfStep.toString()
     }
 }
 

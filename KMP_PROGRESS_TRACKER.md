@@ -14,6 +14,7 @@ Use this together with:
 - Current phase: `Phase 12`
 - Phase 9 status: `checkpointed, not fully closed`
 - Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
+- Phase 11 status: `shared Delivery / Get Coin checkpoint is live; final device QA and any remaining invoice/detail parity follow-up are still pending`
 - Phase 12 status: `first verified implementation slice live, still in progress`
 - Current focus: `finish the remaining platform parity gaps after the first env/storage/otp/push/referral slice`
 - Next milestone: `complete the remaining iOS secure-storage and Firebase/crash/perf parity decisions`
@@ -127,6 +128,22 @@ Use this together with:
 - if added later, apply it only to child/pushed screens such as Help, Contact Us, detail screens, and nested flows
 - do not apply swipe-back to root tab screens by default, and verify gesture conflicts on screens with horizontal interactions
 
+## Phase 11: Delivery / Get Coin
+
+- [x] Complete strict Android audit for delivery / get coin ownership, checkout rules, address flows, and tracking
+- [x] Create `feature/delivery`
+- [x] Port catalog/cart/address book flow
+- [x] Port serviceability checks
+- [x] Port quote/order summary/order placement
+- [x] Port delivery tracking
+- [x] Port shortfall-to-buy-gold bridge from delivery catalog
+- [x] Port add/edit/delete address with OTP verification and serviceability refresh
+- [x] Port pending checkout restore, quote expiry refresh, and payment retry handling
+- [x] Rebuild delivery screens in smaller components
+- [x] Add targeted tests for delivery DTO mapping and catalog state transitions
+- [ ] Finish any remaining delivery-specific invoice/detail parity follow-up if product still needs a dedicated shared invoice surface
+- [ ] Run final end-to-end Delivery QA
+
 ## Feature Flow Coverage
 
 This section keeps the important product flows visible explicitly, even when they are grouped under broader phases.
@@ -144,7 +161,7 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Rewards Flow
 - [ ] Referral Flow
 - [x] Alerts Flow
-- [ ] Delivery / Get Coin Flow
+- [x] Delivery / Get Coin Flow
 - [~] Platform Integrations Flow
 
 ### Hidden Subflows To Preserve
@@ -155,8 +172,8 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Rewards Redeem Flow
 - [x] Rewards History Flow
 - [ ] Referral Status / History decision
-- [ ] Delivery address OTP + serviceability flow
-- [ ] Delivery pending-checkout restore flow
+- [x] Delivery address OTP + serviceability flow
+- [x] Delivery pending-checkout restore flow
 - [x] VPA selection / payout flow
 
 ### Flow To Phase Mapping

@@ -7,19 +7,22 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
 internal fun formatInr(value: Double): String {
-    val rounded = ((value * 100).roundToInt() / 100.0)
-    val absolute = rounded.absoluteValue
-    val whole = absolute.toLong()
-    val decimals = ((absolute - whole) * 100).roundToInt().coerceAtLeast(0)
+    val formatted = com.habit.gold.core.util.formatMoneyCeil(value)
+    val isNegative = formatted.startsWith("-")
+    val absoluteFormatted = formatted.removePrefix("-")
+    val parts = absoluteFormatted.split(".")
+    val wholeStr = parts[0]
+    val fracStr = parts.getOrNull(1)
+    
+    val whole = wholeStr.toLongOrNull() ?: 0L
     val groupedWhole = formatIndianWhole(whole)
-    val decimalSuffix = if (decimals == 0) "" else ".${decimals.toString().padStart(2, '0')}"
-    val sign = if (rounded < 0) "-" else ""
+    val decimalSuffix = if (fracStr == null || fracStr == "00") "" else ".$fracStr"
+    val sign = if (isNegative) "-" else ""
     return "$sign$groupedWhole$decimalSuffix"
 }
 
 internal fun formatGoldBalance(value: Double): String {
-    val rounded = ((value * 10_000).roundToInt() / 10_000.0)
-    return rounded.toString().trimTrailingZeros()
+    return com.habit.gold.core.util.formatGramsTruncatePlain(value)
 }
 
 internal fun formatProfitLabel(value: Double): String {

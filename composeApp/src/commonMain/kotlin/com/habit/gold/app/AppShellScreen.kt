@@ -63,6 +63,7 @@ import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
+import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.profile.domain.usecase.GetProfileSummaryUseCase
 import com.habit.gold.feature.profile.domain.usecase.LogoutProfileUseCase
 import com.habit.gold.feature.profile.domain.usecase.RequestDeleteAccountUseCase
@@ -166,6 +167,7 @@ fun AppMainShellScreen(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
             appPreferencesStorage = appKoin.get<AppPreferencesStorage>(),
             getHomePriceHistoryUseCase = appKoin.get<GetHomePriceHistoryUseCase>(),
+            deliveryRouteDependencies = appKoin.get<DeliveryRouteDependencies>(),
         )
     }
     val profileDependencies = remember(appKoin) {
