@@ -153,6 +153,20 @@ class HistoryViewModelTest {
         assertEquals("+0.0004 g", item4.weightLabel)
     }
 
+    @Test
+    fun `mapping gold quantities with suffixes and negative signs formats them correctly`() {
+        // Test suffix handling (gm, gms, g, and spaces)
+        val tx1 = preview(id = "tx-1", type = "BUY", status = "COMPLETED").copy(goldQuantity = "0.50 gm")
+        val tx2 = preview(id = "tx-2", type = "BUY", status = "COMPLETED").copy(goldQuantity = " 0.500 gms ")
+        val tx3 = preview(id = "tx-3", type = "DELIVERY", status = "COMPLETED").copy(goldQuantity = "-0.50 gm")
+        val tx4 = preview(id = "tx-4", type = "SELL", status = "COMPLETED").copy(goldQuantity = "-0.1234")
+
+        assertEquals("+0.5000 g", mapTradeTransaction(tx1).weightLabel)
+        assertEquals("+0.5000 g", mapTradeTransaction(tx2).weightLabel)
+        assertEquals("-0.5000 g", mapTradeTransaction(tx3).weightLabel)
+        assertEquals("-0.1234 g", mapTradeTransaction(tx4).weightLabel)
+    }
+
     private fun createViewModel(
         repository: FakeTradeRepository,
         nowMillis: () -> Long = { 1_000_000L },

@@ -22,7 +22,7 @@ internal fun formatInr(value: Double): String {
 }
 
 internal fun formatGoldBalance(value: Double): String {
-    return com.habit.gold.core.util.formatGramsTruncatePlain(value)
+    return com.habit.gold.core.util.formatGramsTruncate(value)
 }
 
 internal fun formatProfitLabel(value: Double): String {

@@ -4,32 +4,39 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
-/** Shows gold weight with exactly 4 decimal places, e.g. 0.5000, 1.0000. */
+/** Shows gold weight with exactly 4 decimal places, e.g. 0.5000, 1.0000, truncated. */
 fun formatGrams(value: Double): String {
-    val scaled = (value * 10000).let { kotlin.math.round(it).toLong() }
-    val whole = scaled / 10000
-    val frac = (scaled % 10000).let { if (it < 0) -it else it }
-    return "${whole}.${frac.toString().padStart(4, '0')}"
+    return com.habit.gold.core.util.formatGramsTruncate(value)
 }
 
-/** Shows INR amount with exactly 2 decimal places and US grouping, e.g. 150.00, 1,250.50. */
+/** Shows INR amount with exactly 2 decimal places and Indian grouping, e.g. 150.00, 1,250.50, 1,00,000.00. */
 fun formatAmount(value: Double): String {
-    val scaled = (value * 100).let { kotlin.math.round(it).toLong() }
-    val whole = scaled / 100
-    val frac = (scaled % 100).let { if (it < 0) -it else it }
+    val formatted = com.habit.gold.core.util.formatMoneyCeil(value)
+    val isNegative = formatted.startsWith("-")
+    val absoluteFormatted = formatted.removePrefix("-")
+    val parts = absoluteFormatted.split(".")
+    val wholeStr = parts[0]
+    val fracStr = parts.getOrNull(1) ?: "00"
     
-    val wholeStr = whole.toString()
-    val withCommas = buildString {
-        val len = wholeStr.length
-        for (i in wholeStr.indices) {
-            append(wholeStr[i])
-            val remaining = len - 1 - i
-            if (remaining > 0 && remaining % 3 == 0) {
-                append(',')
-            }
-        }
+    val whole = wholeStr.toLongOrNull() ?: 0L
+    val groupedWhole = formatIndianWhole(whole)
+    val sign = if (isNegative) "-" else ""
+    return "$sign$groupedWhole.$fracStr"
+}
+
+private fun formatIndianWhole(value: Long): String {
+    val digits = value.toString()
+    if (digits.length <= 3) return digits
+
+    val lastThree = digits.takeLast(3)
+    var prefix = digits.dropLast(3)
+    val groups = mutableListOf<String>()
+    while (prefix.length > 2) {
+        groups += prefix.takeLast(2)
+        prefix = prefix.dropLast(2)
     }
-    return "${withCommas}.${frac.toString().padStart(2, '0')}"
+    if (prefix.isNotEmpty()) groups += prefix
+    return groups.asReversed().joinToString(",") + ",$lastThree"
 }
 
 /**

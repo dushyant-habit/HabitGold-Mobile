@@ -299,8 +299,12 @@ private fun normalizeMoneyDisplay(raw: String): String {
 }
 
 private fun normalizeGoldDisplay(raw: String): String {
-    val parsed = raw.trim().removeSuffix("g").trim().toDoubleOrNull() ?: return raw.trim()
-    return com.habit.gold.core.util.formatGramsTruncatePlain(parsed)
+    val cleaned = raw.trim()
+        .replace(Regex("[^0-9.\\-]"), "")
+        .trim()
+    val parsed = cleaned.toDoubleOrNull() ?: return raw.trim()
+    val absolute = parsed.absoluteValue
+    return com.habit.gold.core.util.formatGramsTruncate(absolute)
 }
 
 private fun formatIndianWhole(value: Long): String {
