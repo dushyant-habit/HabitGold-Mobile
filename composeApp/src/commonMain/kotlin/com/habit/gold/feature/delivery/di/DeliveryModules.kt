@@ -26,6 +26,7 @@ import com.habit.gold.feature.delivery.domain.usecase.UpdateUserAddressUseCase
 import com.habit.gold.feature.delivery.domain.usecase.ValidateDeliveryPincodeUseCase
 import com.habit.gold.feature.delivery.domain.usecase.VerifyAddressOtpUseCase
 import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
+import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
 import org.koin.dsl.module
@@ -62,6 +63,26 @@ val deliveryModule = module {
     factory {
         DeliveryCatalogViewModel(
             getDeliveryProductsUseCase = get(),
+            createDeliveryQuoteUseCase = get(),
+            confirmDeliveryOrderUseCase = get(),
+            pendingDeliveryCheckoutStore = get(),
+            deliveryCheckoutTelemetry = get(),
+            getSellAvailabilityUseCase = get(),
+            getDeliveryOrderDetailsUseCase = get(),
+            sessionStore = get(),
+        )
+    }
+
+    factory {
+        DeliveryRouteDependencies(
+            getDeliveryProductsUseCase = get(),
+            createDeliveryQuoteUseCase = get(),
+            confirmDeliveryOrderUseCase = get(),
+            getDeliveryOrderDetailsUseCase = get(),
+            pendingDeliveryCheckoutStore = get(),
+            deliveryCheckoutTelemetry = get(),
+            getSellAvailabilityUseCase = get(),
+            sessionStore = get(),
             listUserAddressesUseCase = get(),
             createUserAddressUseCase = get(),
             updateUserAddressUseCase = get(),
@@ -69,15 +90,9 @@ val deliveryModule = module {
             sendAddressOtpUseCase = get(),
             verifyAddressOtpUseCase = get(),
             checkAddressServiceabilityUseCase = get(),
-            createDeliveryQuoteUseCase = get(),
-            confirmDeliveryOrderUseCase = get(),
             validateDeliveryPincodeUseCase = get(),
             lookupPostalPincodeUseCase = get(),
-            pendingDeliveryCheckoutStore = get(),
-            deliveryCheckoutTelemetry = get(),
-            getSellAvailabilityUseCase = get(),
-            getDeliveryOrderDetailsUseCase = get(),
-            sessionStore = get(),
+            listDeliveryOrdersUseCase = get(),
         )
     }
 
