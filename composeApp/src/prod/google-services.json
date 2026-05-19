@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1004012622650",
+    "project_id": "habitgold-80ffb",
+    "storage_bucket": "habitgold-80ffb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1004012622650:android:d429bba25dcb0832cc7603",
+        "android_client_info": {
+          "package_name": "com.habit.gold"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNuSPBZigkCJvLSlq-3TA3Vxy-_FjseHU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

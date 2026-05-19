@@ -1,0 +1,9 @@
+#include "Base.xcconfig"
+
+PRODUCT_NAME=HabitGoldMobile Preprod
+PRODUCT_BUNDLE_IDENTIFIER=com.habit.gold.preprod
+APP_NAME=HabitGold Preprod
+APP_ENV=preprod
+API_BASE_URL=https:$(SLASH)/preprod.habitgold.com/v1/
+ENABLE_NETWORK_LOGS=YES
+JUSPAY_ENVIRONMENT=sandbox

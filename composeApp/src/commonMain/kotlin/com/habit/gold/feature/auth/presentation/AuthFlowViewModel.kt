@@ -5,6 +5,7 @@ import com.habit.gold.PlatformInfo
 import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.localization.AppStrings
 import com.habit.gold.core.network.ApiResult
+import com.habit.gold.core.platform.PlatformBridgeStore
 import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.session.SessionStore
@@ -26,6 +27,7 @@ class AuthFlowViewModel(
     private val verifyOtpUseCase: VerifyOtpUseCase,
     private val submitBasicDetailsUseCase: SubmitBasicDetailsUseCase,
     private val sessionStore: SessionStore,
+    private val platformBridgeStore: PlatformBridgeStore,
 ) : MviViewModel<AuthFlowUiState, AuthIntent, AuthEffect>(
     initialState = AuthFlowUiState(
         appName = appConfig.appName,
@@ -39,6 +41,11 @@ class AuthFlowViewModel(
     private var resendTimerJob: Job? = null
 
     init {
+        viewModelScope.launch {
+            platformBridgeStore.readPendingReferralCode()?.let { pendingReferralCode ->
+                updateState { it.copy(referralCode = pendingReferralCode) }
+            }
+        }
         viewModelScope.launch {
             sessionStore.state.collectLatest(::syncFromSession)
         }
@@ -152,6 +159,9 @@ class AuthFlowViewModel(
             when (val result = verifyOtpUseCase(currentState.phoneNumber, currentState.otpCode)) {
                 is ApiResult.Success -> {
                     resendTimerJob?.cancel()
+                    if (!result.value.requiresBasicDetails) {
+                        platformBridgeStore.writePendingReferralCode(null)
+                    }
                     updateState {
                         it.copy(
                             screen = if (result.value.requiresBasicDetails) AuthStep.BasicDetails else AuthStep.Handoff,
@@ -258,6 +268,7 @@ class AuthFlowViewModel(
                 )
             ) {
                 is ApiResult.Success -> {
+                    platformBridgeStore.writePendingReferralCode(null)
                     updateState {
                         it.copy(
                             screen = AuthStep.Handoff,
@@ -331,6 +342,7 @@ class AuthFlowViewModel(
                 user = session.user,
                 isLoading = false,
                 errorMessage = null,
+                referralCode = if (session.isProfileComplete) "" else it.referralCode,
             )
         }
     }
