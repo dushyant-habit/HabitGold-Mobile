@@ -17,14 +17,14 @@ data class DeliveryAddressState(
     val postalLookupState: String? = null,
     val deliveryPincodeVerified: Boolean = false,
     val isVerifyingPincode: Boolean = false,
-    val pincodeVerifyError: String? = null,
+    val pincodeVerifyError: DeliveryUiText? = null,
 
     // ── Address save + OTP flow state ──────────────────────────────────
     val isSavingAddress: Boolean = false,
     val lastCreatedAddressId: String? = null,
     val otpAddressId: String? = null,
     val isVerifyingOtp: Boolean = false,
-    val otpVerifyError: String? = null,
+    val otpVerifyError: DeliveryUiText? = null,
 ) : MviState
 
 sealed interface DeliveryAddressIntent : MviIntent {
@@ -47,8 +47,8 @@ sealed interface DeliveryAddressIntent : MviIntent {
 }
 
 sealed interface DeliveryAddressEffect : MviEffect {
-    data class ShowError(val message: String) : DeliveryAddressEffect
-    data class ShowToast(val message: String) : DeliveryAddressEffect
+    data class ShowError(val message: DeliveryUiText) : DeliveryAddressEffect
+    data class ShowToast(val message: DeliveryUiText) : DeliveryAddressEffect
     data object AddressSaved : DeliveryAddressEffect
     /** Emitted after address is created + OTP verified + serviceability check passes. */
     data object AddressFullyVerified : DeliveryAddressEffect

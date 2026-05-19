@@ -85,7 +85,7 @@ fun CouponCodeCard(
                         value = couponCode,
                         onValueChange = { onCodeChange(it.uppercase()) },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Enter coupon code") },
+                        placeholder = { Text(stringResource(Res.string.delivery_cart_enter_coupon_code)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         shape = RoundedCornerShape(12.dp),
@@ -97,6 +97,7 @@ fun CouponCodeCard(
                     Button(
                         onClick = onApply,
                         enabled = couponCode.isNotBlank(),
+                        modifier = Modifier.height(56.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)
                     ) {

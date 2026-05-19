@@ -65,7 +65,7 @@ fun PaymentVerificationScreen(message: String? = null) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = message ?: "We're confirming your transaction with the bank.\nThis usually takes a few seconds.",
+                text = message ?: stringResource(Res.string.delivery_cart_verifying_payment_message),
                 fontSize = 15.sp,
                 color = AppColors.Slate500,
                 textAlign = TextAlign.Center,
@@ -90,7 +90,7 @@ fun PaymentVerificationScreen(message: String? = null) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "100% Secure Checkout",
+                    text = stringResource(Res.string.delivery_cart_secure_checkout),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = AppColors.Slate500
@@ -100,7 +100,7 @@ fun PaymentVerificationScreen(message: String? = null) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Please do not close the app or press back",
+                text = stringResource(Res.string.delivery_cart_do_not_close),
                 fontSize = 12.sp,
                 color = AppColors.Slate400,
                 textAlign = TextAlign.Center

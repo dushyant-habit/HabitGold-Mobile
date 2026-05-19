@@ -18,6 +18,20 @@ import com.habit.gold.feature.delivery.domain.usecase.SendAddressOtpUseCase
 import com.habit.gold.feature.delivery.domain.usecase.UpdateUserAddressUseCase
 import com.habit.gold.feature.delivery.domain.usecase.ValidateDeliveryPincodeUseCase
 import com.habit.gold.feature.delivery.domain.usecase.VerifyAddressOtpUseCase
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.delivery_address_delivery_not_available
+import habitgoldmobile.composeapp.generated.resources.delivery_address_enter_valid_otp
+import habitgoldmobile.composeapp.generated.resources.delivery_address_otp_invalid
+import habitgoldmobile.composeapp.generated.resources.delivery_address_otp_sent
+import habitgoldmobile.composeapp.generated.resources.delivery_address_pincode_not_serviceable
+import habitgoldmobile.composeapp.generated.resources.delivery_address_pincode_serviceable
+import habitgoldmobile.composeapp.generated.resources.delivery_error_create_address
+import habitgoldmobile.composeapp.generated.resources.delivery_error_delete_address
+import habitgoldmobile.composeapp.generated.resources.delivery_error_read_address_id
+import habitgoldmobile.composeapp.generated.resources.delivery_error_send_otp
+import habitgoldmobile.composeapp.generated.resources.delivery_error_update_address
+import habitgoldmobile.composeapp.generated.resources.delivery_error_verify_pincode
+import habitgoldmobile.composeapp.generated.resources.delivery_error_verify_serviceability
 import kotlinx.coroutines.launch
 
 class DeliveryAddressViewModel(
@@ -122,7 +136,12 @@ class DeliveryAddressViewModel(
                     },
                     onFailure = { error ->
                         updateState { it.copy(isSavingAddress = false) }
-                        emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Failed to update address"))
+                        emitEffect(
+                            DeliveryAddressEffect.ShowError(
+                                error.message?.asDeliveryUiText()
+                                    ?: DeliveryUiText.Resource(Res.string.delivery_error_update_address)
+                            )
+                        )
                     }
                 )
             }
@@ -136,7 +155,7 @@ class DeliveryAddressViewModel(
                     val newId = json.extractAddressId()
                     if (newId.isNullOrBlank()) {
                         updateState { it.copy(isSavingAddress = false) }
-                        emitEffect(DeliveryAddressEffect.ShowError("Could not read new address ID"))
+                        emitEffect(DeliveryAddressEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_error_read_address_id)))
                         return@fold
                     }
                     updateState {
@@ -150,7 +169,12 @@ class DeliveryAddressViewModel(
                 },
                 onFailure = { error ->
                     updateState { it.copy(isSavingAddress = false) }
-                    emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Failed to save address"))
+                    emitEffect(
+                        DeliveryAddressEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_create_address)
+                        )
+                    )
                 }
             )
         }
@@ -174,7 +198,12 @@ class DeliveryAddressViewModel(
                     emitEffect(DeliveryAddressEffect.AddressSaved)
                 },
                 onFailure = { error ->
-                    emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Failed to update address"))
+                    emitEffect(
+                        DeliveryAddressEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_update_address)
+                        )
+                    )
                 }
             )
         }
@@ -185,7 +214,12 @@ class DeliveryAddressViewModel(
             deleteUserAddressUseCase(id).fold(
                 onSuccess = { refreshAddresses() },
                 onFailure = { error ->
-                    emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Failed to delete address"))
+                    emitEffect(
+                        DeliveryAddressEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_delete_address)
+                        )
+                    )
                 }
             )
         }
@@ -202,11 +236,13 @@ class DeliveryAddressViewModel(
             sendAddressOtpUseCase(id).fold(
                 onSuccess = {
                     updateState { it.copy(otpAddressId = id) }
-                    emitEffect(DeliveryAddressEffect.ShowToast("OTP sent to your phone"))
+                    emitEffect(DeliveryAddressEffect.ShowToast(DeliveryUiText.Resource(Res.string.delivery_address_otp_sent)))
                 },
                 onFailure = { error ->
-                    updateState { it.copy(otpVerifyError = error.message ?: "Failed to send OTP") }
-                    emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Failed to send OTP"))
+                    val message = error.message?.asDeliveryUiText()
+                        ?: DeliveryUiText.Resource(Res.string.delivery_error_send_otp)
+                    updateState { it.copy(otpVerifyError = message) }
+                    emitEffect(DeliveryAddressEffect.ShowError(message))
                 }
             )
         }
@@ -215,7 +251,7 @@ class DeliveryAddressViewModel(
     private fun verifyAddressOtp(id: String, otp: String) {
         val digits = otp.filter { it.isDigit() }.take(6)
         if (digits.length != 6) {
-            updateState { it.copy(otpVerifyError = "Enter the 6-digit OTP") }
+            updateState { it.copy(otpVerifyError = DeliveryUiText.Resource(Res.string.delivery_address_enter_valid_otp)) }
             return
         }
         updateState { it.copy(isVerifyingOtp = true, otpVerifyError = null) }
@@ -228,7 +264,8 @@ class DeliveryAddressViewModel(
                     updateState {
                         it.copy(
                             isVerifyingOtp = false,
-                            otpVerifyError = error.message ?: "Invalid OTP. Please try again."
+                            otpVerifyError = error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_address_otp_invalid)
                         )
                     }
                 }
@@ -258,14 +295,19 @@ class DeliveryAddressViewModel(
                 } else {
                     emitEffect(
                         DeliveryAddressEffect.ShowError(
-                            "Delivery is not available for this address. Verification status must be PINCODE_SERVICEABLE."
+                            DeliveryUiText.Resource(Res.string.delivery_address_delivery_not_available)
                         )
                     )
                 }
             },
             onFailure = { error ->
                 updateState { it.copy(isVerifyingOtp = false) }
-                emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Could not verify delivery serviceability"))
+                emitEffect(
+                    DeliveryAddressEffect.ShowError(
+                        error.message?.asDeliveryUiText()
+                            ?: DeliveryUiText.Resource(Res.string.delivery_error_verify_serviceability)
+                    )
+                )
             }
         )
     }
@@ -282,24 +324,36 @@ class DeliveryAddressViewModel(
                         it.copy(
                             isVerifyingPincode = false,
                             deliveryPincodeVerified = ok,
-                            pincodeVerifyError = if (ok) null else (root.string("message") ?: "Pincode not serviceable"),
+                            pincodeVerifyError = if (ok) {
+                                null
+                            } else {
+                                root.string("message")?.asDeliveryUiText()
+                                    ?: DeliveryUiText.Resource(Res.string.delivery_address_pincode_not_serviceable)
+                            },
                         )
                     }
                     if (ok) {
-                        emitEffect(DeliveryAddressEffect.ShowToast("Pincode is serviceable ✓"))
+                        emitEffect(DeliveryAddressEffect.ShowToast(DeliveryUiText.Resource(Res.string.delivery_address_pincode_serviceable)))
                     } else {
-                        emitEffect(DeliveryAddressEffect.ShowError(root.string("message") ?: "Pincode not serviceable"))
+                        emitEffect(
+                            DeliveryAddressEffect.ShowError(
+                                root.string("message")?.asDeliveryUiText()
+                                    ?: DeliveryUiText.Resource(Res.string.delivery_address_pincode_not_serviceable)
+                            )
+                        )
                     }
                 }
                 .onFailure { error ->
+                    val message = error.message?.asDeliveryUiText()
+                        ?: DeliveryUiText.Resource(Res.string.delivery_error_verify_pincode)
                     updateState {
                         it.copy(
                             isVerifyingPincode = false,
                             deliveryPincodeVerified = false,
-                            pincodeVerifyError = error.message ?: "Could not verify pincode",
+                            pincodeVerifyError = message,
                         )
                     }
-                    emitEffect(DeliveryAddressEffect.ShowError(error.message ?: "Could not verify pincode"))
+                    emitEffect(DeliveryAddressEffect.ShowError(message))
                 }
         }
     }
@@ -322,3 +376,5 @@ class DeliveryAddressViewModel(
         }
     }
 }
+
+private fun String.asDeliveryUiText(): DeliveryUiText = DeliveryUiText.Dynamic(this)

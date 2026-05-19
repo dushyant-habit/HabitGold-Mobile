@@ -1,6 +1,7 @@
 package com.habit.gold.feature.trade.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.feature.trade.domain.TradePaymentLauncher
@@ -92,10 +93,7 @@ fun TradeRoute(
             onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
-        TradeDestination.GetCoinCatalog -> {
-            // Navigate back to WithdrawalMode so that when the user returns
-            // from the delivery flow they land on the expected screen,
-            // then delegate to the real DeliveryRoute via the parent.
+        TradeDestination.GetCoinCatalog -> LaunchedEffect(destination) {
             onNavigateToDelivery()
         }
         is TradeDestination.TransactionDetails -> TradeTransactionDetailsScreen(

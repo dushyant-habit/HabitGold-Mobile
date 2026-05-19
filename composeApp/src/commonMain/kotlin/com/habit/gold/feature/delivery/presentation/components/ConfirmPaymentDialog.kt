@@ -105,7 +105,7 @@ fun ConfirmPaymentDialog(
                         IconButton(onClick = onDismiss, enabled = !isSubmitting) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
+                                contentDescription = stringResource(Res.string.common_close),
                                 tint = AppColors.PurpleGray600
                             )
                         }

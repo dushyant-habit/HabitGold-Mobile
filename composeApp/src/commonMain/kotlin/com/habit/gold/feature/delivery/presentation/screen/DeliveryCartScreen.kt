@@ -38,6 +38,7 @@ import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.compactAddressLine
+import com.habit.gold.feature.delivery.domain.model.isPincodeServiceable
 import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryIntent
@@ -64,11 +65,7 @@ fun DeliveryCartScreen(
     val selectedCoin = catalogState.coins.find { it.id == selectedCoinId }
     val selectedAddress = addressState.savedAddresses.find { it.id == catalogState.selectedAddressId }
     
-    // Address serviceability logic is assumed to be handled by the backend during select, or by checking the status.
-    // For now we assume if it's selected, it's valid, but ideally we check if it is serviceable.
-    // Based on the contract we can use a flag. In the old code it was checking `viewModel.isSelectedAddressPincodeServiceable()`.
-    // Let's assume the address is serviceable if selected for now, or check via `verificationStatus`.
-    val addressServiceable = selectedAddress?.verificationStatus != "UNSERVICEABLE" 
+    val addressServiceable = selectedAddress?.isPincodeServiceable() == true
     
     val canProceed = selectedCoin != null && selectedAddress != null && addressServiceable
     val checkoutQuote = catalogState.checkoutQuote
@@ -106,7 +103,7 @@ fun DeliveryCartScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.common_back),
                             tint = AppColors.Black
                         )
                     }
@@ -142,7 +139,10 @@ fun DeliveryCartScreen(
                 ctaLabel = when {
                     selectedAddress == null -> stringResource(Res.string.delivery_cart_add_address)
                     !addressServiceable -> stringResource(Res.string.delivery_cart_select_serviceable)
-                    payableAmount > 0.0 -> "Review & Pay ₹${formatAmount(payableAmount)}"
+                    payableAmount > 0.0 -> stringResource(
+                        Res.string.delivery_cart_review_and_pay_amount,
+                        formatAmount(payableAmount)
+                    )
                     else -> stringResource(Res.string.delivery_cart_review_delivery)
                 },
                 isLoadingPayment = catalogState.isCheckingOut
@@ -171,7 +171,7 @@ fun DeliveryCartScreen(
         ) {
             CoinHeadlineCard(
                 coin = selectedCoin,
-                totalGoldAvailableGrams = catalogState.totalGoldBalanceGrams
+                totalGoldAvailableGrams = catalogState.redeemableGoldGrams
             )
             
             // Coupon Code UI
@@ -187,10 +187,12 @@ fun DeliveryCartScreen(
             )
 
             PaymentDetailsCard(
-                totalGoldAvailableGrams = catalogState.totalGoldBalanceGrams,
+                totalGoldAvailableGrams = catalogState.redeemableGoldGrams,
                 goldDebitGrams = checkoutQuote?.goldWeightGrams ?: (selectedCoin.weightGm * (catalogState.cartItems[selectedCoin.id] ?: 1)),
                 mintingChargeInr = checkoutQuote?.mintingChargeInr ?: (selectedCoin.makingCharge * (catalogState.cartItems[selectedCoin.id] ?: 1)),
-                couponDiscountInr = checkoutQuote?.payableChargeInr?.let { it - (checkoutQuote.mintingChargeInr) } ?: catalogState.couponDiscountInr,
+                couponDiscountInr = checkoutQuote?.let {
+                    (it.mintingChargeInr - it.payableChargeInr).coerceAtLeast(0.0)
+                } ?: catalogState.couponDiscountInr,
                 netAmountPayable = payableAmount
             )
 
@@ -217,6 +219,4 @@ fun DeliveryCartScreen(
         )
     }
 }
-
-
 

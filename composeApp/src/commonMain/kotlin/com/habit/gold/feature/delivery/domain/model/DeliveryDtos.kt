@@ -182,11 +182,15 @@ fun DeliveryAddressDto.toDomain(): SavedAddress {
         name = recipientName.orEmpty(),
         fullAddress = fullAddr.ifBlank { "${addressLine1.orEmpty()}, ${city.orEmpty()}" },
         phoneNo = phoneNumber.orEmpty(),
+        type = type?.trim()?.uppercase()?.let { raw ->
+            AddressType.entries.firstOrNull { it.name == raw }
+        },
         addressLine1 = addressLine1,
         addressLine2 = addressLine2,
         city = city,
         state = state,
         pincode = pincode,
+        landmark = landmark,
         verificationStatus = verificationStatus
     )
 }

@@ -14,7 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.habit.gold.core.designsystem.theme.AppColors
-import com.habit.gold.feature.delivery.domain.DeliveryPaymentLauncher
+import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchRequest
 import com.habit.gold.feature.delivery.presentation.screen.AddEditAddressScreen
 import com.habit.gold.feature.delivery.presentation.screen.DeliveryAddressScreen
 import com.habit.gold.feature.delivery.presentation.screen.DeliveryCartScreen
@@ -105,34 +105,19 @@ fun DeliveryRoute(
                 is DeliveryEffect.NavigateBack -> destination = DeliveryDestination.Catalog
                 is DeliveryEffect.NavigateToBuyGold -> onNavigateToBuyGold(effect.shortfallGrams)
                 is DeliveryEffect.LaunchPaymentSdk -> {
-                    // Mirrors the Buy flow in BuyTradeRouteController: launch the
-                    // payment, wait for the result, then feed it back to the ViewModel.
-                    val request = com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchRequest.Juspay(
+                    val request = DeliveryPaymentLaunchRequest.Juspay(
                         payloadJson = effect.payloadJson,
-                        preferredUpiPackage = null // Or pass from somewhere if supported
+                        preferredUpiPackage = null,
                     )
-                    
                     val result = paymentLauncher.launch(request)
-                    
-                    val (status, message) = when (result) {
-                        is com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult.Success -> "charged" to null
-                        is com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult.Failure -> result.status to result.message
-                        is com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult.BackPressed -> "cancelled" to "User cancelled payment"
-                    }
-
-                    catalogViewModel.onIntent(
-                        DeliveryIntent.HandlePaymentResult(
-                            status = status,
-                            payload = message
-                        )
-                    )
+                    catalogViewModel.onIntent(DeliveryIntent.HandlePaymentResult(result))
                 }
                 is DeliveryEffect.OrderCompleted -> destination = DeliveryDestination.OrderSummary(effect.orderId)
                 is DeliveryEffect.ShowError -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    snackbarHostState.showSnackbar(effect.message.resolveSuspending())
                 }
                 is DeliveryEffect.ShowToast -> {
-                    snackbarHostState.showSnackbar(effect.message)
+                    snackbarHostState.showSnackbar(effect.message.resolveSuspending())
                 }
             }
         }
@@ -143,8 +128,8 @@ fun DeliveryRoute(
             when (effect) {
                 is DeliveryAddressEffect.AddressSaved -> destination = DeliveryDestination.AddressList
                 is DeliveryAddressEffect.AddressFullyVerified -> destination = DeliveryDestination.AddressList
-                is DeliveryAddressEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
-                is DeliveryAddressEffect.ShowToast -> snackbarHostState.showSnackbar(effect.message)
+                is DeliveryAddressEffect.ShowError -> snackbarHostState.showSnackbar(effect.message.resolveSuspending())
+                is DeliveryAddressEffect.ShowToast -> snackbarHostState.showSnackbar(effect.message.resolveSuspending())
             }
         }
     }
@@ -167,7 +152,7 @@ fun DeliveryRoute(
                 onIntent = catalogViewModel::onIntent,
                 onBackClick = onBackToHome,
                 onNavigateToCart = { destination = DeliveryDestination.Cart },
-                onNavigateToBuyGold = { onNavigateToBuyGold(0.0) },
+                onNavigateToBuyGold = onNavigateToBuyGold,
             )
 
             is DeliveryDestination.Cart -> DeliveryCartScreen(

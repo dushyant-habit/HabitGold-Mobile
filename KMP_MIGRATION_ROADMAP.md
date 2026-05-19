@@ -109,7 +109,7 @@ These are tracked explicitly so major product flows do not get lost inside broad
 - [x] Rewards Flow
 - [ ] Referral Flow
 - [x] Alerts Flow
-- [ ] Delivery / Get Coin Flow
+- [x] Delivery / Get Coin Flow
 
 ### Phase 0: Project Scaffold
 
@@ -380,16 +380,29 @@ Remaining order:
 
 ### Phase 11: Delivery / Get Coin
 
-- [ ] Create `feature/delivery`
-- [ ] Port catalog/cart/address book flow
-- [ ] Port serviceability checks
-- [ ] Port quote/order summary/order placement
-- [ ] Port delivery tracking and invoice flow
-- [ ] Port shortfall-to-buy-gold bridge from delivery catalog
-- [ ] Port add/edit/delete address with OTP verification and serviceability refresh
-- [ ] Port pending checkout restore, quote expiry refresh, and payment retry handling
-- [ ] Rebuild delivery screens in smaller components
-- [ ] Add tests for address, delivery, and order state transitions
+- [x] Complete strict Android audit for delivery / get coin ownership, checkout rules, address flows, and tracking
+- [x] Create `feature/delivery`
+- [x] Port catalog/cart/address book flow
+- [x] Port serviceability checks
+- [x] Port quote/order summary/order placement
+- [x] Port delivery tracking
+- [x] Port shortfall-to-buy-gold bridge from delivery catalog
+- [x] Port add/edit/delete address with OTP verification and serviceability refresh
+- [x] Port pending checkout restore, quote expiry refresh, and payment retry handling
+- [x] Rebuild delivery screens in smaller components
+- [x] Add targeted tests for delivery DTO mapping and catalog state transitions
+- [ ] Confirm whether delivery still needs a dedicated shared invoice viewer beyond current order-summary / tracking coverage
+- [ ] Run final end-to-end Delivery QA
+
+Locked implementation details:
+
+- delivery affordability uses `redeemableGoldGrams`, not total portfolio balance
+- address serviceability is valid only when verification status is `PINCODE_SERVICEABLE`
+- delivery shortfall hands off into Buy Gold in grams mode, rounded up to the next `0.5g`
+- returning from that Buy flow should land back on Delivery / Get Coin, not Home
+- Trade -> Delivery handoff must preserve `WithdrawalMode` as the return target
+- payment cancel / failure must not fall through to success-style order polling
+- address edits must preserve existing `type` and `landmark`
 
 ## Android Audit Notes
 
@@ -398,7 +411,7 @@ These notes came from a deeper pass through the Android app and are here to prev
 - `Home` is not only dashboard rendering. It also owns recent-transaction drilldown, gold value details entry, support/help entry, editorial entry, Home-triggered SIP create/upgrade/resume, and a SIP verification dialog.
 - `Buy` is not only one-time purchase. It also includes a SIP tab, coupon auto-fetch/manual apply, embedded or external Juspay launch, payment-status polling, and invoice access after success.
 - `Sell` depends on `WithdrawalMode` and on saved verified VPAs. It has a two-step create-then-execute flow, a very short polling window, a pending fallback that relies on History, and locked-gold messaging tied to sell availability.
-- `Delivery / Get Coin` includes catalog, shortfall-to-buy bridge, shared address book, add/edit/delete address, address OTP verification, pincode serviceability, quote creation, payment launch, payment verification polling, order placed, and delivery tracking.
+- `Delivery / Get Coin` includes catalog, shortfall-to-buy bridge, shared address book, add/edit/delete address, address OTP verification, pincode serviceability, quote creation, payment launch, payment verification polling, order placed, and delivery tracking. The shared KMP checkpoint now covers those surfaces, with final device QA still pending.
 - `SIP` exists in three places: Home cards, Buy tab, and dedicated savings setup screens. It also has a separate autopay-management flow for pause/resume/cancel.
 - `Savings` should be migrated in two intentional slices: mandate management first, then setup / upgrade with payment and post-payment states.
 - `Refer & Earn` is broader than one screen: rewards home, refer detail, rewards history, rewards redeem, and referral status/history.
