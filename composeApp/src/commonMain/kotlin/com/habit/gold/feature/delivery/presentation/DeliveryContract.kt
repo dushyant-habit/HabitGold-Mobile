@@ -5,6 +5,7 @@ import com.habit.gold.core.presentation.mvi.MviIntent
 import com.habit.gold.core.presentation.mvi.MviState
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutPhase
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
+import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
 import kotlin.math.roundToInt
 
@@ -50,7 +51,7 @@ sealed interface DeliveryIntent : MviIntent {
     
     data class PrepareQuote(val couponCode: String? = null) : DeliveryIntent
     data object ConfirmOrder : DeliveryIntent
-    data class HandlePaymentResult(val status: String, val payload: String? = null) : DeliveryIntent
+    data class HandlePaymentResult(val result: DeliveryPaymentLaunchResult) : DeliveryIntent
     data object DiscardCheckout : DeliveryIntent
     data object ClearError : DeliveryIntent
     
@@ -59,8 +60,8 @@ sealed interface DeliveryIntent : MviIntent {
 }
 
 sealed interface DeliveryEffect : MviEffect {
-    data class ShowError(val message: String) : DeliveryEffect
-    data class ShowToast(val message: String) : DeliveryEffect
+    data class ShowError(val message: DeliveryUiText) : DeliveryEffect
+    data class ShowToast(val message: DeliveryUiText) : DeliveryEffect
     data object NavigateToCart : DeliveryEffect
     data object NavigateToCheckout : DeliveryEffect
     data class NavigateToOrderSummary(val orderId: String) : DeliveryEffect

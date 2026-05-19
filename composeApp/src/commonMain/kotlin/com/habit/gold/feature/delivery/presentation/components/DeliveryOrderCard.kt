@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocalShipping
@@ -19,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,9 +25,6 @@ import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -38,7 +33,9 @@ fun DeliveryOrderCard(
     expanded: Boolean,
     onClick: () -> Unit,
 ) {
-    val statusText = order.metadata?.latestDispatchStatus?.message ?: order.status ?: "PENDING"
+    val statusText = order.metadata?.latestDispatchStatus?.message
+        ?: order.status
+        ?: stringResource(Res.string.delivery_tracking_status_pending)
     val statusUpper = statusText.uppercase()
     val statusColor = if (
         statusUpper == "DISPATCHED" || statusUpper == "DELIVERED" || statusUpper == "IN TRANSIT" || statusUpper == "IN_TRANSIT"
@@ -79,7 +76,7 @@ fun DeliveryOrderCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocalShipping,
-                        contentDescription = "Delivery",
+                        contentDescription = stringResource(Res.string.history_screen_type_delivery),
                         tint = AppColors.Purple700,
                     )
                 }
@@ -88,13 +85,16 @@ fun DeliveryOrderCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = order.productDescription ?: "Unknown Product",
+                        text = order.productDescription ?: stringResource(Res.string.delivery_tracking_unknown_product),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppColors.Slate900,
                     )
                     Text(
-                        text = "Order ID: ${order.id?.take(8) ?: "N/A"}",
+                        text = stringResource(
+                            Res.string.delivery_tracking_order_id,
+                            order.id?.take(8) ?: stringResource(Res.string.delivery_tracking_not_available)
+                        ),
                         fontSize = 12.sp,
                         color = AppColors.Slate500,
                     )
@@ -128,7 +128,11 @@ fun DeliveryOrderCard(
                     ) {
                         Icon(
                             imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (expanded) "Hide details" else "Show details",
+                            contentDescription = if (expanded) {
+                                stringResource(Res.string.delivery_tracking_hide_details)
+                            } else {
+                                stringResource(Res.string.delivery_tracking_show_details)
+                            },
                             tint = AppColors.Slate500,
                             modifier = Modifier.size(22.dp),
                         )
@@ -148,12 +152,12 @@ fun DeliveryOrderCard(
             ) {
                 Column {
                     Text(
-                        text = "Courier",
+                        text = stringResource(Res.string.delivery_tracking_courier),
                         fontSize = 12.sp,
                         color = AppColors.Slate500,
                     )
                     Text(
-                        text = order.courierCompany ?: "Pending",
+                        text = order.courierCompany ?: stringResource(Res.string.delivery_tracking_status_pending),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = AppColors.Slate900,
@@ -161,12 +165,12 @@ fun DeliveryOrderCard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Tracking ID",
+                        text = stringResource(Res.string.delivery_tracking_tracking_id),
                         fontSize = 12.sp,
                         color = AppColors.Slate500,
                     )
                     Text(
-                        text = order.courierTrackingId ?: "Pending",
+                        text = order.courierTrackingId ?: stringResource(Res.string.delivery_tracking_status_pending),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = AppColors.Slate900,
@@ -178,7 +182,7 @@ fun DeliveryOrderCard(
             order.estimatedDispatchDays?.let { days ->
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "Estimated dispatch: $days days",
+                    text = stringResource(Res.string.delivery_tracking_estimated_dispatch_days, days),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = AppColors.Slate500,
@@ -190,227 +194,5 @@ fun DeliveryOrderCard(
                 DeliveryTrackingDetails(order = order)
             }
         }
-    }
-}
-
-@Composable
-private fun DeliveryTrackingDetails(order: DeliveryOrderDto) {
-    val milestones = buildTrackingMilestones(order)
-    val trackingLink = order.metadata?.latestDispatchStatus?.trackingLink
-    val uriHandler = LocalUriHandler.current
-
-    Spacer(Modifier.height(16.dp))
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = AppColors.Slate50,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Text(
-                text = "Tracking Details",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Slate950,
-            )
-
-            // Payment + Updated row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                TrackingDetailItem(
-                    label = "Payment",
-                    value = order.paymentStatus ?: "Pending",
-                )
-                TrackingDetailItem(
-                    label = "Updated",
-                    value = formatTrackingTimestamp(order.updatedAt),
-                )
-            }
-
-            // Delivering to address
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = stringResource(Res.string.order_summary_delivery_to),
-                    fontSize = 12.sp,
-                    color = AppColors.Slate500,
-                )
-                Text(
-                    text = buildAddressText(order),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = AppColors.Slate800,
-                )
-            }
-
-            // Timeline
-            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                milestones.forEachIndexed { index, milestone ->
-                    TrackingTimelineItem(
-                        title = milestone.title,
-                        subtitle = milestone.subtitle,
-                        isComplete = milestone.isComplete,
-                        isLast = index == milestones.lastIndex,
-                    )
-                }
-            }
-
-            // Tracking link chip
-            if (!trackingLink.isNullOrBlank()) {
-                AssistChip(
-                    onClick = { uriHandler.openUri(trackingLink.toExternalTrackingUrl()) },
-                    label = { Text("Tracking link available") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = AppColors.White,
-                        labelColor = AppColors.Purple700,
-                        leadingIconContentColor = AppColors.Purple700,
-                    ),
-                    border = AssistChipDefaults.assistChipBorder(
-                        enabled = true,
-                        borderColor = AppColors.Purple700.copy(alpha = 0.3f),
-                    ),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TrackingTimelineItem(
-    title: String,
-    subtitle: String,
-    isComplete: Boolean,
-    isLast: Boolean,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .clip(CircleShape)
-                    .background(if (isComplete) AppColors.Purple700 else AppColors.Slate300),
-            )
-            if (!isLast) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(40.dp)
-                        .background(
-                            if (isComplete) AppColors.Purple700.copy(alpha = 0.35f) else AppColors.Slate200,
-                        ),
-                )
-            }
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.padding(bottom = if (isLast) 0.dp else 4.dp)) {
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.Slate950,
-            )
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = AppColors.Slate500,
-            )
-        }
-    }
-}
-
-@Composable
-private fun TrackingDetailItem(label: String, value: String) {
-    Column {
-        Text(text = label, fontSize = 12.sp, color = AppColors.Slate500)
-        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = AppColors.Slate800)
-    }
-}
-
-private data class TrackingMilestone(
-    val title: String,
-    val subtitle: String,
-    val isComplete: Boolean,
-)
-
-private fun buildTrackingMilestones(order: DeliveryOrderDto): List<TrackingMilestone> {
-    val status = (order.metadata?.latestDispatchStatus?.message ?: order.status)
-        .orEmpty().uppercase()
-    val dispatchComplete = status in setOf("DISPATCHED", "IN TRANSIT", "IN_TRANSIT", "DELIVERED")
-    val transitComplete = status in setOf("IN TRANSIT", "IN_TRANSIT", "DELIVERED")
-    val deliveredComplete = status == "DELIVERED"
-
-    return listOf(
-        TrackingMilestone(
-            title = "Order confirmed",
-            subtitle = formatTrackingTimestamp(order.confirmedAt ?: order.createdAt),
-            isComplete = true,
-        ),
-        TrackingMilestone(
-            title = "Packed for dispatch",
-            subtitle = if (dispatchComplete) "Shipment prepared by the vault team" else "Awaiting packaging at fulfillment center",
-            isComplete = dispatchComplete,
-        ),
-        TrackingMilestone(
-            title = "In transit",
-            subtitle = if (transitComplete) "Courier is moving your package" else "Package will start moving once picked up",
-            isComplete = transitComplete,
-        ),
-        TrackingMilestone(
-            title = "Delivered",
-            subtitle = if (deliveredComplete) "Package handed over successfully" else "Final doorstep delivery pending",
-            isComplete = deliveredComplete,
-        ),
-    )
-}
-
-private fun buildAddressText(order: DeliveryOrderDto): String {
-    return listOfNotNull(
-        order.recipientName,
-        listOfNotNull(order.addressLine1, order.addressLine2)
-            .joinToString(", ").takeIf { it.isNotBlank() },
-        listOfNotNull(order.city, order.state, order.pincode)
-            .joinToString(", ").takeIf { it.isNotBlank() },
-        order.phoneNumber,
-    ).joinToString("\n").ifBlank { "Address details will appear once available." }
-}
-
-private fun formatTrackingTimestamp(raw: String?): String {
-    val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return "Awaiting update"
-    return try {
-        val instant = Instant.parse(value)
-        val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        val month = local.month.name.take(3)
-            .lowercase()
-            .replaceFirstChar { it.uppercase() }
-        val hour = local.hour % 12
-        val displayHour = if (hour == 0) 12 else hour
-        val minute = local.minute.toString().padStart(2, '0')
-        val ampm = if (local.hour < 12) "AM" else "PM"
-        "${local.day} $month ${local.year}, $displayHour:$minute $ampm"
-    } catch (_: Exception) {
-        value
-    }
-}
-
-private fun String.toExternalTrackingUrl(): String {
-    return if (startsWith("http://", ignoreCase = true) || startsWith("https://", ignoreCase = true)) {
-        this
-    } else {
-        "https://$this"
     }
 }

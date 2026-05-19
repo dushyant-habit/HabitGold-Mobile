@@ -45,7 +45,7 @@ fun CartSummaryBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AddressStrip(
@@ -173,9 +173,13 @@ fun AddressStrip(
                         )
                         Text(
                             text = if (addressServiceable) {
-                                if (addressLocked) "Address locked for this active quote" else "Estimated Delivery 7-14 Days"
+                                if (addressLocked) {
+                                    stringResource(Res.string.delivery_cart_address_locked)
+                                } else {
+                                    stringResource(Res.string.delivery_cart_estimated_delivery_window)
+                                }
                             } else {
-                                "Choose a serviceable address"
+                                stringResource(Res.string.delivery_cart_choose_serviceable_address)
                             },
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,

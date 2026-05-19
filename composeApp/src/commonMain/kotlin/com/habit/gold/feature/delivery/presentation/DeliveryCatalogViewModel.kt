@@ -10,25 +10,33 @@ import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStore
 import com.habit.gold.feature.delivery.domain.model.CreateDeliveryQuoteDto
 import com.habit.gold.feature.delivery.domain.model.ConfirmDeliveryOrderDto
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutPhase
-import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
-import com.habit.gold.feature.delivery.domain.model.DeliveryQuoteResponseDto
-import com.habit.gold.feature.delivery.domain.model.DeliveryVerifyQuoteDto
+import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
 import com.habit.gold.feature.delivery.domain.usecase.ConfirmDeliveryOrderUseCase
 import com.habit.gold.feature.delivery.domain.usecase.CreateDeliveryQuoteUseCase
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryProductsUseCase
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryOrderDetailsUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_applied
+import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_invalid
+import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_only_valid
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_missing_order_id
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_payment_cancelled
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_payment_failed
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_quote_expired
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_quote_unavailable
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_select_address_coin
+import habitgoldmobile.composeapp.generated.resources.delivery_checkout_timeout
+import habitgoldmobile.composeapp.generated.resources.delivery_error_confirm_order
+import habitgoldmobile.composeapp.generated.resources.delivery_error_create_quote
+import habitgoldmobile.composeapp.generated.resources.delivery_error_load_products
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlin.time.Clock
-import kotlin.time.Instant
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import com.habit.gold.core.network.fold
 
 class DeliveryCatalogViewModel(
@@ -58,7 +66,7 @@ class DeliveryCatalogViewModel(
             is DeliveryIntent.RefreshGoldBalance -> refreshGoldBalance()
             is DeliveryIntent.PrepareQuote -> prepareQuote(intent.couponCode)
             is DeliveryIntent.ConfirmOrder -> confirmOrder()
-            is DeliveryIntent.HandlePaymentResult -> handlePaymentResult(intent.status, intent.payload)
+            is DeliveryIntent.HandlePaymentResult -> handlePaymentResult(intent.result)
             is DeliveryIntent.DiscardCheckout -> discardCheckout()
             is DeliveryIntent.ClearError -> { /* no-op */ }
             is DeliveryIntent.ApplyCoupon -> applyCoupon(intent.code)
@@ -76,7 +84,12 @@ class DeliveryCatalogViewModel(
                 },
                 onFailure = { error ->
                     updateState { it.copy(isLoadingProducts = false) }
-                    emitEffect(DeliveryEffect.ShowError(error.message ?: "Failed to load products"))
+                    emitEffect(
+                        DeliveryEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_load_products)
+                        )
+                    )
                 }
             )
         }
@@ -136,9 +149,10 @@ class DeliveryCatalogViewModel(
             val addressId = state.value.selectedAddressId
             val cartItem = state.value.cartItems.entries.firstOrNull()
             if (addressId == null || cartItem == null) {
-                emitEffect(DeliveryEffect.ShowError("Select an address and a coin to continue."))
+                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_select_address_coin)))
                 return@launch
             }
+            val effectiveCouponCode = couponCode ?: state.value.couponCode
             
             val current = state.value.checkoutQuote
             val now = Clock.System.now().toEpochMilliseconds()
@@ -159,26 +173,39 @@ class DeliveryCatalogViewModel(
                 CreateDeliveryQuoteDto(
                     addressId = addressId,
                     productId = cartItem.key,
-                    couponCode = couponCode ?: state.value.couponCode
+                    couponCode = effectiveCouponCode
                 )
             ).fold(
                 onSuccess = { response ->
                     activeConfirmIdempotencyKey = null
                     val quote = response.toUiQuote(cartItem.key, addressId)
+                    val couponDiscount = (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
                     updateState {
                         it.copy(
                             isCheckingOut = false,
                             checkoutQuote = quote,
+                            couponCode = effectiveCouponCode,
+                            couponDiscountInr = couponDiscount,
                             checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
                         )
                     }
-                    persistPendingCheckout(quote.toPendingCheckout(stage = PendingDeliveryCheckoutStage.REVIEW))
+                    persistPendingCheckout(
+                        quote.toPendingCheckout(
+                            couponCode = effectiveCouponCode,
+                            stage = PendingDeliveryCheckoutStage.REVIEW,
+                        )
+                    )
                     deliveryCheckoutTelemetry.quoteCreated(quote.quoteId, cartItem.key, addressId)
                     emitEffect(DeliveryEffect.NavigateToCheckout)
                 },
                 onFailure = { error ->
                     updateState { it.copy(isCheckingOut = false, checkoutPhase = DeliveryCheckoutPhase.IDLE) }
-                    emitEffect(DeliveryEffect.ShowError(error.message ?: "Failed to create quote"))
+                    emitEffect(
+                        DeliveryEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_create_quote)
+                        )
+                    )
                 }
             )
         }
@@ -196,13 +223,17 @@ class DeliveryCatalogViewModel(
 
         val quote = currentState.checkoutQuote
         if (quote == null) {
-            viewModelScope.launch { emitEffect(DeliveryEffect.ShowError("Checkout quote unavailable.")) }
+            viewModelScope.launch {
+                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_quote_unavailable)))
+            }
             return
         }
 
         val now = Clock.System.now().toEpochMilliseconds()
         if (quote.isExpired(now)) {
-            viewModelScope.launch { emitEffect(DeliveryEffect.ShowError("Quote expired. Please refresh the quote.")) }
+            viewModelScope.launch {
+                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_quote_expired)))
+            }
             return
         }
 
@@ -227,7 +258,15 @@ class DeliveryCatalogViewModel(
                                 checkoutPhase = DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY
                             )
                         }
-                        persistPendingCheckout(quote.toPendingCheckout(stage = PendingDeliveryCheckoutStage.SDK_LAUNCH_READY, confirmIdempotencyKey = idempotencyKey, orderId = response.order.id, sdkPayload = payload))
+                        persistPendingCheckout(
+                            quote.toPendingCheckout(
+                                couponCode = state.value.couponCode,
+                                stage = PendingDeliveryCheckoutStage.SDK_LAUNCH_READY,
+                                confirmIdempotencyKey = idempotencyKey,
+                                orderId = response.order.id,
+                                sdkPayload = payload
+                            )
+                        )
                         emitEffect(DeliveryEffect.LaunchPaymentSdk(payload.toString()))
                     } else {
                         // Success without payment SDK
@@ -236,25 +275,82 @@ class DeliveryCatalogViewModel(
                 },
                 onFailure = { error ->
                     updateState { it.copy(isCheckingOut = false) }
-                    emitEffect(DeliveryEffect.ShowError(error.message ?: "Failed to confirm order"))
+                    emitEffect(
+                        DeliveryEffect.ShowError(
+                            error.message?.asDeliveryUiText()
+                                ?: DeliveryUiText.Resource(Res.string.delivery_error_confirm_order)
+                        )
+                    )
                 }
             )
         }
     }
 
-    private fun handlePaymentResult(status: String, payload: String?) {
-        val orderId = state.value.checkoutQuote?.quoteId // Note: In Android it tracked lastPlacedOrderId, we need an orderId. Let's get it from pending store
-        
+    private fun handlePaymentResult(result: DeliveryPaymentLaunchResult) {
         viewModelScope.launch {
             val pending = pendingDeliveryCheckoutStore.pendingCheckout.firstOrNull()
             val actualOrderId = pending?.orderId
-            if (actualOrderId == null) {
-                emitEffect(DeliveryEffect.ShowError("Missing order ID for payment verification"))
-                return@launch
+            when (result) {
+                is DeliveryPaymentLaunchResult.Success -> {
+                    if (actualOrderId == null) {
+                        emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)))
+                        return@launch
+                    }
+                    updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.VERIFYING_ORDER) }
+                    pollOrderUntilTerminal(actualOrderId)
+                }
+
+                is DeliveryPaymentLaunchResult.Failure -> {
+                    if (result.shouldPollOrderStatus) {
+                        if (actualOrderId == null) {
+                            emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)))
+                            return@launch
+                        }
+                        updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.VERIFYING_ORDER) }
+                        pollOrderUntilTerminal(actualOrderId)
+                    } else {
+                        updateState {
+                            it.copy(
+                                isCheckingOut = false,
+                                pendingPaymentSdkPayloadJson = null,
+                                checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                            )
+                        }
+                        state.value.checkoutQuote?.let { quote ->
+                            persistPendingCheckout(
+                                quote.toPendingCheckout(
+                                    couponCode = state.value.couponCode,
+                                    confirmIdempotencyKey = activeConfirmIdempotencyKey,
+                                    orderId = actualOrderId,
+                                    stage = PendingDeliveryCheckoutStage.REVIEW,
+                                )
+                            )
+                        }
+                        emitEffect(DeliveryEffect.ShowError(result.message.asDeliveryUiText()))
+                    }
+                }
+
+                DeliveryPaymentLaunchResult.BackPressed -> {
+                    updateState {
+                        it.copy(
+                            isCheckingOut = false,
+                            pendingPaymentSdkPayloadJson = null,
+                            checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                        )
+                    }
+                    state.value.checkoutQuote?.let { quote ->
+                        persistPendingCheckout(
+                            quote.toPendingCheckout(
+                                couponCode = state.value.couponCode,
+                                confirmIdempotencyKey = activeConfirmIdempotencyKey,
+                                orderId = actualOrderId,
+                                stage = PendingDeliveryCheckoutStage.REVIEW,
+                            )
+                        )
+                    }
+                    emitEffect(DeliveryEffect.ShowToast(DeliveryUiText.Resource(Res.string.delivery_checkout_payment_cancelled)))
+                }
             }
-            
-            updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.VERIFYING_ORDER) }
-            pollOrderUntilTerminal(actualOrderId)
         }
     }
 
@@ -279,7 +375,7 @@ class DeliveryCatalogViewModel(
                                         checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
                                     )
                                 }
-                                emitEffect(DeliveryEffect.ShowError("Payment failed. Please try again."))
+                                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_payment_failed)))
                                 return@launch
                             }
                         }
@@ -292,7 +388,7 @@ class DeliveryCatalogViewModel(
             }
 
             updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY) }
-            emitEffect(DeliveryEffect.ShowError("Payment verification timed out. Please check tracking."))
+            emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_timeout)))
         }
     }
 
@@ -305,7 +401,7 @@ class DeliveryCatalogViewModel(
                 isCheckingOut = false,
                 checkoutPhase = DeliveryCheckoutPhase.COMPLETED,
                 cartItems = emptyMap(),
-                checkoutQuote = null
+                pendingPaymentSdkPayloadJson = null
             )
         }
         deliveryCheckoutTelemetry.finalOrderState(id, order.paymentStatus, order.status)
@@ -331,12 +427,17 @@ class DeliveryCatalogViewModel(
                 if (pending != null) {
                     val now = Clock.System.now().toEpochMilliseconds()
                     if (!pending.isExpired(now)) {
-                        updateState {
-                            it.copy(
-                                checkoutQuote = pending.toUiQuote(),
-                                cartItems = mapOf(pending.productId to 1), // Only 1 coin allowed
-                                selectedAddressId = pending.addressId,
-                                checkoutPhase = when (pending.stage) {
+                updateState {
+                    it.copy(
+                        checkoutQuote = pending.toUiQuote(),
+                        cartItems = mapOf(pending.productId to 1), // Only 1 coin allowed
+                        selectedAddressId = pending.addressId,
+                        couponCode = pending.couponCode,
+                        couponDiscountInr = (
+                            pending.verifyQuote.mintingChargeInr.toDoubleOrNull().orZero() -
+                                pending.verifyQuote.payableChargeInr.toDoubleOrNull().orZero()
+                            ).coerceAtLeast(0.0),
+                        checkoutPhase = when (pending.stage) {
                                     PendingDeliveryCheckoutStage.REVIEW -> DeliveryCheckoutPhase.REVIEW_READY
                                     PendingDeliveryCheckoutStage.CONFIRM_IN_FLIGHT -> DeliveryCheckoutPhase.CONFIRMING
                                     PendingDeliveryCheckoutStage.SDK_LAUNCH_READY -> DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY
@@ -363,13 +464,33 @@ class DeliveryCatalogViewModel(
             val totalWeight = state.value.totalWeightGm
             if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM) {
                 updateState { it.copy(couponCode = DELIVERY5_COUPON_CODE, couponDiscountInr = DELIVERY5_DISCOUNT_INR) }
-                viewModelScope.launch { emitEffect(DeliveryEffect.ShowToast("Coupon $DELIVERY5_COUPON_CODE applied! Free delivery on 5g+ coins.")) }
+                viewModelScope.launch {
+                    emitEffect(
+                        DeliveryEffect.ShowToast(
+                            DeliveryUiText.Resource(
+                                Res.string.delivery_catalog_coupon_applied,
+                                listOf(DELIVERY5_COUPON_CODE)
+                            )
+                        )
+                    )
+                }
             } else {
-                viewModelScope.launch { emitEffect(DeliveryEffect.ShowError("Coupon $DELIVERY5_COUPON_CODE is only valid for coins 5g and above.")) }
+                viewModelScope.launch {
+                    emitEffect(
+                        DeliveryEffect.ShowError(
+                            DeliveryUiText.Resource(
+                                Res.string.delivery_catalog_coupon_only_valid,
+                                listOf(DELIVERY5_COUPON_CODE)
+                            )
+                        )
+                    )
+                }
             }
         } else {
             // Generic coupon - for now just reject unknown codes
-            viewModelScope.launch { emitEffect(DeliveryEffect.ShowError("Invalid coupon code.")) }
+            viewModelScope.launch {
+                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_catalog_coupon_invalid)))
+            }
         }
     }
 
@@ -408,171 +529,6 @@ class DeliveryCatalogViewModel(
     }
 }
 
-private fun DeliveryQuoteResponseDto.toUiQuote(productId: String, addressId: String): DeliveryCheckoutQuote =
-    DeliveryCheckoutQuote(
-        quoteId = quoteId,
-        productId = productId,
-        addressId = addressId,
-        goldWeightGrams = verifyQuote.goldWeightGrams.toDoubleOrNull() ?: 0.0,
-        mintingChargeInr = verifyQuote.mintingChargeInr.toDoubleOrNull() ?: 0.0,
-        payableChargeInr = verifyQuote.payableChargeInr.toDoubleOrNull() ?: 0.0,
-        estimatedDispatchDays = verifyQuote.estimatedDispatchDays,
-        verifyExpiresAt = verifyQuote.verifyExpiresAt
-    )
+private fun Double?.orZero(): Double = this ?: 0.0
 
-private fun DeliveryCheckoutQuote.toPendingCheckout(
-    couponCode: String? = null,
-    confirmIdempotencyKey: String? = null,
-    orderId: String? = null,
-    sdkPayload: JsonObject? = null,
-    stage: PendingDeliveryCheckoutStage
-): PendingDeliveryCheckout =
-    PendingDeliveryCheckout(
-        quoteId = quoteId,
-        productId = productId.orEmpty(),
-        addressId = addressId.orEmpty(),
-        couponCode = couponCode,
-        verifyQuote = DeliveryVerifyQuoteDto(
-            mintingChargeInr = mintingChargeInr.toString(),
-            payableChargeInr = payableChargeInr.toString(),
-            goldWeightGrams = goldWeightGrams.toString(),
-            verifyExpiresAt = verifyExpiresAt.orEmpty(),
-            estimatedDispatchDays = estimatedDispatchDays
-        ),
-        confirmIdempotencyKey = confirmIdempotencyKey,
-        orderId = orderId,
-        sdkPayload = sdkPayload,
-        stage = stage
-    )
-
-private fun PendingDeliveryCheckout.toUiQuote(): DeliveryCheckoutQuote =
-    DeliveryCheckoutQuote(
-        quoteId = quoteId,
-        productId = productId,
-        addressId = addressId,
-        goldWeightGrams = verifyQuote.goldWeightGrams.toDoubleOrNull() ?: 0.0,
-        mintingChargeInr = verifyQuote.mintingChargeInr.toDoubleOrNull() ?: 0.0,
-        payableChargeInr = verifyQuote.payableChargeInr.toDoubleOrNull() ?: 0.0,
-        estimatedDispatchDays = verifyQuote.estimatedDispatchDays,
-        verifyExpiresAt = verifyQuote.verifyExpiresAt
-    )
-
-private fun String.parseIsoInstantToMillis(): Long? =
-    runCatching { Instant.parse(this).toEpochMilliseconds() }.getOrNull()
-
-private fun DeliveryCheckoutQuote.isExpired(nowMillis: Long): Boolean {
-    val expiresAt = verifyExpiresAt?.parseIsoInstantToMillis() ?: return false
-    return expiresAt <= nowMillis
-}
-
-private fun PendingDeliveryCheckout.isExpired(nowMillis: Long): Boolean {
-    val expiresAt = verifyQuote.verifyExpiresAt.parseIsoInstantToMillis() ?: return false
-    return expiresAt <= nowMillis
-}
-
-private enum class CheckoutOrderState {
-    SUCCESS,
-    FAILURE,
-    RECOVERABLE_PENDING
-}
-
-private fun DeliveryOrderDto.resolveCheckoutState(): CheckoutOrderState {
-    val payment = paymentStatus?.trim()?.uppercase()
-    val status = status?.trim()?.uppercase()
-    return when {
-        payment == "SUCCESS" -> CheckoutOrderState.SUCCESS
-        payment == "FAILED" || payment == "FAILURE" || payment == "CANCELLED" -> CheckoutOrderState.FAILURE
-        payment == "PAYMENT_SESSION_PENDING" -> CheckoutOrderState.RECOVERABLE_PENDING
-        confirmedAt != null && payment.isNullOrBlank() -> CheckoutOrderState.SUCCESS
-        status == "CONFIRMED" || status == "DISPATCHED" || status == "IN_TRANSIT" || status == "DELIVERED" -> CheckoutOrderState.SUCCESS
-        else -> CheckoutOrderState.RECOVERABLE_PENDING
-    }
-}
-private fun parseDeliveryProducts(payload: JsonElement): List<PhysicalCoin> {
-    val array: JsonArray? = when (payload) {
-        is JsonArray -> payload
-        is JsonObject -> payload["data"] as? JsonArray
-        else -> null
-    }
-
-    val list = array
-        ?.mapNotNull { it as? JsonObject }
-        ?.mapNotNull { obj ->
-            val id = obj.string("productId")
-                ?: obj.string("id")
-                ?: obj.string("safeGoldProductId")
-                ?: return@mapNotNull null
-            val sku = obj.string("sku").orEmpty()
-            val productName = obj.string("productName").orEmpty()
-            val weight = obj.double("weight")
-                ?: obj.double("weightGrams")
-                ?: obj.double("productWeightGrams")
-                ?: obj.double("weightGm")
-                ?: return@mapNotNull null
-            val making = obj.double("makingCharge") ?: 0.0
-            val image = obj.string("image").orEmpty()
-            val stamp = obj.string("metalStamp").orEmpty()
-            val dispatchDays = obj.optInt("estimatedDispatchDays")
-            PhysicalCoin(
-                id = id,
-                sku = sku,
-                productName = productName.ifBlank { "${weight}g product" },
-                weightGm = weight,
-                makingCharge = making,
-                imageUrl = image,
-                metalStamp = stamp,
-                estimatedDispatchDays = dispatchDays
-            )
-        }
-        ?: emptyList()
-
-    return list.sortedWith(compareBy({ it.weightGm }, { it.productName }))
-}
-
-internal fun JsonObject.string(key: String): String? = (this[key] as? JsonPrimitive)?.content
-
-private fun JsonObject.double(key: String): Double? {
-    val p = this[key] as? JsonPrimitive ?: return null
-    return p.content.toDoubleOrNull()
-}
-
-private fun JsonObject.optInt(key: String): Int? {
-    val p = this[key] as? JsonPrimitive ?: return null
-    return p.content.toIntOrNull()
-}
-
-// ── API response JSON helpers (mirrored from legacy ApiResponseExt.kt) ──────
-
-/**
- * Many authenticated v1 responses wrap payloads as `{ "data": ... }`.
- * Returns the `data` object when present, otherwise `this`.
- */
-internal fun JsonObject.dataPayloadOrSelf(): JsonObject =
-    (this["data"] as? JsonObject) ?: this
-
-/**
- * Extract the created address ID from the API response, handling both
- * `{ id: ... }` and `{ data: { id: ... } }` shapes.
- */
-internal fun JsonObject.extractAddressId(): String? {
-    fun pick(o: JsonObject): String? =
-        (o["id"] as? JsonPrimitive)?.content?.takeIf { it.isNotBlank() }
-            ?: (o["addressId"] as? JsonPrimitive)?.content?.takeIf { it.isNotBlank() }
-    val root = dataPayloadOrSelf()
-    return pick(root) ?: pick(this)
-}
-
-/**
- * Returns `true` when the delivery-pincode validation response indicates
- * that the pincode is serviceable. Handles boolean and string representations.
- */
-internal fun JsonObject.pincodeAccepted(): Boolean {
-    val serviceable = this["serviceable"]
-    if (serviceable is JsonPrimitive) {
-        if (serviceable.isString) return serviceable.content.equals("true", ignoreCase = true)
-        return serviceable.content.toBooleanStrictOrNull() ?: false
-    }
-    val status = (this["status"] as? JsonPrimitive)?.content
-    return status?.equals("SERVICEABLE", ignoreCase = true) == true
-        || status?.equals("SUCCESS", ignoreCase = true) == true
-}
+private fun String.asDeliveryUiText(): DeliveryUiText = DeliveryUiText.Dynamic(this)

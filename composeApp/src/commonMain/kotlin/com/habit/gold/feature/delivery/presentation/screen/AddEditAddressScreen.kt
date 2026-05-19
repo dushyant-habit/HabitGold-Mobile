@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.theme.*
+import com.habit.gold.core.presentation.clearFocusOnTapOutside
 import com.habit.gold.feature.delivery.domain.model.AddressType
 import com.habit.gold.feature.delivery.domain.model.CreateAddressDto
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
@@ -30,6 +32,7 @@ import com.habit.gold.feature.delivery.domain.model.UpdateAddressDto
 import com.habit.gold.feature.delivery.domain.model.normalizeIndianMobileForApi
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
+import com.habit.gold.feature.delivery.presentation.resolve
 import com.habit.gold.feature.delivery.presentation.components.*
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
@@ -53,6 +56,7 @@ fun AddEditAddressScreen(
     onIntent: (DeliveryAddressIntent) -> Unit,
     onBackClick: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
     val isEditing = state.addressBeingEdited != null
     val existing: SavedAddress? = state.addressBeingEdited
 
@@ -64,8 +68,8 @@ fun AddEditAddressScreen(
     var line2 by remember { mutableStateOf(existing?.addressLine2.orEmpty()) }
     var city by remember { mutableStateOf(existing?.city.orEmpty()) }
     var stateField by remember { mutableStateOf(existing?.state.orEmpty()) }
-    var landmark by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(AddressType.HOME) }
+    var landmark by remember { mutableStateOf(existing?.landmark.orEmpty()) }
+    var selectedType by remember { mutableStateOf(existing?.type ?: AddressType.HOME) }
 
     // Track the pincode that was last verified so we know when it changes
     var lastVerifiedPincode by remember { mutableStateOf("") }
@@ -117,7 +121,7 @@ fun AddEditAddressScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.common_back),
                             tint = AppColors.Black,
                         )
                     }
@@ -135,6 +139,7 @@ fun AddEditAddressScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .clearFocusOnTapOutside { focusManager.clearFocus(force = true) }
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
@@ -177,7 +182,7 @@ fun AddEditAddressScreen(
                         // Verified state
                         Icon(
                             Icons.Default.CheckCircle,
-                            contentDescription = "Verified",
+                            contentDescription = stringResource(Res.string.delivery_address_serviceable),
                             tint = AppColors.Green600,
                             modifier = Modifier.size(28.dp),
                         )
@@ -198,7 +203,11 @@ fun AddEditAddressScreen(
                                 disabledContainerColor = AppColors.Purple200,
                             ),
                         ) {
-                            Text("Verify", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                stringResource(Res.string.delivery_address_verify),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
@@ -206,7 +215,7 @@ fun AddEditAddressScreen(
                 // Pincode verify error
                 state.pincodeVerifyError?.let { error ->
                     Text(
-                        text = error,
+                        text = error.resolve(),
                         fontSize = 12.sp,
                         color = AppColors.Red600,
                         modifier = Modifier.padding(start = 4.dp),
@@ -267,7 +276,7 @@ fun AddEditAddressScreen(
                     .padding(vertical = 12.dp)
             ) {
                 Text(
-                    text = "Save as",
+                    text = stringResource(Res.string.delivery_address_save_as),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Slate700
@@ -362,10 +371,8 @@ fun AddEditAddressScreen(
                     onIntent(DeliveryAddressIntent.SendAddressOtp(otpAddress.id))
                 },
                 isVerifying = state.isVerifyingOtp,
-                errorMessage = state.otpVerifyError
+                errorMessage = state.otpVerifyError?.resolve()
             )
         }
     }
 }
-
-

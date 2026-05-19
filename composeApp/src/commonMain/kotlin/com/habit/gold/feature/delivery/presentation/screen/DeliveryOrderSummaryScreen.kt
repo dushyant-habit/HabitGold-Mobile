@@ -74,7 +74,7 @@ fun DeliveryOrderSummaryScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(Res.string.common_back),
                             tint = AppColors.Black,
                         )
                     }
@@ -94,7 +94,9 @@ fun DeliveryOrderSummaryScreen(
                 color = AppColors.White,
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Button(
@@ -149,7 +151,7 @@ fun DeliveryOrderSummaryScreen(
             // Order ID
             SummaryInfoCard(
                 label = stringResource(Res.string.order_summary_order_id),
-                value = orderId.take(18) + if (orderId.length > 18) "…" else "",
+                value = orderId,
             )
 
             // Delivery address
@@ -203,10 +205,11 @@ fun DeliveryOrderSummaryScreen(
                         label = stringResource(Res.string.order_summary_making_charge),
                         value = "₹${formatMoneyCeil(quote.mintingChargeInr)}",
                     )
-                    if (catalogState.couponDiscountInr > 0) {
+                    val couponDiscount = (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
+                    if (couponDiscount > 0) {
                         PriceRow(
                             label = stringResource(Res.string.order_summary_discount),
-                            value = "-₹${formatMoney0(catalogState.couponDiscountInr)}",
+                            value = "-₹${formatMoney0(couponDiscount)}",
                             valueColor = AppColors.Green600,
                         )
                     }
@@ -246,14 +249,14 @@ private fun SuccessHeaderCard() {
                 modifier = Modifier.size(56.dp),
             )
             Text(
-                text = "Order Placed Successfully!",
+                text = stringResource(Res.string.order_summary_success_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = AppColors.Green700,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Your gold coin will be dispatched within the estimated time.",
+                text = stringResource(Res.string.order_summary_success_message),
                 fontSize = 13.sp,
                 color = AppColors.Green600,
                 textAlign = TextAlign.Center,
@@ -270,15 +273,20 @@ private fun SummaryInfoCard(label: String, value: String) {
         colors = CardDefaults.cardColors(containerColor = AppColors.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(label, fontSize = 13.sp, color = AppColors.Slate600)
-            Text(value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = AppColors.Slate900, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AppColors.Slate900,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -329,5 +337,3 @@ private fun PriceRow(
         )
     }
 }
-
-

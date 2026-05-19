@@ -33,11 +33,9 @@ import com.habit.gold.core.designsystem.theme.*
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingIntent
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingState
+import com.habit.gold.feature.delivery.presentation.resolve
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import com.habit.gold.feature.delivery.presentation.components.*
 
@@ -109,7 +107,7 @@ fun DeliveryTrackingScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = stringResource(Res.string.delivery_tracking_error),
+                            text = state.message.resolve(),
                             color = AppColors.Danger,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,

@@ -618,15 +618,19 @@ Already in place:
 
 Next major focus:
 
-- Phase 9 profile/security parity hardening and checkpoint cleanup
+- Phase 11 Delivery / Get Coin checkpoint stabilization
 
 That means:
 
-- finish the remaining Phase 9 parity gaps and deferred biometric/security review
-- keep Profile-linked UPI surfaces honest about ownership boundaries
-- expand Profile child-flow and linked-route test coverage
-- update docs as each Phase 9 checkpoint moves forward
-- do not mark Phase 9 complete without a dedicated hardening/code-quality closure pass after the checkpoint work
+- keep `feature/delivery` aligned with the strict Android audit
+- preserve the delivery rules that already landed:
+  - affordability uses `redeemableGoldGrams`
+  - serviceability requires `PINCODE_SERVICEABLE`
+  - shortfall-to-buy rounds up to the next `0.5g`
+  - buy-back should return to Delivery / Get Coin, not Home
+- keep Trade / Home / Delivery return-destination ownership honest
+- finish device QA on catalog, address, checkout, order summary, and tracking
+- document any remaining invoice/detail parity decision explicitly instead of silently over-claiming closure
 - later navigation improvement candidate: add LinkedIn-style left-edge swipe-back only for child/pushed screens, not for root tab screens
 - if swipe-back is added later, explicitly test it against horizontal gestures such as carousels, sheets, and swipe CTAs before broad rollout
 - for Phase 10 and later UI-heavy phases, keep code quality in focus during implementation and do not commit the phase work until the explicit pre-commit quality gate has been reviewed

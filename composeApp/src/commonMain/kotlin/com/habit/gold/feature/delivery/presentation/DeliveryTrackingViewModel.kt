@@ -3,6 +3,8 @@ package com.habit.gold.feature.delivery.presentation
 import androidx.lifecycle.viewModelScope
 import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.feature.delivery.domain.usecase.ListDeliveryOrdersUseCase
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.delivery_error_fetch_orders
 import kotlinx.coroutines.launch
 
 class DeliveryTrackingViewModel(
@@ -30,7 +32,8 @@ class DeliveryTrackingViewModel(
                     updateState { DeliveryTrackingState.Success(orders) }
                 },
                 onFailure = { error ->
-                    val message = error.message ?: "Failed to fetch orders"
+                    val message = error.message?.asDeliveryUiText()
+                        ?: DeliveryUiText.Resource(Res.string.delivery_error_fetch_orders)
                     updateState { DeliveryTrackingState.Error(message) }
                     emitEffect(DeliveryTrackingEffect.ShowError(message))
                 }
@@ -38,3 +41,5 @@ class DeliveryTrackingViewModel(
         }
     }
 }
+
+private fun String.asDeliveryUiText(): DeliveryUiText = DeliveryUiText.Dynamic(this)

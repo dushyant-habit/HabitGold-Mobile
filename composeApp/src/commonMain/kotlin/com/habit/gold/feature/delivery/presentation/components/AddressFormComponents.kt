@@ -18,6 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.AddressType
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.delivery_address_type_home
+import habitgoldmobile.composeapp.generated.resources.delivery_address_type_other
+import habitgoldmobile.composeapp.generated.resources.delivery_address_type_work
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AddressTypeRow(
@@ -25,9 +30,9 @@ fun AddressTypeRow(
     onSelect: (AddressType) -> Unit,
 ) {
     val types = listOf(
-        AddressType.HOME to "Home",
-        AddressType.WORK to "Work",
-        AddressType.OTHER to "Other",
+        AddressType.HOME to stringResource(Res.string.delivery_address_type_home),
+        AddressType.WORK to stringResource(Res.string.delivery_address_type_work),
+        AddressType.OTHER to stringResource(Res.string.delivery_address_type_other),
     )
     Row(
         modifier = Modifier.fillMaxWidth(),

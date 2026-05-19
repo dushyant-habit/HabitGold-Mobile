@@ -28,11 +28,13 @@ data class SavedAddress(
     val name: String,
     val fullAddress: String,
     val phoneNo: String,
+    val type: AddressType? = null,
     val addressLine1: String? = null,
     val addressLine2: String? = null,
     val city: String? = null,
     val state: String? = null,
     val pincode: String? = null,
+    val landmark: String? = null,
     /** Server-side verification, e.g. UNVERIFIED / VERIFIED — from delivery address APIs. */
     val verificationStatus: String? = null
 )

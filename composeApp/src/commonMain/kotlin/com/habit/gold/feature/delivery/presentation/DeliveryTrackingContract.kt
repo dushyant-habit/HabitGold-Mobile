@@ -8,7 +8,7 @@ import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 sealed interface DeliveryTrackingState : MviState {
     data object Loading : DeliveryTrackingState
     data class Success(val orders: List<DeliveryOrderDto>) : DeliveryTrackingState
-    data class Error(val message: String) : DeliveryTrackingState
+    data class Error(val message: DeliveryUiText) : DeliveryTrackingState
 }
 
 sealed interface DeliveryTrackingIntent : MviIntent {
@@ -17,5 +17,5 @@ sealed interface DeliveryTrackingIntent : MviIntent {
 }
 
 sealed interface DeliveryTrackingEffect : MviEffect {
-    data class ShowError(val message: String) : DeliveryTrackingEffect
+    data class ShowError(val message: DeliveryUiText) : DeliveryTrackingEffect
 }

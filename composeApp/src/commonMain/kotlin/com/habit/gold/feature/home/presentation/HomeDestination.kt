@@ -20,7 +20,10 @@ internal sealed interface HomeDestination {
         val returnDestination: HomeDestination = Dashboard,
     ) : HomeDestination
     data class TransactionDetails(val item: HomeRecentTransactionPreview) : HomeDestination
-    data class Trade(val destination: TradeDestination) : HomeDestination
+    data class Trade(
+        val destination: TradeDestination,
+        val returnDestination: HomeDestination = Dashboard,
+    ) : HomeDestination
     data class Delivery(
         val destination: DeliveryDestination = DeliveryDestination.Catalog,
         val returnDestination: HomeDestination = Dashboard,

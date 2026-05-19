@@ -14,6 +14,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.common_cancel
+import habitgoldmobile.composeapp.generated.resources.delivery_address_otp
+import habitgoldmobile.composeapp.generated.resources.delivery_address_otp_message
+import habitgoldmobile.composeapp.generated.resources.delivery_address_otp_title
+import habitgoldmobile.composeapp.generated.resources.delivery_address_resend_otp
+import habitgoldmobile.composeapp.generated.resources.delivery_address_verify
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun OtpVerificationDialog(
@@ -32,7 +40,7 @@ fun OtpVerificationDialog(
         shape = RoundedCornerShape(20.dp),
         title = {
             Text(
-                text = "Verify Address",
+                text = stringResource(Res.string.delivery_address_otp_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = AppColors.Slate950,
@@ -41,7 +49,7 @@ fun OtpVerificationDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Enter the 6-digit OTP sent to your phone number to verify this address.",
+                    text = stringResource(Res.string.delivery_address_otp_message),
                     fontSize = 14.sp,
                     color = AppColors.Slate600,
                 )
@@ -49,7 +57,7 @@ fun OtpVerificationDialog(
                     value = otp,
                     onValueChange = { if (it.length <= 6) otp = it.filter(Char::isDigit) },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("OTP") },
+                    label = { Text(stringResource(Res.string.delivery_address_otp)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
@@ -75,13 +83,17 @@ fun OtpVerificationDialog(
                     onClick = onResend,
                     modifier = Modifier.align(Alignment.End),
                 ) {
-                    Text("Resend OTP", color = AppColors.Purple700, fontSize = 13.sp)
+                    Text(
+                        stringResource(Res.string.delivery_address_resend_otp),
+                        color = AppColors.Purple700,
+                        fontSize = 13.sp
+                    )
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppColors.Slate500)
+                Text(stringResource(Res.string.common_cancel), color = AppColors.Slate500)
             }
         },
         confirmButton = {
@@ -102,7 +114,7 @@ fun OtpVerificationDialog(
                     )
                     Spacer(Modifier.width(6.dp))
                 }
-                Text("Verify")
+                Text(stringResource(Res.string.delivery_address_verify))
             }
         },
     )
