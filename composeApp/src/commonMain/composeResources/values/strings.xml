@@ -899,7 +899,7 @@ Invest in Gold</string>
     <string name="delivery_cart_insurance_charge">Insurance charges</string>
     <string name="delivery_cart_free">FREE</string>
     <string name="delivery_cart_net_payable">Net payable</string>
-    <string name="delivery_cart_gold_balance_covers">Locker balance covers delivery charge</string>
+    <string name="delivery_cart_gold_balance_covers">Your gold balance covers the coin value. Delivery charges are free over 5 grams.</string>
     <string name="delivery_cart_loading_address">Loading delivery addresses...</string>
     <string name="delivery_cart_add_delivery_address">Add a delivery address</string>
     <string name="delivery_cart_select_where_to_deliver">Select where we should deliver your gold coin</string>
