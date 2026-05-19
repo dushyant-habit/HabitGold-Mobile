@@ -6,15 +6,25 @@ private const val SECURE_SUITE_NAME = "com.habit.gold.secure"
 private const val APP_SUITE_NAME = "com.habit.gold.app"
 
 actual fun createPlatformSecureStorage(): SecureStorage {
-    return AppleUserDefaultsStorage(
-        userDefaults = NSUserDefaults(suiteName = SECURE_SUITE_NAME),
-    )
+    val defaults = try {
+        val suite = NSUserDefaults(suiteName = SECURE_SUITE_NAME)
+        suite.dictionaryRepresentation() // Verify the Objective-C object is non-nil
+        suite
+    } catch (e: Throwable) {
+        NSUserDefaults.standardUserDefaults
+    }
+    return AppleUserDefaultsStorage(userDefaults = defaults)
 }
 
 actual fun createPlatformPreferencesStorage(): KeyValueStorage {
-    return AppleUserDefaultsStorage(
-        userDefaults = NSUserDefaults(suiteName = APP_SUITE_NAME),
-    )
+    val defaults = try {
+        val suite = NSUserDefaults(suiteName = APP_SUITE_NAME)
+        suite.dictionaryRepresentation() // Verify the Objective-C object is non-nil
+        suite
+    } catch (e: Throwable) {
+        NSUserDefaults.standardUserDefaults
+    }
+    return AppleUserDefaultsStorage(userDefaults = defaults)
 }
 
 private class AppleUserDefaultsStorage(

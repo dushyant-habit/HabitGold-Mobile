@@ -141,6 +141,18 @@ class HistoryViewModelTest {
         assertFalse(viewModel.state.value.hasMore)
     }
 
+    @Test
+    fun `mapping small gold quantities formats them cleanly without exponential notation`() {
+        val transaction8 = preview(id = "tx-1", type = "BUY", status = "COMPLETED").copy(goldQuantity = "0.0008")
+        val transaction4 = preview(id = "tx-2", type = "BUY", status = "COMPLETED").copy(goldQuantity = "0.0004")
+        
+        val item8 = mapTradeTransaction(transaction8)
+        val item4 = mapTradeTransaction(transaction4)
+        
+        assertEquals("+0.0008 g", item8.weightLabel)
+        assertEquals("+0.0004 g", item4.weightLabel)
+    }
+
     private fun createViewModel(
         repository: FakeTradeRepository,
         nowMillis: () -> Long = { 1_000_000L },
