@@ -1,6 +1,7 @@
 package com.habit.gold.feature.profile.data.repository
 
 import com.habit.gold.core.network.ApiResult
+import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.auth.domain.AuthenticatedUser
 import com.habit.gold.feature.profile.data.model.ProfileKycVerifyRequestDto
@@ -20,6 +21,7 @@ import com.habit.gold.feature.profile.domain.model.ProfileVpa
 class ProfileRepositoryImpl(
     private val remoteDataSource: ProfileRemoteDataSource,
     private val sessionStore: SessionStore,
+    private val deviceTokenSyncManager: DeviceTokenSyncManager,
 ) : ProfileRepository {
 
     override suspend fun getProfileSummary(): ApiResult<ProfileSummary> {
@@ -88,6 +90,7 @@ class ProfileRepositoryImpl(
 
     override suspend fun logout(): ApiResult<Unit> {
         remoteDataSource.logout()
+        deviceTokenSyncManager.unregisterCurrentTokenBeforeLogout()
         sessionStore.clear()
         return ApiResult.Success(Unit)
     }
@@ -95,6 +98,7 @@ class ProfileRepositoryImpl(
     override suspend fun requestDeleteAccount(): ApiResult<Unit> {
         return when (val result = remoteDataSource.requestDeleteAccount()) {
             is ApiResult.Success -> {
+                deviceTokenSyncManager.unregisterCurrentTokenBeforeLogout()
                 sessionStore.clear()
                 ApiResult.Success(Unit)
             }

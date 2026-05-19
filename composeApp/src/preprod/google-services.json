@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "804124740410",
+    "project_id": "habitgold-staging",
+    "storage_bucket": "habitgold-staging.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804124740410:android:e23499e76714adcfee9e03",
+        "android_client_info": {
+          "package_name": "com.habit.gold.preprod"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "804124740410-b9c2868rrg9nfng3u02trl51kirf6a7c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAK6VcvXzgC_TVJ4HPKq40bAU7UGFxrSqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "804124740410-b9c2868rrg9nfng3u02trl51kirf6a7c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

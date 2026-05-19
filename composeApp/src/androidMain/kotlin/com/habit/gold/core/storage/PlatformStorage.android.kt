@@ -2,6 +2,8 @@ package com.habit.gold.core.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 
 private const val SECURE_PREFS_NAME = "habitgold_secure_storage"
 private const val APP_PREFS_NAME = "habitgold_app_storage"
@@ -16,11 +18,9 @@ fun initializePlatformStorage(context: Context) {
 }
 
 actual fun createPlatformSecureStorage(): SecureStorage {
+    val context = platformContext()
     return AndroidSharedPreferencesStorage(
-        sharedPreferences = platformContext().getSharedPreferences(
-            SECURE_PREFS_NAME,
-            Context.MODE_PRIVATE,
-        ),
+        sharedPreferences = createEncryptedSharedPreferences(context),
     )
 }
 
@@ -38,6 +38,21 @@ private fun platformContext(): Context {
         "Platform storage must be initialized before starting Koin."
     }
     return applicationContext
+}
+
+private fun createEncryptedSharedPreferences(
+    context: Context,
+): SharedPreferences {
+    val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+    return EncryptedSharedPreferences.create(
+        context,
+        SECURE_PREFS_NAME,
+        masterKey,
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+    )
 }
 
 private class AndroidSharedPreferencesStorage(

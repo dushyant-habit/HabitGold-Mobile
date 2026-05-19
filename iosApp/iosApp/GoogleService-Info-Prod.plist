@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1004012622650-j1lmi5kc22ssuehp2lcleeblfiquser7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1004012622650-j1lmi5kc22ssuehp2lcleeblfiquser7</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAswYIIPAblcAPYY_Wiu401x0Elva8YTVw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1004012622650</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.habit.gold</string>
+	<key>PROJECT_ID</key>
+	<string>habitgold-80ffb</string>
+	<key>STORAGE_BUCKET</key>
+	<string>habitgold-80ffb.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1004012622650:ios:19556c1fd61bb9b9cc7603</string>
+</dict>
+</plist>

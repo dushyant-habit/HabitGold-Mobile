@@ -50,6 +50,7 @@ import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.presentation.PlatformBackHandler
+import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.storage.SecureStorage
 import com.habit.gold.core.storage.AppPreferencesStorage
@@ -160,6 +161,7 @@ fun AppMainShellScreen(
     )
 
     val paymentLauncher = rememberPlatformTradePaymentLauncher()
+    val deviceTokenSyncManager = remember(appKoin) { appKoin.get<DeviceTokenSyncManager>() }
     val homeDependencies = remember(appKoin) {
         HomeRouteDependencies(
             loadHomeSummaryUseCase = appKoin.get<LoadHomeSummaryUseCase>(),
@@ -243,6 +245,9 @@ fun AppMainShellScreen(
 
     LaunchedEffect(session.isLoggedIn) {
         tradeDependencies.livePriceStore.setLoggedIn(session.isLoggedIn)
+        if (session.isLoggedIn) {
+            deviceTokenSyncManager.registerCurrentTokenAfterLogin()
+        }
     }
 
     LaunchedEffect(biometricSecurityStore) {

@@ -1,6 +1,8 @@
 #include "Base.xcconfig"
 
 PRODUCT_NAME=HabitGoldMobile Staging
+PRODUCT_BUNDLE_IDENTIFIER=com.habit.gold.staging
+APP_NAME=HabitGold Staging
 APP_ENV=staging
 API_BASE_URL=https:$(SLASH)/staging.habitgold.com/v1/
 ENABLE_NETWORK_LOGS=YES

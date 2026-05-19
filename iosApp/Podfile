@@ -1,8 +1,17 @@
 platform :ios, '18.2'
 
+project 'iosApp', {
+  'Debug' => :debug,
+  'Preprod' => :debug,
+  'Release' => :release,
+}
+
 target 'iosApp' do
   use_frameworks!
 
+  pod 'FirebaseCore'
+  pod 'FirebaseCrashlytics'
+  pod 'FirebasePerformance'
   pod 'HyperSDK', '2.2.5'
 end
 
