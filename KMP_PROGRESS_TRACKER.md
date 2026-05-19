@@ -11,12 +11,13 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 11`
+- Current phase: `Phase 12`
 - Phase 9 status: `checkpointed, not fully closed`
 - Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
 - Phase 11 status: `shared Delivery / Get Coin checkpoint is live; final device QA and any remaining invoice/detail parity follow-up are still pending`
-- Current focus: `stabilize the shared Delivery / Get Coin checkpoint and keep the docs aligned with the real feature boundaries`
-- Next milestone: `merge the Phase 11 delivery checkpoint, then decide whether to return to unfinished closure work or continue later platform phases`
+- Phase 12 status: `first verified implementation slice live, still in progress`
+- Current focus: `finish the remaining platform parity gaps after the first env/storage/otp/push/referral slice`
+- Next milestone: `complete the remaining iOS secure-storage and Firebase/crash/perf parity decisions`
 
 ## Phase Status
 
@@ -41,7 +42,7 @@ Use this together with:
 - [ ] Phase 9: Profile And Security
 - [ ] Phase 10: History, Rewards, Referral, Alerts
 - [ ] Phase 11: Delivery / Get Coin
-- [ ] Phase 12: Platform Integrations
+- [~] Phase 12: Platform Integrations
 - [ ] Phase 13: Hardening And QA
 
 ## Phase 6: Home
@@ -161,6 +162,7 @@ This section keeps the important product flows visible explicitly, even when the
 - [ ] Referral Flow
 - [x] Alerts Flow
 - [x] Delivery / Get Coin Flow
+- [~] Platform Integrations Flow
 
 ### Hidden Subflows To Preserve
 
@@ -188,6 +190,29 @@ This section keeps the important product flows visible explicitly, even when the
 - `Referral Flow` -> `Phase 10: History, Rewards, Referral, Alerts`
 - `Alerts Flow` -> `Phase 10: History, Rewards, Referral, Alerts`
 - `Delivery / Get Coin Flow` -> `Phase 11: Delivery / Get Coin`
+- `Platform Integrations Flow` -> `Phase 12: Platform Integrations`
+
+## Phase 12: Platform Integrations
+
+- [x] Complete strict Phase 12 audit
+- [x] Align shared Android and iOS base app version values to the current Android production version line
+- [x] Add Android encrypted secure storage implementation
+- [x] Add Android SMS Retriever bridge behind the shared auth OTP screen
+- [x] Add shared platform bridge storage for pending referral and device-token state
+- [x] Add shared device-token sync manager and shared alert recorder
+- [x] Add Android referral deep-link capture
+- [x] Add Android Install Referrer capture
+- [x] Add Android FCM messaging-service callback path
+- [x] Add Android Clarity init and shared route screen-name updates
+- [x] Add iOS APNs registration/token capture hooks
+- [x] Add iOS referral URL capture hooks
+- [x] Add iOS shared-alert persistence hook from notification callbacks
+- [x] Finish true iOS preprod Xcode configuration wiring
+- [x] Add Android Firebase plugin/runtime parity and env `google-services.json` assets
+- [x] Add iOS Firebase pod/runtime wiring plus env plist selection
+- [ ] Finish iOS keychain-backed secure storage
+- [ ] Verify iOS Firebase / Crashlytics / Performance on device
+- [ ] Finalize iOS push capability / associated-domain project setup and verify on device
 
 ## Completed So Far
 
@@ -296,7 +321,7 @@ Immediate tasks:
 - [x] define secure storage abstraction
 - [x] define session restore and logout cleanup behavior
 - [x] add session-focused common tests
-- [ ] align environment-specific identifiers when flavors/schemes are introduced
+- [x] align environment-specific identifiers when flavors/schemes are introduced
 
 ### Phase 2: Network Foundation
 

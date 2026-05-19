@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 val profileModule = module {
     single { ProfileRemoteDataSource(get()) }
-    single<ProfileRepository> { ProfileRepositoryImpl(get(), get()) }
+    single<ProfileRepository> { ProfileRepositoryImpl(get(), get(), get()) }
     single { GetProfileSummaryUseCase(get()) }
     single { UpdateProfileUseCase(get()) }
     single { VerifyProfileKycUseCase(get()) }

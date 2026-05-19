@@ -424,13 +424,10 @@ Later foundation items:
 - screenshot-based parity QA baseline
 - native integration boundary inventory for platform SDK features
 - deferred Gradle / SDK parity items that are intentionally not in the KMP app yet:
-  - Microsoft Clarity Compose SDK and Clarity project-id/build-config wiring
-  - Firebase plugins and SDKs used by the Android app: Messaging, Crashlytics, and Performance
-  - Google Services / Crashlytics / Firebase Perf Gradle plugins
-  - Android Install Referrer dependency and native binding
-  - Android SMS Retriever dependency and native OTP auto-read binding
-  - Juspay iOS launcher/binding and final cross-platform SDK parity
-  - Android app versionCode / versionName parity with the production Android app where headers or analytics depend on app version
+  - iOS keychain-backed secure storage
+  - iOS push / associated-domain project capability verification
+  - iOS Firebase / Crashlytics / Performance device verification
+  - final Juspay iOS asset-postprocessing environment stability
 
 Platform SDK planning rule:
 
@@ -618,19 +615,26 @@ Already in place:
 
 Next major focus:
 
-- Phase 11 Delivery / Get Coin checkpoint stabilization
+- Phase 12 platform integrations implementation after the strict audit
 
 That means:
 
-- keep `feature/delivery` aligned with the strict Android audit
-- preserve the delivery rules that already landed:
-  - affordability uses `redeemableGoldGrams`
+- continue from the first verified Phase 12 slice:
+  - env/version parity
+  - Android secure storage
+  - Android OTP auto-read
+  - shared token/referral bridge state
+  - Android/iOS push and referral entry hooks
+- carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
+  - delivery affordability uses `redeemableGoldGrams`
   - serviceability requires `PINCODE_SERVICEABLE`
   - shortfall-to-buy rounds up to the next `0.5g`
   - buy-back should return to Delivery / Get Coin, not Home
-- keep Trade / Home / Delivery return-destination ownership honest
-- finish device QA on catalog, address, checkout, order summary, and tracking
-- document any remaining invoice/detail parity decision explicitly instead of silently over-claiming closure
+- finish the remaining iOS secure-storage and project-level push/deep-link parity
+- finish the remaining Firebase / crash / performance parity decisions
+- keep notification, deep-link, install-referrer, and OTP behavior platform-owned but contract-driven
+- document explicit iOS non-equivalent paths instead of faking Android parity where none exists
+- update docs as each Phase 12 checkpoint moves forward
 - later navigation improvement candidate: add LinkedIn-style left-edge swipe-back only for child/pushed screens, not for root tab screens
 - if swipe-back is added later, explicitly test it against horizontal gestures such as carousels, sheets, and swipe CTAs before broad rollout
 - for Phase 10 and later UI-heavy phases, keep code quality in focus during implementation and do not commit the phase work until the explicit pre-commit quality gate has been reviewed

@@ -5,6 +5,9 @@ import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.network.AuthTokenProvider
 import com.habit.gold.core.network.SessionExpiryHandler
 import com.habit.gold.core.network.createHttpClient
+import com.habit.gold.core.platform.PlatformBridgeStore
+import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
+import com.habit.gold.core.storage.KeyValueStorage
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.storage.AuthTokenStorage
@@ -29,11 +32,14 @@ fun coreModule(
     single { platformInfo }
     single { AppDispatchers() }
     single<SecureStorage> { createPlatformSecureStorage() }
+    single<KeyValueStorage> { createPlatformPreferencesStorage() }
     single<AuthTokenStorage> { SecureAuthTokenStorage(get()) }
-    single<UserProfileStorage> { JsonUserProfileStorage(createPlatformPreferencesStorage()) }
-    single<SessionMetadataStorage> { JsonSessionMetadataStorage(createPlatformPreferencesStorage()) }
-    single<AppPreferencesStorage> { JsonAppPreferencesStorage(createPlatformPreferencesStorage()) }
+    single<UserProfileStorage> { JsonUserProfileStorage(get()) }
+    single<SessionMetadataStorage> { JsonSessionMetadataStorage(get()) }
+    single<AppPreferencesStorage> { JsonAppPreferencesStorage(get()) }
+    single { PlatformBridgeStore(get()) }
     single { SessionStore(get(), get(), get()) }
+    single { DeviceTokenSyncManager(get(), get(), get(), get()) }
     single<AuthTokenProvider> {
         object : AuthTokenProvider {
             override fun getAccessToken(): String? = get<SessionStore>().state.value.accessToken

@@ -47,6 +47,17 @@ internal fun AuthOtpScreen(
         focusRequesters.first().requestFocus()
     }
 
+    PlatformOtpAutoFillEffect(
+        enabled = !uiState.isLoading,
+        onOtpReceived = { otp ->
+            onOtpChanged(otp)
+            if (otp.length == 6) {
+                keyboardController?.hide()
+                onVerifyOtp()
+            }
+        },
+    )
+
     AppScreen {
         Column(modifier = Modifier.fillMaxSize()) {
             AuthOtpHeader(
