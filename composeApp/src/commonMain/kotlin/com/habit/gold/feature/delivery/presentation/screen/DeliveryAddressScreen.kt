@@ -32,8 +32,10 @@ import com.habit.gold.core.designsystem.theme.*
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.compactAddressLine
 import com.habit.gold.feature.delivery.domain.model.isPincodeServiceable
-import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
-import com.habit.gold.feature.delivery.presentation.DeliveryIntent
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressEffect
+import com.habit.gold.feature.delivery.presentation.components.OtpVerificationDialog
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -50,19 +52,20 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeliveryAddressScreen(
-    state: DeliveryCatalogState,
-    onIntent: (DeliveryIntent) -> Unit,
+    state: DeliveryAddressState,
+    selectedAddressId: String? = null,
+    onIntent: (DeliveryAddressIntent) -> Unit,
+    onSelectAddress: (String) -> Unit = {},
     onBackClick: () -> Unit,
     onAddNewAddress: () -> Unit,
     onEditAddress: (addressId: String) -> Unit,
     onContinue: () -> Unit,
     showCheckoutButton: Boolean = true,
 ) {
-    var otpValue by remember { mutableStateOf("") }
     var showDeleteConfirm by remember { mutableStateOf<SavedAddress?>(null) }
 
     // Listen for AddressSaved effect to dismiss OTP dialog
-    val selectedAddress = state.savedAddresses.find { it.id == state.selectedAddressId }
+    val selectedAddress = state.savedAddresses.find { it.id == selectedAddressId }
 
     Scaffold(
         topBar = {
@@ -134,14 +137,14 @@ fun DeliveryAddressScreen(
                 }
             } else if (state.savedAddresses.isEmpty()) {
                 EmptyAddressState(onAddNewAddress = {
-                    onIntent(DeliveryIntent.ClearEditState)
+                    onIntent(DeliveryAddressIntent.ClearEditState)
                     onAddNewAddress()
                 })
             } else {
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                     OutlinedButton(
                         onClick = {
-                            onIntent(DeliveryIntent.ClearEditState)
+                            onIntent(DeliveryAddressIntent.ClearEditState)
                             onAddNewAddress()
                         },
                         modifier = Modifier
@@ -172,22 +175,21 @@ fun DeliveryAddressScreen(
                 ) {
 
                     items(state.savedAddresses, key = { it.id }) { address ->
-                        val isSelected = address.id == state.selectedAddressId
+                        val isSelected = address.id == selectedAddressId
                         DeliveryAddressCard(
                             address = address,
                             isSelected = isSelected,
-                            onSelect = { onIntent(DeliveryIntent.SelectAddress(address.id)) },
+                            onSelect = { onSelectAddress(address.id) },
                             onEdit = {
-                                onIntent(DeliveryIntent.LoadAddressForEdit(address.id))
+                                onIntent(DeliveryAddressIntent.LoadAddressForEdit(address.id))
                                 onEditAddress(address.id)
                             },
                             onDelete = { showDeleteConfirm = address },
                             onSendOtp = {
-                                otpValue = ""
-                                onIntent(DeliveryIntent.SendAddressOtp(address.id))
+                                onIntent(DeliveryAddressIntent.SendAddressOtp(address.id))
                             },
                             onCheckServiceability = {
-                                onIntent(DeliveryIntent.CheckServiceability(address.id))
+                                onIntent(DeliveryAddressIntent.CheckServiceability(address.id))
                             },
                         )
                     }
@@ -203,14 +205,14 @@ fun DeliveryAddressScreen(
         if (address != null) {
             OtpVerificationDialog(
                 address = address,
-                otpValue = otpValue,
-                onOtpChange = { otpValue = it },
-                onVerify = {
-                    onIntent(DeliveryIntent.VerifyAddressOtp(address.id, otpValue))
-                },
                 onDismiss = {
-                    onIntent(DeliveryIntent.DismissOtpDialog)
-                    otpValue = ""
+                    onIntent(DeliveryAddressIntent.DismissOtpDialog)
+                },
+                onVerify = { otp ->
+                    onIntent(DeliveryAddressIntent.VerifyAddressOtp(address.id, otp))
+                },
+                onResend = {
+                    onIntent(DeliveryAddressIntent.SendAddressOtp(address.id))
                 },
                 isVerifying = state.isVerifyingOtp,
                 errorMessage = state.otpVerifyError
@@ -226,7 +228,7 @@ fun DeliveryAddressScreen(
             text = { Text("Delete address for ${address.name}?") },
             confirmButton = {
                 TextButton(onClick = {
-                    onIntent(DeliveryIntent.DeleteAddress(address.id))
+                    onIntent(DeliveryAddressIntent.DeleteAddress(address.id))
                     showDeleteConfirm = null
                 }) {
                     Text("Delete", color = AppColors.Danger)
@@ -404,84 +406,4 @@ private fun ServiceableChip() {
     }
 }
 
-@Composable
-private fun OtpVerificationDialog(
-    address: SavedAddress,
-    otpValue: String,
-    onOtpChange: (String) -> Unit,
-    onVerify: () -> Unit,
-    onDismiss: () -> Unit,
-    isVerifying: Boolean,
-    errorMessage: String?
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .padding(8.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = AppColors.White),
-        ) {
-            Column(modifier = Modifier.padding(24.dp)) {
-                Text(
-                    text = stringResource(Res.string.delivery_address_verify_number),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = AppColors.Slate950,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Enter OTP sent to ${address.phoneNo}",
-                    fontSize = 14.sp,
-                    color = AppColors.Slate600,
-                )
-                Spacer(Modifier.height(20.dp))
-                OutlinedTextField(
-                    value = otpValue,
-                    onValueChange = { if (it.length <= 6) onOtpChange(it) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("6-digit OTP") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    isError = errorMessage != null,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Purple700,
-                        unfocusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Slate300,
-                    )
-                )
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage,
-                        fontSize = 12.sp,
-                        color = AppColors.Red600,
-                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                    )
-                }
-                Spacer(Modifier.height(24.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    Spacer(Modifier.width(12.dp))
-                    Button(
-                        onClick = onVerify,
-                        enabled = otpValue.length == 6 && !isVerifying,
-                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Purple700),
-                        shape = RoundedCornerShape(12.dp),
-                    ) {
-                        if (isVerifying) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = AppColors.White,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(Modifier.width(6.dp))
-                        }
-                        Text(stringResource(Res.string.delivery_address_verify_otp))
-                    }
-                }
-            }
-        }
-    }
-}
+

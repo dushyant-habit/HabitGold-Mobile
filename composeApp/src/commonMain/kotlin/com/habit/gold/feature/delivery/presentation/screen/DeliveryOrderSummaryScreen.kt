@@ -26,6 +26,7 @@ import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.compactAddressLine
 import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryIntent
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
@@ -46,16 +47,17 @@ import com.habit.gold.core.util.formatMoney0
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeliveryOrderSummaryScreen(
-    state: DeliveryCatalogState,
+    catalogState: DeliveryCatalogState,
+    addressState: DeliveryAddressState,
     orderId: String,
     onIntent: (DeliveryIntent) -> Unit,
     onBackClick: () -> Unit,
     onTrackOrder: () -> Unit,
     onDone: () -> Unit,
 ) {
-    val quote: DeliveryCheckoutQuote? = state.checkoutQuote
-    val selectedAddress: SavedAddress? = state.savedAddresses.find { it.id == state.selectedAddressId }
-    val selectedCoin = quote?.productId?.let { id -> state.coins.find { it.id == id } }
+    val quote: DeliveryCheckoutQuote? = catalogState.checkoutQuote
+    val selectedAddress: SavedAddress? = addressState.savedAddresses.find { it.id == catalogState.selectedAddressId }
+    val selectedCoin = quote?.productId?.let { id -> catalogState.coins.find { it.id == id } }
 
     Scaffold(
         topBar = {
@@ -201,10 +203,10 @@ fun DeliveryOrderSummaryScreen(
                         label = stringResource(Res.string.order_summary_making_charge),
                         value = "₹${formatMoneyCeil(quote.mintingChargeInr)}",
                     )
-                    if (state.couponDiscountInr > 0) {
+                    if (catalogState.couponDiscountInr > 0) {
                         PriceRow(
                             label = stringResource(Res.string.order_summary_discount),
-                            value = "-₹${formatMoney0(state.couponDiscountInr)}",
+                            value = "-₹${formatMoney0(catalogState.couponDiscountInr)}",
                             valueColor = AppColors.Green600,
                         )
                     }

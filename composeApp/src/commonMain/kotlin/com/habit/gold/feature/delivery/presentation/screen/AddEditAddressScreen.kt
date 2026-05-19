@@ -28,8 +28,9 @@ import com.habit.gold.feature.delivery.domain.model.CreateAddressDto
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.UpdateAddressDto
 import com.habit.gold.feature.delivery.domain.model.normalizeIndianMobileForApi
-import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
-import com.habit.gold.feature.delivery.presentation.DeliveryIntent
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
+import com.habit.gold.feature.delivery.presentation.components.*
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -48,8 +49,8 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditAddressScreen(
-    state: DeliveryCatalogState,
-    onIntent: (DeliveryIntent) -> Unit,
+    state: DeliveryAddressState,
+    onIntent: (DeliveryAddressIntent) -> Unit,
     onBackClick: () -> Unit,
 ) {
     val isEditing = state.addressBeingEdited != null
@@ -81,7 +82,7 @@ fun AddEditAddressScreen(
             // Reset verification when pincode changes
         }
         if (pincode.length == 6 && city.isBlank() && stateField.isBlank()) {
-            onIntent(DeliveryIntent.LookupPostalPincode(pincode))
+            onIntent(DeliveryAddressIntent.LookupPostalPincode(pincode))
         }
     }
 
@@ -188,7 +189,7 @@ fun AddEditAddressScreen(
                         )
                     } else {
                         Button(
-                            onClick = { onIntent(DeliveryIntent.VerifyDeliveryPincode(pincode)) },
+                            onClick = { onIntent(DeliveryAddressIntent.VerifyDeliveryPincode(pincode)) },
                             enabled = pincode.length == 6,
                             modifier = Modifier.height(48.dp),
                             shape = RoundedCornerShape(12.dp),
@@ -283,7 +284,7 @@ fun AddEditAddressScreen(
                         val normalizedPhone = normalizeIndianMobileForApi(phone)
                         if (isEditing && existing != null) {
                             onIntent(
-                                DeliveryIntent.UpdateAddress(
+                                DeliveryAddressIntent.UpdateAddress(
                                     id = existing.id,
                                     body = UpdateAddressDto(
                                         type = selectedType,
@@ -300,7 +301,7 @@ fun AddEditAddressScreen(
                             )
                         } else {
                             onIntent(
-                                DeliveryIntent.CreateAddress(
+                                DeliveryAddressIntent.CreateAddress(
                                     body = CreateAddressDto(
                                         type = selectedType,
                                         recipientName = name.trim(),
@@ -347,176 +348,24 @@ fun AddEditAddressScreen(
     // ── OTP Verification Dialog ──────────────────────────────────────────
     val otpAddressId = state.otpAddressId
     if (otpAddressId != null) {
-        OtpVerificationDialog(
-            onDismiss = { onIntent(DeliveryIntent.DismissOtpDialog) },
-            onVerify = { otp -> onIntent(DeliveryIntent.VerifyAddressOtp(otpAddressId, otp)) },
-            onResend = { onIntent(DeliveryIntent.SendAddressOtp(otpAddressId)) },
-            isVerifying = state.isVerifyingOtp,
-            errorMessage = state.otpVerifyError
-        )
-    }
-}
-
-// ── OTP Dialog ───────────────────────────────────────────────────────────────
-
-@Composable
-private fun OtpVerificationDialog(
-    onDismiss: () -> Unit,
-    onVerify: (String) -> Unit,
-    onResend: () -> Unit,
-    isVerifying: Boolean,
-    errorMessage: String? = null
-) {
-    var otp by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = AppColors.White,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text(
-                text = "Verify Address",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.Slate950,
+        val otpAddress = state.savedAddresses.find { it.id == otpAddressId }
+        if (otpAddress != null) {
+            OtpVerificationDialog(
+                address = otpAddress,
+                onDismiss = {
+                    onIntent(DeliveryAddressIntent.DismissOtpDialog)
+                },
+                onVerify = { otp ->
+                    onIntent(DeliveryAddressIntent.VerifyAddressOtp(otpAddress.id, otp))
+                },
+                onResend = {
+                    onIntent(DeliveryAddressIntent.SendAddressOtp(otpAddress.id))
+                },
+                isVerifying = state.isVerifyingOtp,
+                errorMessage = state.otpVerifyError
             )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Enter the 6-digit OTP sent to your phone number to verify this address.",
-                    fontSize = 14.sp,
-                    color = AppColors.Slate600,
-                )
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = { if (it.length <= 6) otp = it.filter(Char::isDigit) },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("OTP") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done,
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Purple700,
-                        unfocusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Slate300,
-                        focusedLabelColor = AppColors.Purple700,
-                    ),
-                    isError = errorMessage != null
-                )
-                if (errorMessage != null) {
-                    Text(
-                        text = errorMessage,
-                        fontSize = 12.sp,
-                        color = AppColors.Red600,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                TextButton(
-                    onClick = onResend,
-                    modifier = Modifier.align(Alignment.End),
-                ) {
-                    Text("Resend OTP", color = AppColors.Purple700, fontSize = 13.sp)
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppColors.Slate500)
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onVerify(otp) },
-                enabled = otp.length == 6 && !isVerifying,
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Purple700,
-                    disabledContainerColor = AppColors.Purple200,
-                ),
-            ) {
-                if (isVerifying) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        color = AppColors.White,
-                        strokeWidth = 2.dp,
-                    )
-                    Spacer(Modifier.width(6.dp))
-                }
-                Text("Verify")
-            }
-        },
-    )
-}
-
-// ── Reusable Form Components ─────────────────────────────────────────────────
-
-@Composable
-private fun AddressTypeRow(
-    selected: AddressType,
-    onSelect: (AddressType) -> Unit,
-) {
-    val types = listOf(
-        AddressType.HOME to "Home",
-        AddressType.WORK to "Work",
-        AddressType.OTHER to "Other",
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        types.forEach { (type, label) ->
-            val isSelected = selected == type
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) AppColors.Purple700 else AppColors.White)
-                    .clickable { onSelect(type) }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) AppColors.White else AppColors.Slate600,
-                )
-            }
         }
     }
 }
 
-@Composable
-private fun AddressFormField(
-    modifier: Modifier = Modifier,
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
-    imeAction: ImeAction = ImeAction.Next,
-    prefix: @Composable (() -> Unit)? = null,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        label = { Text(label, fontSize = 13.sp) },
-        prefix = prefix,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            capitalization = capitalization,
-            imeAction = imeAction,
-        ),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = AppColors.Purple700,
-            unfocusedBorderColor = AppColors.Slate300,
-            focusedLabelColor = AppColors.Purple700,
-        ),
-    )
-}
+

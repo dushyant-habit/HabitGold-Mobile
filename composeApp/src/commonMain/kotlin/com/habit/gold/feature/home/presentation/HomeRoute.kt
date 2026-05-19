@@ -15,9 +15,8 @@ import com.habit.gold.core.storage.AppPreferencesStorage
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.feature.alerts.presentation.AlertsRoute
 import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
-import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
 import com.habit.gold.feature.delivery.presentation.DeliveryRoute
-import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
+import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
@@ -37,8 +36,7 @@ data class HomeRouteDependencies(
     val loadHomeSummaryUseCase: LoadHomeSummaryUseCase,
     val appPreferencesStorage: AppPreferencesStorage,
     val getHomePriceHistoryUseCase: GetHomePriceHistoryUseCase,
-    val deliveryCatalogViewModelFactory: () -> DeliveryCatalogViewModel,
-    val deliveryTrackingViewModelFactory: () -> DeliveryTrackingViewModel,
+    val deliveryRouteDependencies: DeliveryRouteDependencies,
 )
 
 @Composable
@@ -201,11 +199,8 @@ fun HomeRoute(
             modifier = modifier,
         )
         is HomeDestination.Delivery -> {
-            val catalogViewModel = viewModel { dependencies.deliveryCatalogViewModelFactory() }
-            val trackingViewModel = viewModel { dependencies.deliveryTrackingViewModelFactory() }
             DeliveryRoute(
-                catalogViewModel = catalogViewModel,
-                trackingViewModel = trackingViewModel,
+                dependencies = dependencies.deliveryRouteDependencies,
                 initialDestination = activeDestination.destination,
                 onBackToHome = { destination = activeDestination.returnDestination },
                 onNavigateToBuyGold = { shortfall ->

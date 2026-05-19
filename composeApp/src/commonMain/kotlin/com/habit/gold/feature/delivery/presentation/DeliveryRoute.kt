@@ -6,6 +6,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,13 +46,47 @@ sealed interface DeliveryDestination {
  */
 @Composable
 fun DeliveryRoute(
-    catalogViewModel: DeliveryCatalogViewModel,
-    trackingViewModel: DeliveryTrackingViewModel,
+    dependencies: DeliveryRouteDependencies,
     initialDestination: DeliveryDestination = DeliveryDestination.Catalog,
     onBackToHome: () -> Unit,
     onNavigateToBuyGold: (shortfallGrams: Double) -> Unit,
 ) {
+    val catalogViewModel = viewModel {
+        DeliveryCatalogViewModel(
+            getDeliveryProductsUseCase = dependencies.getDeliveryProductsUseCase,
+            createDeliveryQuoteUseCase = dependencies.createDeliveryQuoteUseCase,
+            confirmDeliveryOrderUseCase = dependencies.confirmDeliveryOrderUseCase,
+            pendingDeliveryCheckoutStore = dependencies.pendingDeliveryCheckoutStore,
+            deliveryCheckoutTelemetry = dependencies.deliveryCheckoutTelemetry,
+            getSellAvailabilityUseCase = dependencies.getSellAvailabilityUseCase,
+            getDeliveryOrderDetailsUseCase = dependencies.getDeliveryOrderDetailsUseCase,
+            sessionStore = dependencies.sessionStore,
+        )
+    }
+    
+    val addressViewModel = viewModel {
+        DeliveryAddressViewModel(
+            listUserAddressesUseCase = dependencies.listUserAddressesUseCase,
+            createUserAddressUseCase = dependencies.createUserAddressUseCase,
+            updateUserAddressUseCase = dependencies.updateUserAddressUseCase,
+            deleteUserAddressUseCase = dependencies.deleteUserAddressUseCase,
+            sendAddressOtpUseCase = dependencies.sendAddressOtpUseCase,
+            verifyAddressOtpUseCase = dependencies.verifyAddressOtpUseCase,
+            checkAddressServiceabilityUseCase = dependencies.checkAddressServiceabilityUseCase,
+            validateDeliveryPincodeUseCase = dependencies.validateDeliveryPincodeUseCase,
+            lookupPostalPincodeUseCase = dependencies.lookupPostalPincodeUseCase,
+            sessionStore = dependencies.sessionStore,
+        )
+    }
+
+    val trackingViewModel = viewModel {
+        DeliveryTrackingViewModel(
+            listDeliveryOrdersUseCase = dependencies.listDeliveryOrdersUseCase,
+        )
+    }
+
     val catalogState by catalogViewModel.state.collectAsState()
+    val addressState by addressViewModel.state.collectAsState()
     val trackingState by trackingViewModel.state.collectAsState()
 
     val paymentLauncher = rememberPlatformDeliveryPaymentLauncher()
@@ -68,8 +103,6 @@ fun DeliveryRoute(
                 is DeliveryEffect.NavigateToCheckout -> destination = DeliveryDestination.Cart
                 is DeliveryEffect.NavigateToOrderSummary -> destination = DeliveryDestination.OrderSummary(effect.orderId)
                 is DeliveryEffect.NavigateBack -> destination = DeliveryDestination.Catalog
-                is DeliveryEffect.AddressSaved -> destination = DeliveryDestination.AddressList
-                is DeliveryEffect.AddressFullyVerified -> destination = DeliveryDestination.AddressList
                 is DeliveryEffect.NavigateToBuyGold -> onNavigateToBuyGold(effect.shortfallGrams)
                 is DeliveryEffect.LaunchPaymentSdk -> {
                     // Mirrors the Buy flow in BuyTradeRouteController: launch the
@@ -105,6 +138,17 @@ fun DeliveryRoute(
         }
     }
 
+    LaunchedEffect(addressViewModel.effects) {
+        addressViewModel.effects.collect { effect ->
+            when (effect) {
+                is DeliveryAddressEffect.AddressSaved -> destination = DeliveryDestination.AddressList
+                is DeliveryAddressEffect.AddressFullyVerified -> destination = DeliveryDestination.AddressList
+                is DeliveryAddressEffect.ShowError -> snackbarHostState.showSnackbar(effect.message)
+                is DeliveryAddressEffect.ShowToast -> snackbarHostState.showSnackbar(effect.message)
+            }
+        }
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
@@ -127,7 +171,8 @@ fun DeliveryRoute(
             )
 
             is DeliveryDestination.Cart -> DeliveryCartScreen(
-                state = catalogState,
+                catalogState = catalogState,
+                addressState = addressState,
                 onIntent = catalogViewModel::onIntent,
                 onBackClick = { destination = DeliveryDestination.Catalog },
                 onChangeAddressClick = { destination = DeliveryDestination.AddressList },
@@ -135,8 +180,10 @@ fun DeliveryRoute(
             )
 
             is DeliveryDestination.AddressList -> DeliveryAddressScreen(
-                state = catalogState,
-                onIntent = catalogViewModel::onIntent,
+                state = addressState,
+                selectedAddressId = catalogState.selectedAddressId,
+                onIntent = addressViewModel::onIntent,
+                onSelectAddress = { catalogViewModel.onIntent(DeliveryIntent.SelectAddress(it)) },
                 onBackClick = {
                     if (initialDestination is DeliveryDestination.AddressList) {
                         onBackToHome()
@@ -151,13 +198,14 @@ fun DeliveryRoute(
             )
 
             is DeliveryDestination.AddEditAddress -> AddEditAddressScreen(
-                state = catalogState,
-                onIntent = catalogViewModel::onIntent,
+                state = addressState,
+                onIntent = addressViewModel::onIntent,
                 onBackClick = { destination = DeliveryDestination.AddressList },
             )
 
             is DeliveryDestination.OrderSummary -> DeliveryOrderSummaryScreen(
-                state = catalogState,
+                catalogState = catalogState,
+                addressState = addressState,
                 orderId = dest.orderId,
                 onIntent = catalogViewModel::onIntent,
                 onBackClick = { destination = DeliveryDestination.Catalog },
