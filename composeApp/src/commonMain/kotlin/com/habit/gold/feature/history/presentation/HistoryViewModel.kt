@@ -300,13 +300,7 @@ private fun normalizeMoneyDisplay(raw: String): String {
 
 private fun normalizeGoldDisplay(raw: String): String {
     val parsed = raw.trim().removeSuffix("g").trim().toDoubleOrNull() ?: return raw.trim()
-    val rounded = ((parsed * 10_000).roundToInt() / 10_000.0)
-    val text = rounded.toString()
-    return if (!text.contains('.')) {
-        text
-    } else {
-        text.trimEnd('0').trimEnd('.')
-    }
+    return com.habit.gold.core.util.formatGramsTruncatePlain(parsed)
 }
 
 private fun formatIndianWhole(value: Long): String {
