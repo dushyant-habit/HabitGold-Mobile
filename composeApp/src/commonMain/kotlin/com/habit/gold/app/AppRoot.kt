@@ -16,6 +16,9 @@ import com.habit.gold.core.localization.AppStrings
 import com.habit.gold.core.localization.ProvideAppStrings
 import com.habit.gold.core.localization.rememberAppStrings
 import com.habit.gold.core.navigation.AppRoute
+import com.habit.gold.core.platform.analytics.setPlatformScreenName
+import com.habit.gold.core.platform.PlatformBridgeStore
+import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.auth.presentation.AuthFlowScreen
 import com.habit.gold.feature.auth.presentation.AuthFlowViewModel
@@ -41,12 +44,21 @@ fun AppRoot() {
                     AppRootViewModel(
                         sessionStore = sessionStore,
                         startupCoordinator = AppStartupCoordinator(),
+                        deviceTokenSyncManager = appKoin.get<DeviceTokenSyncManager>(),
                     )
                 }
                 LaunchedEffect(appRootViewModel) {
                     appRootViewModel.start()
                 }
                 val appState by appRootViewModel.state.collectAsStateWithLifecycle()
+                LaunchedEffect(appState.currentRoute) {
+                    val routeName = when (val route = appState.currentRoute) {
+                        AppRoute.Splash -> "Splash"
+                        AppRoute.Authentication -> "Authentication"
+                        is AppRoute.Main -> "Main_${route.tab.name}"
+                    }
+                    setPlatformScreenName(routeName)
+                }
 
                 when (val currentRoute = appState.currentRoute) {
                     AppRoute.Splash -> AppSplashScreen(modifier = Modifier.fillMaxSize())
@@ -60,6 +72,7 @@ fun AppRoot() {
                                 verifyOtpUseCase = appKoin.get<VerifyOtpUseCase>(),
                                 submitBasicDetailsUseCase = appKoin.get<SubmitBasicDetailsUseCase>(),
                                 sessionStore = sessionStore,
+                                platformBridgeStore = appKoin.get<PlatformBridgeStore>(),
                             )
                         }
                         val uiState by authViewModel.uiState.collectAsStateWithLifecycle()

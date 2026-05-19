@@ -3,6 +3,7 @@ package com.habit.gold.core.config
 enum class AppEnvironment {
     Development,
     Staging,
+    Preprod,
     Production,
     Custom,
     ;
@@ -11,7 +12,8 @@ enum class AppEnvironment {
         fun from(rawValue: String): AppEnvironment {
             return when (rawValue.trim().lowercase()) {
                 "dev", "debug", "development" -> Development
-                "stage", "staging", "qa", "preprod" -> Staging
+                "stage", "staging" -> Staging
+                "qa", "preprod" -> Preprod
                 "prod", "production", "release" -> Production
                 else -> Custom
             }

@@ -6,10 +6,15 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
 }
 
 val appName = providers.gradleProperty("APP_NAME").getOrElse("HabitGold").trim()
 val androidAppId = providers.gradleProperty("ANDROID_APP_ID").getOrElse("com.habit.gold").trim()
+val clarityProjectId = providers.gradleProperty("CLARITY_PROJECT_ID").getOrElse("").trim()
+val enableClarity = providers.gradleProperty("ENABLE_CLARITY").getOrElse("false").toBoolean()
 val juspayClientId = providers.gradleProperty("JUSPAY_CLIENT_ID").getOrElse("").trim()
 val juspayMerchantId = providers.gradleProperty("JUSPAY_MERCHANT_ID").getOrElse("").trim()
 val juspayRoutingId = providers.gradleProperty("JUSPAY_ROUTING_ID").getOrElse("").trim()
@@ -34,7 +39,7 @@ val preprodBaseUrl = requireHttpsUrl(
     "PREPROD_API_BASE_URL",
     normalizedBaseUrl(
         providers.gradleProperty("PREPROD_API_BASE_URL")
-            .getOrElse(stagingBaseUrl)
+            .getOrElse("https://preprod.habitgold.com/v1/")
     )
 )
 val prodBaseUrl = requireHttpsUrl(
@@ -54,6 +59,24 @@ val juspayEnvironmentPreprod = providers.gradleProperty("JUSPAY_ENVIRONMENT_PREP
 val juspayEnvironmentProd = providers.gradleProperty("JUSPAY_ENVIRONMENT_PROD")
     .getOrElse(juspayEnvironment.ifBlank { "production" })
     .trim()
+val stagingClarityProjectId = providers.gradleProperty("CLARITY_PROJECT_ID_STAGING")
+    .getOrElse(clarityProjectId)
+    .trim()
+val preprodClarityProjectId = providers.gradleProperty("CLARITY_PROJECT_ID_PREPROD")
+    .getOrElse(clarityProjectId)
+    .trim()
+val prodClarityProjectId = providers.gradleProperty("CLARITY_PROJECT_ID_PROD")
+    .getOrElse(clarityProjectId)
+    .trim()
+val enableClarityStaging = providers.gradleProperty("ENABLE_CLARITY_STAGING")
+    .getOrElse(enableClarity.toString())
+    .toBoolean()
+val enableClarityPreprod = providers.gradleProperty("ENABLE_CLARITY_PREPROD")
+    .getOrElse(enableClarity.toString())
+    .toBoolean()
+val enableClarityProd = providers.gradleProperty("ENABLE_CLARITY_PROD")
+    .getOrElse(enableClarity.toString())
+    .toBoolean()
 val enableJuspayPlugin = providers.gradleProperty("ENABLE_JUSPAY_PLUGIN").getOrElse("false").toBoolean()
 val isJuspayConfigured = juspayClientId.isNotBlank() && !juspayClientId.startsWith("REPLACE_WITH_")
 
@@ -85,8 +108,16 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.1.0"))
             implementation("androidx.biometric:biometric:1.1.0")
             implementation("androidx.fragment:fragment-ktx:1.6.2")
+            implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            implementation("com.android.installreferrer:installreferrer:2.2")
+            implementation("com.google.android.gms:play-services-auth-api-phone:18.3.0")
+            implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
+            implementation("com.google.firebase:firebase-crashlytics")
+            implementation("com.google.firebase:firebase-perf")
+            implementation("com.microsoft.clarity:clarity-compose:3.8.1")
             implementation("com.google.zxing:core:3.5.4")
         }
         commonMain.dependencies {
@@ -128,13 +159,15 @@ android {
         applicationId = androidAppId
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 19
+        versionName = "1.0.19"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "APP_NAME", "\"$appName\"")
         buildConfigField("String", "APP_ENV", "\"prod\"")
         buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
         buildConfigField("Boolean", "ENABLE_NETWORK_LOGS", "false")
+        buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityProd")
+        buildConfigField("String", "CLARITY_PROJECT_ID", "\"$prodClarityProjectId\"")
         buildConfigField("String", "JUSPAY_CLIENT_ID", "\"$juspayClientId\"")
         buildConfigField("String", "JUSPAY_MERCHANT_ID", "\"$juspayMerchantId\"")
         buildConfigField("String", "JUSPAY_ROUTING_ID", "\"$juspayRoutingId\"")
@@ -145,18 +178,24 @@ android {
     productFlavors {
         create("staging") {
             dimension = "environment"
+            applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             resValue("string", "app_name", "HabitGold Staging")
             buildConfigField("String", "APP_ENV", "\"staging\"")
             buildConfigField("String", "API_BASE_URL", "\"$stagingBaseUrl\"")
+            buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityStaging")
+            buildConfigField("String", "CLARITY_PROJECT_ID", "\"$stagingClarityProjectId\"")
             buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentStaging\"")
         }
         create("preprod") {
             dimension = "environment"
+            applicationIdSuffix = ".preprod"
             versionNameSuffix = "-preprod"
             resValue("string", "app_name", "HabitGold Preprod")
             buildConfigField("String", "APP_ENV", "\"preprod\"")
             buildConfigField("String", "API_BASE_URL", "\"$preprodBaseUrl\"")
+            buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityPreprod")
+            buildConfigField("String", "CLARITY_PROJECT_ID", "\"$preprodClarityProjectId\"")
             buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentPreprod\"")
         }
         create("prod") {
@@ -164,12 +203,13 @@ android {
             resValue("string", "app_name", "HabitGold")
             buildConfigField("String", "APP_ENV", "\"prod\"")
             buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
+            buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityProd")
+            buildConfigField("String", "CLARITY_PROJECT_ID", "\"$prodClarityProjectId\"")
             buildConfigField("String", "JUSPAY_ENVIRONMENT", "\"$juspayEnvironmentProd\"")
         }
     }
     buildTypes {
         getByName("debug") {
-            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
             buildConfigField("Boolean", "ENABLE_NETWORK_LOGS", "true")
         }
