@@ -403,7 +403,9 @@ Current reality after implementation:
   - alert persistence into shared alert storage keys is live
   - preprod config file and Xcode/shared-scheme wiring are live
   - environment Firebase plist selection is live
+  - Firebase bootstrap now runs earlier from SwiftUI app startup while remaining idempotent in the app delegate
   - Keychain-backed secure storage is live
   - app naming and icon branding alignment are live
   - project-level associated domains / push capability setup is live
 - Firebase pods are wired on iOS, but device/runtime verification is still pending
+- attribution-equivalent behavior is still the one product/platform decision left open in this phase

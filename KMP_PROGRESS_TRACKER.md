@@ -15,9 +15,9 @@ Use this together with:
 - Phase 9 status: `checkpointed, not fully closed`
 - Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
 - Phase 11 status: `shared Delivery / Get Coin checkpoint is live; final device QA and any remaining invoice/detail parity follow-up are still pending`
-- Phase 12 status: `latest implementation slice live, still in progress`
+- Phase 12 status: `implementation checkpoint is live; remaining work is mostly iOS runtime verification plus attribution decision`
 - Current focus: `finish the remaining iOS runtime/device verification gaps after env/storage/otp/push/referral/app-branding setup`
-- Next milestone: `complete iOS Firebase Messaging/APNs/associated-domain on-device verification`
+- Next milestone: `complete iOS Firebase / Crashlytics / Performance and APNs / associated-domain verification on a properly provisioned device build`
 
 ## Phase Status
 
@@ -216,9 +216,12 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Finish iOS keychain-backed secure storage
 - [x] Align Android and iOS environment-specific display names
 - [x] Align Android and iOS app icon assets to current HabitGold branding
+- [x] Move iOS Firebase bootstrap earlier into SwiftUI app startup so runtime init happens before downstream Firebase usage
 - [ ] Verify iOS Firebase / Crashlytics / Performance on device
 - [~] Finalize iOS push capability / associated-domain project setup and verify on device
 - personal-team local builds still require empty dev entitlements, so true APNs delivery verification remains tied to paid-team provisioning
+- [ ] Finalize iOS attribution equivalent or explicitly document the non-equivalent path
+- [~] Keep iOS Clarity wiring in place, but do not block Phase 12 closure on Clarity dashboard validation
 
 ## Completed So Far
 

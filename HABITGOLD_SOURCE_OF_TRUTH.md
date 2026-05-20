@@ -635,6 +635,7 @@ That means:
   - Android launcher icons now mirror the legacy Android project assets
   - iOS app icons now come from the IconKitchen-exported `AppIcon.appiconset`
   - iOS Firebase Messaging delegate / FCM token capture is wired
+  - iOS Firebase bootstrap now runs earlier from the SwiftUI app initializer
 - carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
   - delivery affordability uses `redeemableGoldGrams`
   - serviceability requires `PINCODE_SERVICEABLE`
@@ -642,6 +643,7 @@ That means:
   - buy-back should return to Delivery / Get Coin, not Home
 - finish the remaining iOS project-level push/deep-link runtime verification
 - finish the remaining Firebase / crash / performance parity decisions
+- finish the remaining iOS attribution decision by implementing an equivalent path or documenting the non-equivalent one
 - remember that personal-team local iOS builds use empty dev entitlements for signing, so true APNs / associated-domain verification still requires paid-team provisioning
 - keep notification, deep-link, install-referrer, and OTP behavior platform-owned but contract-driven
 - document explicit iOS non-equivalent paths instead of faking Android parity where none exists

@@ -15,40 +15,10 @@ private let currentDeviceTokenKey = "platform.current_device_token"
 private let alertsStorageKey = "alerts.items"
 private let appPreferencesKey = "app.preferences"
 
-private struct StoredAlertPayload: Codable {
-    let id: String
-    let title: String
-    let description: String
-    let createdAt: String
-    let isRead: Bool
-}
-
-private struct AppPreferencesPayload: Codable {
-    let hasUnreadAlerts: Bool
-    let isBalanceVisible: Bool
-}
-
-final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-    ) -> Bool {
-        configureFirebaseIfAvailable()
-        Messaging.messaging().delegate = self
-        configureClarityIfAvailable()
-        UNUserNotificationCenter.current().delegate = self
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-            guard granted else { return }
-            DispatchQueue.main.async {
-                application.registerForRemoteNotifications()
-            }
-        }
-        return true
-    }
-
-    private func configureFirebaseIfAvailable() {
+private enum AppBootstrap {
+    static func configureFirebaseIfAvailable() {
         guard FirebaseApp.app() == nil else { return }
-        let appEnv = (Bundle.main.object(forInfoDictionaryKey: "APP_ENV") as? String ?? "prod").lowercased()
+        let appEnv = currentAppEnv()
         if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
             FirebaseApp.configure()
             Performance.sharedInstance().isDataCollectionEnabled = true
@@ -77,6 +47,53 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
         NSLog("Firebase configured successfully for APP_ENV=\(appEnv).")
     }
 
+    static func currentAppEnv() -> String {
+        (Bundle.main.object(forInfoDictionaryKey: "APP_ENV") as? String ?? "prod").lowercased()
+    }
+
+    static func firebasePlistResourceName(for appEnv: String) -> String {
+        switch appEnv {
+        case "prod", "production", "release":
+            return "GoogleService-Info-Prod"
+        case "preprod", "stage", "staging", "debug":
+            return "GoogleService-Info-Staging"
+        default:
+            return "GoogleService-Info-Staging"
+        }
+    }
+}
+
+private struct StoredAlertPayload: Codable {
+    let id: String
+    let title: String
+    let description: String
+    let createdAt: String
+    let isRead: Bool
+}
+
+private struct AppPreferencesPayload: Codable {
+    let hasUnreadAlerts: Bool
+    let isBalanceVisible: Bool
+}
+
+final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        AppBootstrap.configureFirebaseIfAvailable()
+        Messaging.messaging().delegate = self
+        configureClarityIfAvailable()
+        UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+            guard granted else { return }
+            DispatchQueue.main.async {
+                application.registerForRemoteNotifications()
+            }
+        }
+        return true
+    }
+
     private func configureClarityIfAvailable() {
         let clarityEnabled = (Bundle.main.object(forInfoDictionaryKey: "ENABLE_CLARITY") as? String ?? "NO")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -93,7 +110,7 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
             return
         }
 
-        let appEnv = (Bundle.main.object(forInfoDictionaryKey: "APP_ENV") as? String ?? "prod").lowercased()
+        let appEnv = AppBootstrap.currentAppEnv()
         let logLevel: ClarityLogLevel = appEnv == "prod" ? .none : .verbose
         let clarityConfig = ClarityConfig(
             projectId: projectId,
@@ -108,17 +125,6 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
         } else {
             Crashlytics.crashlytics().log("Clarity initialization returned false for APP_ENV=\(appEnv)")
             NSLog("Clarity initialization returned false for APP_ENV=\(appEnv).")
-        }
-    }
-
-    private func firebasePlistResourceName(for appEnv: String) -> String {
-        switch appEnv {
-        case "prod", "production", "release":
-            return "GoogleService-Info-Prod"
-        case "preprod", "stage", "staging", "debug":
-            return "GoogleService-Info-Staging"
-        default:
-            return "GoogleService-Info-Staging"
         }
     }
 
@@ -275,6 +281,10 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
 @main
 struct iOSApp: App {
     @UIApplicationDelegateAdaptor(JuspayAppDelegate.self) private var appDelegate
+
+    init() {
+        AppBootstrap.configureFirebaseIfAvailable()
+    }
 
     var body: some Scene {
         WindowGroup {
