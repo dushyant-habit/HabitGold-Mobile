@@ -1002,5 +1002,12 @@ This usually takes a few seconds.</string>
     <string name="order_summary_total">Total paid</string>
     <string name="order_summary_success_title">Order Placed Successfully!</string>
     <string name="order_summary_success_message">Your gold coin will be dispatched within the estimated time.</string>
+
+    <!-- Additional Delivery Cart Strings -->
+    <string name="delivery_cart_free_delivery_applied">Free Delivery Applied</string>
+    <string name="delivery_cart_coupon_applied">Coupon Applied</string>
+    <string name="delivery_cart_offers_and_coupons">Offers &amp; Coupons</string>
+    <string name="delivery_cart_offers_available">Offers Available</string>
+    <string name="delivery_cart_offers_available_count">%1$d Offers Available</string>
 </resources>
 

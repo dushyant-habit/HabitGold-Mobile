@@ -43,6 +43,9 @@ import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryIntent
 import com.habit.gold.feature.delivery.presentation.components.*
+import com.habit.gold.core.presentation.CommonCouponCard
+import com.habit.gold.core.presentation.clearFocusOnTapOutside
+import androidx.compose.ui.platform.LocalFocusManager
 import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
@@ -61,6 +64,7 @@ fun DeliveryCartScreen(
     onChangeAddressClick: () -> Unit,
     onBackToDashboard: () -> Unit = {}
 ) {
+    val focusManager = LocalFocusManager.current
     val selectedCoinId = catalogState.cartItems.keys.firstOrNull()
     val productId = catalogState.cartItems.keys.minOrNull()
     val selectedCoin = catalogState.coins.find { it.id == selectedCoinId }
@@ -166,6 +170,7 @@ fun DeliveryCartScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .clearFocusOnTapOutside { focusManager.clearFocus(force = true) }
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -177,18 +182,25 @@ fun DeliveryCartScreen(
             )
             
             // Coupon Code UI
-            CouponCodeCard(
-                couponCode = localCouponCode,
-                appliedCoupon = catalogState.couponCode,
-                couponType = catalogState.couponType,
-                availableCouponsCount = catalogState.availableCoupons.size,
-                onShowOffers = { showCouponSheet = true },
-                onCodeChange = { localCouponCode = it },
-                onApply = { onIntent(DeliveryIntent.ApplyCoupon(localCouponCode)) },
-                onRemove = {
+            CommonCouponCard(
+                couponDraft = localCouponCode,
+                appliedCouponCode = catalogState.couponCode,
+                appliedBenefitText = catalogState.couponType?.let {
+                    when (it) {
+                        TradeCouponType.FREE_DELIVERY -> stringResource(Res.string.delivery_cart_free_delivery_applied)
+                        else -> stringResource(Res.string.delivery_cart_coupon_applied)
+                    }
+                },
+                onCouponDraftChange = { localCouponCode = it },
+                onApplyCoupon = { onIntent(DeliveryIntent.ApplyCoupon(localCouponCode)) },
+                onRemoveAppliedCoupon = {
                     localCouponCode = ""
                     onIntent(DeliveryIntent.RemoveCoupon)
-                }
+                },
+                onShowOffers = { showCouponSheet = true },
+                isApplyingEnabled = localCouponCode.isNotBlank(),
+                availableCoupons = catalogState.availableCoupons.size,
+                onDone = { focusManager.clearFocus() }
             )
 
             PaymentDetailsCard(
@@ -245,76 +257,7 @@ fun DeliveryCartScreen(
     }
 }
 
-@Composable
-private fun CouponCodeCard(
-    couponCode: String,
-    appliedCoupon: String?,
-    onCodeChange: (String) -> Unit,
-    onApply: () -> Unit,
-    onRemove: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = AppColors.White,
-        border = BorderStroke(1.dp, AppColors.Slate125)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(Res.string.delivery_cart_coupon_code),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.Slate950
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            if (appliedCoupon != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().background(AppColors.Green50, RoundedCornerShape(12.dp)).border(1.dp, AppColors.Green200, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AppColors.Green600, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = appliedCoupon, fontWeight = FontWeight.Bold, color = AppColors.Green800)
-                    }
-                    TextButton(onClick = onRemove, contentPadding = PaddingValues(0.dp)) {
-                        Text(stringResource(Res.string.delivery_cart_remove), color = AppColors.Red600, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = couponCode,
-                        onValueChange = { onCodeChange(it.uppercase()) },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Enter coupon code") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AppColors.Primary,
-                            unfocusedBorderColor = AppColors.Slate200
-                        )
-                    )
-                    Button(
-                        onClick = onApply,
-                        enabled = couponCode.isNotBlank(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)
-                    ) {
-                        Text(stringResource(Res.string.delivery_cart_apply), fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-    }
-}
+
 
 @Composable
 private fun CoinHeadlineCard(
