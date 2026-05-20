@@ -424,29 +424,32 @@ These notes came from a deeper pass through the Android app and are here to prev
 - [x] Add Android environment split strategy: `staging`, `preprod`, `prod`
 - [x] Decide iOS environment strategy: schemes/configurations or build settings equivalent
 - [x] Align environment-specific app IDs / bundle IDs and display names for prod/preprod switching
+- [x] Align Android and iOS app-name branding for `Staging HabitGold`, `Preprod HabitGold`, and `HabitGold`
+- [x] Align Android and iOS launcher/app-icon assets to current HabitGold branding
 - [x] Align KMP Android app versionCode / versionName and any app-version headers with the intended production Android parity strategy
 - [x] Android secure storage implementation
 - [x] Android Firebase / Crashlytics / Performance plugin parity and env config assets
 - [x] iOS Firebase pod/runtime wiring and env plist selection
-- [ ] iOS secure storage implementation
+- [x] iOS secure storage implementation
 - [x] Android SMS Retriever / OTP auto-read binding behind the shared auth contract
-- [ ] Decide and document iOS OTP auto-fill expectations separately from Android SMS auto-read
+- [x] Decide and document iOS OTP auto-fill expectations separately from Android SMS auto-read
 - [~] Android push notifications integration
 - [~] iOS push notifications integration
 - [x] Wire Android FCM token callbacks into the shared notification registration contract
 - [x] Wire iOS push/APNs token callbacks into the shared notification registration contract
+- [x] Wire iOS Firebase Messaging registration-token callbacks into the shared notification registration contract
 - [x] Android deep-link and referral capture integration
-- [~] iOS deep-link and referral capture integration
+- [x] iOS deep-link and referral capture integration
 - [x] Android Install Referrer integration feeding the shared referral-attribution contract
 - [ ] iOS attribution equivalent or documented non-equivalent path for referral capture
 - [x] Android Juspay SDK integration finalization for shared Trade payment flows
 - [x] iOS payment SDK integration finalization for shared Trade payment flows
 - [x] Android Microsoft Clarity integration and build-config/project-id wiring
-- [ ] Decide iOS Clarity equivalent or document that the analytics experience is Android-only
-- [~] Android Firebase Messaging SDK/plugin wiring
-- [ ] Android Firebase Crashlytics SDK/plugin wiring
-- [ ] Android Firebase Performance SDK/plugin wiring
-- [ ] Decide iOS crash/performance/notification SDK parity strategy for the shared app
+- [x] Add iOS Microsoft Clarity integration and build-config/project-id wiring
+- [x] Android Firebase Messaging SDK/plugin wiring
+- [x] Android Firebase Crashlytics SDK/plugin wiring
+- [x] Android Firebase Performance SDK/plugin wiring
+- [~] Decide any remaining iOS analytics/session-replay parity strategy for the shared app without blocking Firebase/push completion
 
 ### Phase 13: Hardening And QA
 

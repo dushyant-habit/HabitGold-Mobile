@@ -2,7 +2,7 @@
 
 ## Status
 
-- Current status: `first implementation slice live, phase still in progress`
+- Current status: `latest implementation slice live, phase still in progress`
 - Branch: `codex/feature/phase12-platform-integrations`
 
 ## Scope
@@ -13,6 +13,7 @@ Primary scope:
 
 - Android / iOS environment configuration parity
 - app id / bundle id / display name alignment
+- app icon / launcher-branding alignment
 - versioning and app-version header parity
 - secure storage hardening
 - Android OTP auto-read and iOS OTP autofill expectations
@@ -54,12 +55,11 @@ Already present:
 
 Missing or incomplete:
 
-- iOS secure storage is still not keychain-backed yet
 - iOS OTP autofill remains expectation/documentation-driven, not special SMS interception
 - iOS Firebase runtime still needs final environment-level verification on device
-- iOS push capability / entitlements parity still needs final project-level verification
-- iOS universal-link associated-domain parity still needs project-level setup
+- iOS APNs / associated-domain behavior still needs final on-device verification
 - iOS Crashlytics / Performance verification is still pending after pod/runtime wiring
+- iOS local personal-team builds still cannot verify real APNs / associated-domain delivery because they must use empty dev entitlements for signing
 
 ## Implemented In This Slice
 
@@ -67,8 +67,18 @@ Missing or incomplete:
 - iOS base version parity updated to `1.0.19 (19)`
 - Android `staging` / `preprod` builds now use flavor-specific application IDs for side-by-side install
 - iOS `Preprod` configuration is now wired into Xcode with shared `iOSAppStaging` / `iOSAppPreprod` / `iOSAppProd` schemes
+- Android and iOS display names are now aligned for local switching:
+  - `Staging HabitGold`
+  - `Preprod HabitGold`
+  - `HabitGold`
+- Android launcher icons now match the legacy Android project assets
+- iOS app icon catalog now uses the current IconKitchen-exported HabitGold icon set
 - Android secure storage moved to encrypted shared preferences
+- iOS secure storage moved to Keychain-backed storage
 - shared OTP screen now supports Android SMS Retriever autofill
+- OTP platform rule is now explicit:
+  - Android uses automatic SMS retrieval where supported
+  - iOS relies on the system OTP keyboard suggestion / autofill flow
 - Android Firebase plugin/runtime parity is now wired:
   - Google Services
   - Crashlytics
@@ -90,14 +100,19 @@ Missing or incomplete:
   - FCM messaging service
   - Clarity init and shared route screen naming
 - iOS app delegate now includes:
+  - Clarity init gated by `ENABLE_CLARITY` + `CLARITY_PROJECT_ID`
   - APNs permission request and registration
   - APNs token capture
+  - Firebase Messaging delegate + FCM registration-token capture
   - custom-scheme referral capture
   - universal-link referral capture
   - alert persistence into the shared Alerts storage keys
   - Firebase plist selection by `APP_ENV`
     - `prod` -> `GoogleService-Info-Prod.plist`
     - `preprod` / `staging` -> `GoogleService-Info-Staging.plist`
+  - Crashlytics env/device-token logging hooks
+  - Firebase Performance enablement hooks
+  - push + associated-domain entitlements via `iosApp.entitlements`
 
 ## Android Source Of Truth
 
@@ -133,13 +148,14 @@ Current finding:
 - iOS bootstrap now handles:
   - Juspay redirect URLs
   - APNs permission + token registration
+  - Firebase Messaging token capture and shared token persistence
   - notification delegate persistence into shared alerts
   - custom-scheme referral capture
   - universal-link referral capture
 - remaining iOS gaps are now:
-  - Keychain-backed secure storage
-  - project-level push / associated-domain capability verification
   - on-device Firebase / Crashlytics / Performance verification
+  - on-device APNs / associated-domain verification
+  - paid-team entitlement/provisioning verification for real push delivery
 
 ## Implementation Order
 

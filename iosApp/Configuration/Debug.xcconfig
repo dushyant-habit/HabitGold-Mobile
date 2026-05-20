@@ -1,9 +1,12 @@
 #include "Base.xcconfig"
 
-PRODUCT_NAME=HabitGoldMobile Staging
+PRODUCT_NAME=HabitGold Staging
 PRODUCT_BUNDLE_IDENTIFIER=com.habit.gold.staging
-APP_NAME=HabitGold Staging
+APP_NAME=Staging HabitGold
 APP_ENV=staging
 API_BASE_URL=https:$(SLASH)/staging.habitgold.com/v1/
 ENABLE_NETWORK_LOGS=YES
 JUSPAY_ENVIRONMENT=sandbox
+APS_ENVIRONMENT=development
+ENABLE_CLARITY=YES
+FIREBASE_PLIST_SOURCE=GoogleService-Info-Staging.plist

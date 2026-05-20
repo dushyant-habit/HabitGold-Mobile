@@ -14,7 +14,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0711D16AFB5CBCE0119AC89E"
-               BuildableName = "HabitGoldMobile Preprod.app"
+               BuildableName = "HabitGold Preprod.app"
                BlueprintName = "iosApp"
                ReferencedContainer = "container:iosApp.xcodeproj">
             </BuildableReference>
@@ -43,7 +43,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "0711D16AFB5CBCE0119AC89E"
-            BuildableName = "HabitGoldMobile Preprod.app"
+            BuildableName = "HabitGold Preprod.app"
             BlueprintName = "iosApp"
             ReferencedContainer = "container:iosApp.xcodeproj">
          </BuildableReference>

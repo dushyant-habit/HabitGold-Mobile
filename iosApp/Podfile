@@ -11,7 +11,9 @@ target 'iosApp' do
 
   pod 'FirebaseCore'
   pod 'FirebaseCrashlytics'
+  pod 'FirebaseMessaging'
   pod 'FirebasePerformance'
+  pod 'Clarity', '3.5.2'
   pod 'HyperSDK', '2.2.5'
 end
 

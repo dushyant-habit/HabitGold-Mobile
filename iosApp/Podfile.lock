@@ -1,5 +1,6 @@
 PODS:
   - Airborne (0.14.0)
+  - Clarity (3.5.2)
   - FirebaseABTesting (12.13.0):
     - FirebaseCore (~> 12.13.0)
   - FirebaseCore (12.13.0):
@@ -24,6 +25,15 @@ PODS:
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/UserDefaults (~> 8.1)
     - PromisesObjC (~> 2.4)
+  - FirebaseMessaging (12.13.0):
+    - FirebaseCore (~> 12.13.0)
+    - FirebaseInstallations (~> 12.13.0)
+    - GoogleDataTransport (~> 10.1)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Reachability (~> 8.1)
+    - GoogleUtilities/UserDefaults (~> 8.1)
+    - nanopb (~> 3.30910.0)
   - FirebasePerformance (12.13.0):
     - FirebaseCore (~> 12.13.0)
     - FirebaseInstallations (~> 12.13.0)
@@ -56,6 +66,11 @@ PODS:
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
+  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+    - GoogleUtilities/Privacy
   - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
   - GoogleUtilities/Logger (8.1.0):
@@ -64,9 +79,17 @@ PODS:
   - GoogleUtilities/MethodSwizzler (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
+  - GoogleUtilities/Network (8.1.0):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Privacy
+    - GoogleUtilities/Reachability
   - "GoogleUtilities/NSData+zlib (8.1.0)":
     - GoogleUtilities/Privacy
   - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/Reachability (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
   - GoogleUtilities/UserDefaults (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
@@ -86,20 +109,24 @@ PODS:
     - PromisesObjC (= 2.4.0)
 
 DEPENDENCIES:
+  - Clarity (= 3.5.2)
   - FirebaseCore
   - FirebaseCrashlytics
+  - FirebaseMessaging
   - FirebasePerformance
   - HyperSDK (= 2.2.5)
 
 SPEC REPOS:
   trunk:
     - Airborne
+    - Clarity
     - FirebaseABTesting
     - FirebaseCore
     - FirebaseCoreExtension
     - FirebaseCoreInternal
     - FirebaseCrashlytics
     - FirebaseInstallations
+    - FirebaseMessaging
     - FirebasePerformance
     - FirebaseRemoteConfig
     - FirebaseRemoteConfigInterop
@@ -116,12 +143,14 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   Airborne: 0abab8e0cac5b281c632866742e34c2777136a0d
+  Clarity: 26b69506b51fdc75d03c56f3b928292b5ac7ba73
   FirebaseABTesting: a308446df8bd5fd29d2535ddfb124a7011dadbc2
   FirebaseCore: 58905958aa00a061397a0fd759ae4b55bddb3576
   FirebaseCoreExtension: 5b94169f1ee96ecc2dbde40bc53690e4d65eb652
   FirebaseCoreInternal: 37bee58388fc6d183f0ab1b32d69ae44f2cf8aad
   FirebaseCrashlytics: 8bb2d41cb47e8f3ea34200d99361499a59995e0d
   FirebaseInstallations: 134bde50e477628ded76070efdb12d515d53f948
+  FirebaseMessaging: 30564b85d2f81a96f9d312bd23acf8186ff092ae
   FirebasePerformance: 0d1e1fc53c4f6fc62bf8ef42d1a5670f87c51c77
   FirebaseRemoteConfig: 672634c19a4a5bc329fd85e84cfea51fce514c4b
   FirebaseRemoteConfigInterop: 4801ab93a543ef8fedfb40ae2f66d03e3fdcb864
@@ -136,6 +165,6 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
 
-PODFILE CHECKSUM: 076de52137a19b745ed51e491dd1b57f120d7531
+PODFILE CHECKSUM: cb067a764b562f60d5c50f48e9e76d0dfb2c03b1
 
 COCOAPODS: 1.16.2

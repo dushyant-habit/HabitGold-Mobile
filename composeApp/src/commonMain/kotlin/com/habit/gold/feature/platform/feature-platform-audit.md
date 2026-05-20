@@ -2,9 +2,9 @@
 
 ## Audit Status
 
-- Status: `strict audit complete`
+- Status: `strict audit complete, later implementation slices documented`
 - Branch: `codex/feature/phase12-platform-integrations`
-- Implementation state: `first verified slice implemented`
+- Implementation state: `latest verified slice implemented`
 
 ## Audit Goal
 
@@ -78,11 +78,32 @@ Current KMP state:
   - prod bundle id: `com.habit.gold`
   - preprod bundle id: `com.habit.gold.preprod`
   - explicit preprod product/app naming in `Preprod.xcconfig`
+  - current display names:
+    - staging: `Staging HabitGold`
+    - preprod: `Preprod HabitGold`
+    - prod: `HabitGold`
 
 Current gap:
 
 - staging iOS still shares the base bundle id today
 - final product call is still needed on whether staging should remain developer-only or get its own installable bundle id
+
+### 2A. App Icon / Launcher Branding
+
+Decision:
+
+- app icons stay platform-specific resources but should align visually across Android and iOS
+- Android should reuse the verified launcher assets from the legacy Android project
+- iOS should use a complete Apple-style asset catalog export instead of a hand-assembled partial icon set
+
+Current KMP state:
+
+- Android launcher assets now mirror the legacy Android launcher icon set, including adaptive foreground/background/monochrome layers
+- iOS `AppIcon.appiconset` now uses the IconKitchen-exported HabitGold icon pack
+
+Remaining caution:
+
+- if iOS system surfaces still show stale icons after reinstall, inspect the compiled asset catalog in the built `.app` bundle rather than only source assets
 
 ### 3. Version Strategy
 
@@ -150,7 +171,7 @@ Current KMP state:
 
 - shared `AuthOtpScreen.kt` only supports manual entry
 - no Android actual bridge exists
-- no iOS OTP autofill documentation exists yet
+- iOS OTP autofill behavior was undocumented before this Phase 12 pass
 
 Required implementation:
 
@@ -158,6 +179,9 @@ Required implementation:
   - add `OtpAutoFillController` / similar platform bridge
   - deliver six-digit code to shared auth flow
 - iOS:
+  - document native OTP autofill expectations explicitly:
+    - Android uses automatic SMS retrieval where supported
+    - iOS relies on the system OTP keyboard suggestion / autofill behavior
   - document `UITextContentType.oneTimeCode` / native autofill expectations
   - decide whether Compose Multiplatform text fields can surface the needed platform hint cleanly or need a platform wrapper
 
@@ -186,12 +210,15 @@ Current KMP state:
 - Android FCM service, token sync, and alert persistence are now wired
 - shared device-token registration contract is now wired
 - iOS APNs hooks are now wired
+- iOS Firebase Messaging delegate + FCM token capture are now wired
 
 Remaining implementation:
 
 - iOS:
   - final push capability / entitlement verification
   - on-device APNs token + alert persistence verification
+  - confirm FCM registration token reaches backend successfully after login
+  - note that personal-team signed local builds cannot verify real APNs delivery while using empty dev entitlements
 
 ### 7. Deep Links And Referral Capture
 
@@ -255,7 +282,8 @@ Required implementation:
 Decision:
 
 - Android should retain Firebase + Clarity parity because the legacy app already relies on them.
-- iOS parity must be decided explicitly, not assumed.
+- iOS should also retain Firebase parity, with device/runtime verification kept as the remaining step.
+- iOS Clarity wiring can remain in place, but it should not block Phase 12 closure while product/SDK fit is revisited.
 
 Android source findings:
 
@@ -283,11 +311,15 @@ Required implementation:
   - Clarity init + screen-name updates
 - iOS:
   - explicit parity decision for crash/performance/notification SDKs
-  - explicit Clarity-equivalent or Android-only decision
+  - Clarity integration and project-id wiring
 
 ## Must-Match Android Behavior
 
 - Android flavor env names: `staging`, `preprod`, `prod`
+- Android and iOS product naming now uses:
+  - `Staging HabitGold`
+  - `Preprod HabitGold`
+  - `HabitGold`
 - manifest deep-link hosts/schemes for referral entry
 - Android OTP auto-read behavior
 - FCM token registration lifecycle:
@@ -348,6 +380,7 @@ Required implementation:
 - this audit doc
 - updated roadmap/progress docs
 - explicit iOS parity decisions where Android-only integrations remain non-equivalent
+  - install-referrer style attribution remains the one open non-equivalent decision
 
 ## Current Implementation Checkpoint
 
@@ -365,10 +398,12 @@ Current reality after implementation:
   - SMS Retriever bridge is live
   - referral deep links, install referrer, FCM token capture, alert persistence, Clarity hooks, and Firebase plugin/runtime parity are live
 - iOS:
-  - APNs registration/token capture and referral URL capture hooks are live
+  - Clarity hooks are wired, though practical SDK fit is still deferred from phase closure
+  - APNs registration/token capture, Firebase Messaging FCM token capture, and referral URL capture hooks are live
   - alert persistence into shared alert storage keys is live
   - preprod config file and Xcode/shared-scheme wiring are live
   - environment Firebase plist selection is live
-  - secure storage is still not keychain-backed
-  - project-level associated domains / push capability verification still remains
+  - Keychain-backed secure storage is live
+  - app naming and icon branding alignment are live
+  - project-level associated domains / push capability setup is live
 - Firebase pods are wired on iOS, but device/runtime verification is still pending
