@@ -2,8 +2,8 @@
 
 ## Status
 
-- Current status: `latest implementation slice live, phase still in progress`
-- Branch: `codex/feature/phase12-platform-integrations`
+- Current status: `latest implementation and code-quality slice live, phase still in progress`
+- Branch: `codex/feature/phase12-platform-integrations-pr-clean`
 
 ## Scope
 
@@ -104,17 +104,22 @@ Missing or incomplete:
   - earlier Firebase bootstrap from the SwiftUI app initializer plus idempotent app-delegate startup wiring
   - Clarity init gated by `ENABLE_CLARITY` + `CLARITY_PROJECT_ID`
   - APNs permission request and registration
-  - APNs token capture
+  - APNs token capture without storing the raw APNs token as the backend registration candidate
   - Firebase Messaging delegate + FCM registration-token capture
-  - custom-scheme referral capture
-  - universal-link referral capture
-  - alert persistence into the shared Alerts storage keys
+  - custom-scheme referral capture through the shared referral parser
+  - universal-link referral capture through the shared referral parser
+  - alert persistence routed into the shared alerts recorder bridge
   - Firebase plist selection by `APP_ENV`
     - `prod` -> `GoogleService-Info-Prod.plist`
     - `preprod` / `staging` -> `GoogleService-Info-Staging.plist`
   - Crashlytics env/device-token logging hooks
   - Firebase Performance enablement hooks
   - push + associated-domain entitlements via `iosApp.entitlements`
+- Phase 12 cleanup pass is now also live:
+  - shared referral parsing extracted so Android and iOS no longer drift
+  - iOS runtime bridge extracted so Swift no longer hardcodes shared storage keys
+  - device-token sync now only marks registration/unregistration complete on real `2xx` responses
+  - targeted regression tests added for referral parsing and device-token sync behavior
 
 ## Android Source Of Truth
 
