@@ -8,6 +8,7 @@ import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.core.session.AppStartupState
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.core.session.SessionStore
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
@@ -27,7 +28,10 @@ class AppRootViewModel(
         hasStarted = true
 
         viewModelScope.launch {
-            syncFromSession(sessionStore.restore())
+            val session = sessionStore.restore()
+            // Provide a 1.8-second delay so that the beautiful custom branded splash screen displays nicely
+            delay(1800)
+            syncFromSession(session)
             sessionStore.state
                 .drop(1)
                 .collect(::syncFromSession)

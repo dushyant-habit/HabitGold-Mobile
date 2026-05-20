@@ -145,7 +145,6 @@ import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalFocusManager
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SavingsCouponRow(
     availableCoupons: Int,
@@ -159,136 +158,18 @@ internal fun SavingsCouponRow(
     isApplyingEnabled: Boolean,
     onDone: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White)
-            .border(1.dp, ChildCardBorder, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        if (appliedCouponCode != null) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = Color(0xFF10B981),
-                modifier = Modifier.size(16.dp),
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-                Text(
-                    text = appliedCouponCode,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ChildPrimaryText,
-                )
-                appliedBenefitText?.let {
-                    Text(
-                        text = it,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = ChildMutedText,
-                    )
-                }
-            }
-            Text(
-                text = stringResource(Res.string.trade_buy_change),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = HabitGoldPalette.plum,
-                modifier = Modifier.clickable(onClick = onShowOffers),
-            )
-            Text(
-                text = stringResource(Res.string.trade_buy_remove),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFB91C1C),
-                modifier = Modifier.clickable(onClick = onRemoveAppliedCoupon),
-            )
-        } else {
-            BasicTextField(
-                value = couponDraft,
-                onValueChange = onCouponDraftChange,
-                singleLine = true,
-                cursorBrush = SolidColor(HabitGoldPalette.plum),
-                textStyle = TextStyle(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = ChildPrimaryText,
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .height(38.dp)
-                    .background(Color.White, RoundedCornerShape(10.dp))
-                    .border(1.dp, ChildCardBorder, RoundedCornerShape(10.dp))
-                    .padding(horizontal = 10.dp),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(onDone = { onDone() }),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        if (couponDraft.isEmpty()) {
-                            Text(
-                                text = stringResource(Res.string.trade_buy_enter_coupon_code),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFFC7CAD1),
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
-            )
-            Button(
-                onClick = onApplyCoupon,
-                enabled = isApplyingEnabled,
-                modifier = Modifier.height(36.dp),
-                shape = RoundedCornerShape(999.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = HabitGoldPalette.plum,
-                    contentColor = Color.White,
-                    disabledContainerColor = ChildCardBorder,
-                    disabledContentColor = ChildMutedText,
-                ),
-            ) {
-                Text(
-                    text = stringResource(Res.string.trade_buy_apply),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Row(
-                modifier = Modifier.clickable(onClick = onShowOffers),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(Res.string.trade_buy_offers),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = HabitGoldPalette.plum,
-                )
-                if (availableCoupons > 0) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                }
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = HabitGoldPalette.plum,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
-    }
+    com.habit.gold.core.presentation.CommonCouponCard(
+        couponDraft = couponDraft,
+        appliedCouponCode = appliedCouponCode,
+        appliedBenefitText = appliedBenefitText,
+        onCouponDraftChange = onCouponDraftChange,
+        onApplyCoupon = onApplyCoupon,
+        onRemoveAppliedCoupon = onRemoveAppliedCoupon,
+        onShowOffers = onShowOffers,
+        isApplyingEnabled = isApplyingEnabled,
+        availableCoupons = availableCoupons,
+        onDone = onDone
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

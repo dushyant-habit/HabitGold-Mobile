@@ -1002,4 +1002,17 @@ This usually takes a few seconds.</string>
     <string name="order_summary_total">Total paid</string>
     <string name="order_summary_success_title">Order Placed Successfully!</string>
     <string name="order_summary_success_message">Your gold coin will be dispatched within the estimated time.</string>
+
+    <!-- Additional Delivery Cart Strings -->
+    <string name="delivery_cart_free_delivery_applied">Free Delivery Applied</string>
+    <string name="delivery_cart_coupon_applied">Coupon Applied</string>
+    <string name="delivery_cart_offers_and_coupons">Offers &amp; Coupons</string>
+    <string name="delivery_cart_offers_available">Offers Available</string>
+    <string name="delivery_cart_offers_available_count">%1$d Offers Available</string>
+    <string name="delivery_coupon_sheet_title">Available Coupons</string>
+    <string name="delivery_coupon_sheet_subtitle">Choose a coupon to apply to your delivery order</string>
+    <string name="delivery_coupon_sheet_no_coupons">No available coupons found for delivery</string>
+    <string name="delivery_coupon_sheet_apply">Apply</string>
+    <string name="delivery_coupon_sheet_save_description">Save ₹%1$s on delivery charges</string>
 </resources>
+

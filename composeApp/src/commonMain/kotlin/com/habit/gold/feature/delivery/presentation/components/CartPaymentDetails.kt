@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.theme.*
+import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -25,7 +26,8 @@ fun PaymentDetailsCard(
     goldDebitGrams: Double,
     mintingChargeInr: Double,
     couponDiscountInr: Double,
-    netAmountPayable: Double
+    netAmountPayable: Double,
+    couponType: TradeCouponType? = null
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -54,13 +56,16 @@ fun PaymentDetailsCard(
                 value = "${formatGrams(goldDebitGrams)}g",
                 valueColor = AppColors.Neutral400
             )
+            
+            val isFreeDelivery = couponType == TradeCouponType.FREE_DELIVERY
             PaymentLine(
                 label = stringResource(Res.string.delivery_cart_delivery_charges),
-                value = "₹${formatAmount(mintingChargeInr)}"
+                value = if (isFreeDelivery) "FREE" else "₹${formatAmount(mintingChargeInr)}",
+                valueColor = if (isFreeDelivery) AppColors.Green600 else null
             )
             if (couponDiscountInr > 0.0) {
                 PaymentLine(
-                    label = stringResource(Res.string.delivery_cart_discount),
+                    label = if (isFreeDelivery) "Free Delivery Coupon" else stringResource(Res.string.delivery_cart_discount),
                     value = "-₹${formatAmount(couponDiscountInr)}",
                     valueColor = AppColors.Green600
                 )

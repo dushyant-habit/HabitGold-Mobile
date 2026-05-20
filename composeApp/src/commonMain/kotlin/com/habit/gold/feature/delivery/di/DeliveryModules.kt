@@ -29,6 +29,8 @@ import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
 import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
+import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import org.koin.dsl.module
 
 val deliveryModule = module {
@@ -69,6 +71,8 @@ val deliveryModule = module {
             deliveryCheckoutTelemetry = get(),
             getSellAvailabilityUseCase = get(),
             getDeliveryOrderDetailsUseCase = get(),
+            getTradeAvailableCouponsUseCase = get(),
+            validateTradeCouponUseCase = get(),
             sessionStore = get(),
         )
     }
@@ -82,6 +86,8 @@ val deliveryModule = module {
             pendingDeliveryCheckoutStore = get(),
             deliveryCheckoutTelemetry = get(),
             getSellAvailabilityUseCase = get(),
+            getTradeAvailableCouponsUseCase = get(),
+            validateTradeCouponUseCase = get(),
             sessionStore = get(),
             listUserAddressesUseCase = get(),
             createUserAddressUseCase = get(),
@@ -90,9 +96,9 @@ val deliveryModule = module {
             sendAddressOtpUseCase = get(),
             verifyAddressOtpUseCase = get(),
             checkAddressServiceabilityUseCase = get(),
+            listDeliveryOrdersUseCase = get(),
             validateDeliveryPincodeUseCase = get(),
             lookupPostalPincodeUseCase = get(),
-            listDeliveryOrdersUseCase = get(),
         )
     }
 

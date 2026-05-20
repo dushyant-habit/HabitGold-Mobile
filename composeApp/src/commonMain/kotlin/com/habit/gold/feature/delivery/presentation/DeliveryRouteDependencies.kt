@@ -17,6 +17,8 @@ import com.habit.gold.feature.delivery.domain.usecase.ListDeliveryOrdersUseCase
 import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStore
 import com.habit.gold.feature.delivery.data.DeliveryCheckoutTelemetry
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
+import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import com.habit.gold.core.session.SessionStore
 
 data class DeliveryRouteDependencies(
@@ -27,6 +29,8 @@ data class DeliveryRouteDependencies(
     val pendingDeliveryCheckoutStore: PendingDeliveryCheckoutStore,
     val deliveryCheckoutTelemetry: DeliveryCheckoutTelemetry,
     val getSellAvailabilityUseCase: GetSellAvailabilityUseCase,
+    val getTradeAvailableCouponsUseCase: GetTradeAvailableCouponsUseCase,
+    val validateTradeCouponUseCase: ValidateTradeCouponUseCase,
     val sessionStore: SessionStore,
 
     // Address Management
@@ -41,3 +45,4 @@ data class DeliveryRouteDependencies(
     val lookupPostalPincodeUseCase: LookupPostalPincodeUseCase,
     val listDeliveryOrdersUseCase: ListDeliveryOrdersUseCase,
 )
+

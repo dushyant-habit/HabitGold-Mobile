@@ -55,9 +55,14 @@ actual fun createPlatformSecureStorage(): SecureStorage {
 }
 
 actual fun createPlatformPreferencesStorage(): KeyValueStorage {
-    return AppleUserDefaultsStorage(
-        userDefaults = NSUserDefaults(suiteName = APP_SUITE_NAME),
-    )
+    val defaults = try {
+        val suite = NSUserDefaults(suiteName = APP_SUITE_NAME)
+        suite.dictionaryRepresentation() // Verify the Objective-C object is non-nil
+        suite
+    } catch (e: Throwable) {
+        NSUserDefaults.standardUserDefaults
+    }
+    return AppleUserDefaultsStorage(userDefaults = defaults)
 }
 
 private class AppleKeychainStorage(

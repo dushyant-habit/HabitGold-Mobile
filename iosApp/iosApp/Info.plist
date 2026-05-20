@@ -2,10 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>APP_ENV</key>
-	<string>$(APP_ENV)</string>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
+	<key>APP_ENV</key>
+	<string>$(APP_ENV)</string>
 	<key>APP_NAME</key>
 	<string>$(APP_NAME)</string>
 	<key>CFBundleDisplayName</key>
@@ -14,6 +14,19 @@
 	<string>$(CLARITY_PROJECT_ID)</string>
 	<key>ENABLE_CLARITY</key>
 	<string>$(ENABLE_CLARITY)</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>habitgold</string>
+				<string>juspay-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+				<string>paytm-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
+	</array>
 	<key>ENABLE_NETWORK_LOGS</key>
 	<string>$(ENABLE_NETWORK_LOGS)</string>
 	<key>JUSPAY_CLIENT_ID</key>
@@ -30,17 +43,6 @@
 	<string>$(JUSPAY_SDK_VERSION)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>HabitGold uses Face ID to securely unlock your account when biometric protection is enabled.</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>habitgold</string>
-				<string>juspay-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-				<string>paytm-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-			</array>
-		</dict>
-	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>credpay</string>
@@ -75,8 +77,6 @@
 		<string>scapia</string>
 		<string>salaryse</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 </dict>

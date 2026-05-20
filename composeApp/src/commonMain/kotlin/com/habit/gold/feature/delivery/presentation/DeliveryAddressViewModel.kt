@@ -191,13 +191,25 @@ class DeliveryAddressViewModel(
     }
 
     private fun updateAddress(id: String, body: UpdateAddressDto) {
+        updateState { it.copy(isSavingAddress = true) }
         viewModelScope.launch {
             updateUserAddressUseCase(id, body).fold(
                 onSuccess = {
-                    refreshAddresses()
-                    emitEffect(DeliveryAddressEffect.AddressSaved)
+                    refreshAddressesSuspend()
+                    updateState { it.copy(isSavingAddress = false) }
+                    val existingAddress = state.value.savedAddresses.find { it.id == id }
+                    val userPhone = sessionStore.state.value.user?.phoneNumber
+                    val phoneChanged = existingAddress == null || !indianMobileNumbersMatch(existingAddress.phoneNo, body.phoneNumber)
+                    val matchesUserMobile = indianMobileNumbersMatch(userPhone, body.phoneNumber)
+
+                    if (phoneChanged && !matchesUserMobile) {
+                        sendAddressOtp(id)
+                    } else {
+                        emitEffect(DeliveryAddressEffect.AddressSaved)
+                    }
                 },
                 onFailure = { error ->
+                    updateState { it.copy(isSavingAddress = false) }
                     emitEffect(
                         DeliveryAddressEffect.ShowError(
                             error.message?.asDeliveryUiText()
@@ -279,6 +291,10 @@ class DeliveryAddressViewModel(
         }
     }
 
+    /**
+     * Checks serviceability status of the address with the logistics provider.
+     * Marks the address as serviceable or shows a fallback error to the user.
+     */
     private suspend fun completeAddressVerification(addressId: String) {
         checkAddressServiceabilityUseCase(addressId).fold(
             onSuccess = { json ->
@@ -312,6 +328,10 @@ class DeliveryAddressViewModel(
         )
     }
 
+    /**
+     * Validates if a raw pincode is serviceable under the current weight tier.
+     * Triggers a status toast or shows an validation error dialog to the user.
+     */
     private fun verifyDeliveryPincode(pincode: String) {
         updateState { it.copy(isVerifyingPincode = true, pincodeVerifyError = null) }
         viewModelScope.launch {
@@ -358,6 +378,10 @@ class DeliveryAddressViewModel(
         }
     }
 
+    /**
+     * Performs a reverse directory lookup on a pincode to extract city and state.
+     * Automatically pre-fills form fields when a match is successfully resolved.
+     */
     private fun lookupPostalPincode(pincode: String) {
         viewModelScope.launch {
             lookupPostalPincodeUseCase(pincode).fold(

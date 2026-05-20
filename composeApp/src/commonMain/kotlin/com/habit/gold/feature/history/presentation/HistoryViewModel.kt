@@ -299,14 +299,12 @@ private fun normalizeMoneyDisplay(raw: String): String {
 }
 
 private fun normalizeGoldDisplay(raw: String): String {
-    val parsed = raw.trim().removeSuffix("g").trim().toDoubleOrNull() ?: return raw.trim()
-    val rounded = ((parsed * 10_000).roundToInt() / 10_000.0)
-    val text = rounded.toString()
-    return if (!text.contains('.')) {
-        text
-    } else {
-        text.trimEnd('0').trimEnd('.')
-    }
+    val cleaned = raw.trim()
+        .replace(Regex("[^0-9.\\-]"), "")
+        .trim()
+    val parsed = cleaned.toDoubleOrNull() ?: return raw.trim()
+    val absolute = parsed.absoluteValue
+    return com.habit.gold.core.util.formatGramsTruncate(absolute)
 }
 
 private fun formatIndianWhole(value: Long): String {
