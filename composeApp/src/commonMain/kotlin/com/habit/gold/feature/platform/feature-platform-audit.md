@@ -3,8 +3,8 @@
 ## Audit Status
 
 - Status: `strict audit complete, later implementation slices documented`
-- Branch: `codex/feature/phase12-platform-integrations`
-- Implementation state: `latest verified slice implemented`
+- Branch: `codex/feature/phase12-platform-integrations-pr-clean`
+- Implementation state: `latest verified implementation and cleanup slice implemented`
 
 ## Audit Goal
 
@@ -211,6 +211,8 @@ Current KMP state:
 - shared device-token registration contract is now wired
 - iOS APNs hooks are now wired
 - iOS Firebase Messaging delegate + FCM token capture are now wired
+- shared referral parsing now owns the referral-code extraction rule for both Android and iOS
+- iOS bootstrap now routes referral and alert persistence through small Kotlin bridges instead of duplicating shared storage keys in Swift
 
 Remaining implementation:
 
@@ -408,4 +410,9 @@ Current reality after implementation:
   - app naming and icon branding alignment are live
   - project-level associated domains / push capability setup is live
 - Firebase pods are wired on iOS, but device/runtime verification is still pending
+- the stricter Phase 12 cleanup pass is also now complete:
+  - iOS bootstrap responsibilities are split more cleanly
+  - shared referral parsing replaces platform drift
+  - device-token sync only records success on real `2xx` responses
+  - targeted tests now cover referral parsing and token-sync behavior
 - attribution-equivalent behavior is still the one product/platform decision left open in this phase

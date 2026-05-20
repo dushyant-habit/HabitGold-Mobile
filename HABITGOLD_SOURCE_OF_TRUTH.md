@@ -636,6 +636,11 @@ That means:
   - iOS app icons now come from the IconKitchen-exported `AppIcon.appiconset`
   - iOS Firebase Messaging delegate / FCM token capture is wired
   - iOS Firebase bootstrap now runs earlier from the SwiftUI app initializer
+  - stricter Phase 12 cleanup is live:
+    - iOS runtime bootstrap is split into smaller ownership boundaries
+    - shared referral parsing now owns code extraction across Android and iOS
+    - token-sync success state is only persisted on real `2xx` responses
+    - targeted tests cover referral parsing and device-token sync behavior
 - carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
   - delivery affordability uses `redeemableGoldGrams`
   - serviceability requires `PINCODE_SERVICEABLE`

@@ -450,6 +450,10 @@ These notes came from a deeper pass through the Android app and are here to prev
 - [x] Android Firebase Crashlytics SDK/plugin wiring
 - [x] Android Firebase Performance SDK/plugin wiring
 - [x] Move iOS Firebase bootstrap earlier into SwiftUI app startup so the default Firebase app is configured before downstream SDK usage
+- [x] Run strict Phase 12 code-quality cleanup pass over the platform glue
+- [x] Extract shared referral parsing and route iOS runtime persistence through Kotlin bridge helpers
+- [x] Add targeted tests for Phase 12 referral parsing and device-token sync behavior
+- [x] Tighten device-token sync so successful registration state is only persisted on real `2xx` responses
 - [ ] Verify iOS Firebase / Crashlytics / Performance on a properly provisioned device build
 - [ ] Verify iOS APNs / associated-domain behavior on a properly provisioned device build
 - personal-team local builds still require empty dev entitlements, so real APNs delivery and associated-domain verification still depend on paid-team provisioning
