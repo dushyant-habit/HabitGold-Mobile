@@ -60,6 +60,7 @@ Missing or incomplete:
 - iOS APNs / associated-domain behavior still needs final on-device verification
 - iOS Crashlytics / Performance verification is still pending after pod/runtime wiring
 - iOS local personal-team builds still cannot verify real APNs / associated-domain delivery because they must use empty dev entitlements for signing
+- iOS attribution still needs either a real equivalent path or an explicit documented non-equivalent decision
 
 ## Implemented In This Slice
 
@@ -100,6 +101,7 @@ Missing or incomplete:
   - FCM messaging service
   - Clarity init and shared route screen naming
 - iOS app delegate now includes:
+  - earlier Firebase bootstrap from the SwiftUI app initializer plus idempotent app-delegate startup wiring
   - Clarity init gated by `ENABLE_CLARITY` + `CLARITY_PROJECT_ID`
   - APNs permission request and registration
   - APNs token capture
@@ -155,6 +157,7 @@ Current finding:
 - remaining iOS gaps are now:
   - on-device Firebase / Crashlytics / Performance verification
   - on-device APNs / associated-domain verification
+  - iOS attribution equivalent or explicit documented non-equivalent path
   - paid-team entitlement/provisioning verification for real push delivery
 
 ## Implementation Order

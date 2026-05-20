@@ -449,6 +449,10 @@ These notes came from a deeper pass through the Android app and are here to prev
 - [x] Android Firebase Messaging SDK/plugin wiring
 - [x] Android Firebase Crashlytics SDK/plugin wiring
 - [x] Android Firebase Performance SDK/plugin wiring
+- [x] Move iOS Firebase bootstrap earlier into SwiftUI app startup so the default Firebase app is configured before downstream SDK usage
+- [ ] Verify iOS Firebase / Crashlytics / Performance on a properly provisioned device build
+- [ ] Verify iOS APNs / associated-domain behavior on a properly provisioned device build
+- personal-team local builds still require empty dev entitlements, so real APNs delivery and associated-domain verification still depend on paid-team provisioning
 - [~] Decide any remaining iOS analytics/session-replay parity strategy for the shared app without blocking Firebase/push completion
 
 ### Phase 13: Hardening And QA
