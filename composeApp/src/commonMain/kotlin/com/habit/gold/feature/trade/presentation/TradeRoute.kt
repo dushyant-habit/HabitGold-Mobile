@@ -93,7 +93,10 @@ fun TradeRoute(
             onOpenHelp = onOpenHelp,
             modifier = modifier,
         )
-        TradeDestination.GetCoinCatalog -> LaunchedEffect(destination) {
+        TradeDestination.GetCoinCatalog -> {
+            // Navigate back to WithdrawalMode so that when the user returns
+            // from the delivery flow they land on the expected screen,
+            // then delegate to the real DeliveryRoute via the parent.
             onNavigateToDelivery()
         }
         is TradeDestination.TransactionDetails -> TradeTransactionDetailsScreen(

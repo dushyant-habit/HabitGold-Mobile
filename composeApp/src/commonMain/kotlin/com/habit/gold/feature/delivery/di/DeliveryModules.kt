@@ -90,9 +90,9 @@ val deliveryModule = module {
             sendAddressOtpUseCase = get(),
             verifyAddressOtpUseCase = get(),
             checkAddressServiceabilityUseCase = get(),
+            listDeliveryOrdersUseCase = get(),
             validateDeliveryPincodeUseCase = get(),
             lookupPostalPincodeUseCase = get(),
-            listDeliveryOrdersUseCase = get(),
         )
     }
 

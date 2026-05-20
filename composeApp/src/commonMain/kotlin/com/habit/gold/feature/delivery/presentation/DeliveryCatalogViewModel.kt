@@ -1,22 +1,24 @@
 package com.habit.gold.feature.delivery.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.habit.gold.core.network.fold
 import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.delivery.data.DeliveryCheckoutTelemetry
 import com.habit.gold.feature.delivery.data.PendingDeliveryCheckout
 import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStage
 import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStore
-import com.habit.gold.feature.delivery.domain.model.CreateDeliveryQuoteDto
 import com.habit.gold.feature.delivery.domain.model.ConfirmDeliveryOrderDto
+import com.habit.gold.feature.delivery.domain.model.CreateDeliveryQuoteDto
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutPhase
+import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
 import com.habit.gold.feature.delivery.domain.usecase.ConfirmDeliveryOrderUseCase
 import com.habit.gold.feature.delivery.domain.usecase.CreateDeliveryQuoteUseCase
-import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryProductsUseCase
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryOrderDetailsUseCase
+import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryProductsUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_applied
@@ -33,11 +35,10 @@ import habitgoldmobile.composeapp.generated.resources.delivery_error_confirm_ord
 import habitgoldmobile.composeapp.generated.resources.delivery_error_create_quote
 import habitgoldmobile.composeapp.generated.resources.delivery_error_load_products
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlin.time.Clock
-import kotlinx.serialization.json.JsonObject
-import com.habit.gold.core.network.fold
 
 class DeliveryCatalogViewModel(
     private val getDeliveryProductsUseCase: GetDeliveryProductsUseCase,
@@ -47,6 +48,7 @@ class DeliveryCatalogViewModel(
     private val deliveryCheckoutTelemetry: DeliveryCheckoutTelemetry,
     private val getSellAvailabilityUseCase: GetSellAvailabilityUseCase,
     private val getDeliveryOrderDetailsUseCase: GetDeliveryOrderDetailsUseCase,
+    @Suppress("unused")
     private val sessionStore: SessionStore,
 ) : MviViewModel<DeliveryCatalogState, DeliveryIntent, DeliveryEffect>(DeliveryCatalogState()) {
 
@@ -63,12 +65,13 @@ class DeliveryCatalogViewModel(
             is DeliveryIntent.LoadProducts -> loadProducts()
             is DeliveryIntent.UpdateQuantity -> updateQuantity(intent.coinId, intent.delta)
             is DeliveryIntent.SelectAddress -> selectAddress(intent.id)
+            is DeliveryIntent.RefreshAddresses -> Unit
             is DeliveryIntent.RefreshGoldBalance -> refreshGoldBalance()
             is DeliveryIntent.PrepareQuote -> prepareQuote(intent.couponCode)
             is DeliveryIntent.ConfirmOrder -> confirmOrder()
             is DeliveryIntent.HandlePaymentResult -> handlePaymentResult(intent.result)
             is DeliveryIntent.DiscardCheckout -> discardCheckout()
-            is DeliveryIntent.ClearError -> { /* no-op */ }
+            is DeliveryIntent.ClearError -> Unit
             is DeliveryIntent.ApplyCoupon -> applyCoupon(intent.code)
             is DeliveryIntent.RemoveCoupon -> removeCoupon()
         }
@@ -80,7 +83,12 @@ class DeliveryCatalogViewModel(
             getDeliveryProductsUseCase().fold(
                 onSuccess = { payload ->
                     val products = parseDeliveryProducts(payload)
-                    updateState { it.copy(isLoadingProducts = false, coins = applyDeliveryProductFilter(products)) }
+                    updateState {
+                        it.copy(
+                            isLoadingProducts = false,
+                            coins = applyDeliveryProductFilter(products),
+                        )
+                    }
                 },
                 onFailure = { error ->
                     updateState { it.copy(isLoadingProducts = false) }
@@ -97,24 +105,16 @@ class DeliveryCatalogViewModel(
 
     private fun applyDeliveryProductFilter(products: List<PhysicalCoin>): List<PhysicalCoin> {
         val liveBuyPrice = state.value.liveBuyPricePerGram
-        val maxEstimate = MAX_PRODUCT_UNIT_ESTIMATE_INR
         return products.filter {
-            it.estimatedUnitSubtotalInr(liveBuyPrice) <= maxEstimate
+            it.estimatedUnitSubtotalInr(liveBuyPrice) <= MAX_PRODUCT_UNIT_ESTIMATE_INR
         }
     }
 
     private fun updateQuantity(coinId: String, delta: Int) {
         updateState { currentState ->
             val currentQty = currentState.cartItems[coinId] ?: 0
-            val newQty = (currentQty + delta).coerceIn(0, 1) // MAX_COINS_PER_ORDER = 1
-            
-            // If another coin is already in cart, remove it (MAX_COINS_PER_ORDER = 1 across all items)
-            val newCart = if (newQty > 0) {
-                mapOf(coinId to newQty)
-            } else {
-                emptyMap()
-            }
-            
+            val newQty = (currentQty + delta).coerceIn(0, 1)
+            val newCart = if (newQty > 0) mapOf(coinId to newQty) else emptyMap()
             currentState.copy(cartItems = newCart)
         }
         autoApplyDelivery5IfEligible()
@@ -129,7 +129,7 @@ class DeliveryCatalogViewModel(
                         it.copy(
                             isRefreshingBalance = false,
                             totalGoldBalanceGrams = availability.totalGoldBalanceGrams,
-                            redeemableGoldGrams = availability.sellableGoldBalanceGrams
+                            redeemableGoldGrams = availability.sellableGoldBalanceGrams,
                         )
                     }
                 },
@@ -149,11 +149,15 @@ class DeliveryCatalogViewModel(
             val addressId = state.value.selectedAddressId
             val cartItem = state.value.cartItems.entries.firstOrNull()
             if (addressId == null || cartItem == null) {
-                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_select_address_coin)))
+                emitEffect(
+                    DeliveryEffect.ShowError(
+                        DeliveryUiText.Resource(Res.string.delivery_checkout_select_address_coin)
+                    )
+                )
                 return@launch
             }
+
             val effectiveCouponCode = couponCode ?: state.value.couponCode
-            
             val current = state.value.checkoutQuote
             val now = Clock.System.now().toEpochMilliseconds()
             if (
@@ -166,27 +170,33 @@ class DeliveryCatalogViewModel(
                 emitEffect(DeliveryEffect.NavigateToCheckout)
                 return@launch
             }
-            
-            updateState { it.copy(isCheckingOut = true, checkoutPhase = DeliveryCheckoutPhase.CONFIRMING) }
-            
+
+            updateState {
+                it.copy(
+                    isCheckingOut = true,
+                    checkoutPhase = DeliveryCheckoutPhase.CONFIRMING,
+                )
+            }
+
             createDeliveryQuoteUseCase(
                 CreateDeliveryQuoteDto(
                     addressId = addressId,
                     productId = cartItem.key,
-                    couponCode = effectiveCouponCode
+                    couponCode = effectiveCouponCode,
                 )
             ).fold(
                 onSuccess = { response ->
                     activeConfirmIdempotencyKey = null
                     val quote = response.toUiQuote(cartItem.key, addressId)
-                    val couponDiscount = (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
+                    val couponDiscount =
+                        (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
                     updateState {
                         it.copy(
                             isCheckingOut = false,
                             checkoutQuote = quote,
                             couponCode = effectiveCouponCode,
                             couponDiscountInr = couponDiscount,
-                            checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                            checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
                         )
                     }
                     persistPendingCheckout(
@@ -199,7 +209,12 @@ class DeliveryCatalogViewModel(
                     emitEffect(DeliveryEffect.NavigateToCheckout)
                 },
                 onFailure = { error ->
-                    updateState { it.copy(isCheckingOut = false, checkoutPhase = DeliveryCheckoutPhase.IDLE) }
+                    updateState {
+                        it.copy(
+                            isCheckingOut = false,
+                            checkoutPhase = DeliveryCheckoutPhase.IDLE,
+                        )
+                    }
                     emitEffect(
                         DeliveryEffect.ShowError(
                             error.message?.asDeliveryUiText()
@@ -212,19 +227,26 @@ class DeliveryCatalogViewModel(
     }
 
     private fun confirmOrder() {
-        // Re-entry guard: prevent multiple concurrent confirm calls
         val currentState = state.value
         if (currentState.isCheckingOut) return
+
         val phase = currentState.checkoutPhase
-        if (phase == DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY ||
+        if (
+            phase == DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY ||
             phase == DeliveryCheckoutPhase.PAYMENT_IN_PROGRESS ||
             phase == DeliveryCheckoutPhase.VERIFYING_ORDER
-        ) return
+        ) {
+            return
+        }
 
         val quote = currentState.checkoutQuote
         if (quote == null) {
             viewModelScope.launch {
-                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_quote_unavailable)))
+                emitEffect(
+                    DeliveryEffect.ShowError(
+                        DeliveryUiText.Resource(Res.string.delivery_checkout_quote_unavailable)
+                    )
+                )
             }
             return
         }
@@ -232,7 +254,11 @@ class DeliveryCatalogViewModel(
         val now = Clock.System.now().toEpochMilliseconds()
         if (quote.isExpired(now)) {
             viewModelScope.launch {
-                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_quote_expired)))
+                emitEffect(
+                    DeliveryEffect.ShowError(
+                        DeliveryUiText.Resource(Res.string.delivery_checkout_quote_expired)
+                    )
+                )
             }
             return
         }
@@ -245,7 +271,7 @@ class DeliveryCatalogViewModel(
         viewModelScope.launch {
             confirmDeliveryOrderUseCase(
                 idempotencyKey = idempotencyKey,
-                body = ConfirmDeliveryOrderDto(quoteId = quote.quoteId)
+                body = ConfirmDeliveryOrderDto(quoteId = quote.quoteId),
             ).fold(
                 onSuccess = { response ->
                     deliveryCheckoutTelemetry.confirmStarted(quote.quoteId, idempotencyKey)
@@ -255,7 +281,7 @@ class DeliveryCatalogViewModel(
                             it.copy(
                                 isCheckingOut = false,
                                 pendingPaymentSdkPayloadJson = payload.toString(),
-                                checkoutPhase = DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY
+                                checkoutPhase = DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY,
                             )
                         }
                         persistPendingCheckout(
@@ -264,12 +290,11 @@ class DeliveryCatalogViewModel(
                                 stage = PendingDeliveryCheckoutStage.SDK_LAUNCH_READY,
                                 confirmIdempotencyKey = idempotencyKey,
                                 orderId = response.order.id,
-                                sdkPayload = payload
+                                sdkPayload = payload,
                             )
                         )
                         emitEffect(DeliveryEffect.LaunchPaymentSdk(payload.toString()))
                     } else {
-                        // Success without payment SDK
                         completeCheckout(response.order)
                     }
                 },
@@ -293,7 +318,11 @@ class DeliveryCatalogViewModel(
             when (result) {
                 is DeliveryPaymentLaunchResult.Success -> {
                     if (actualOrderId == null) {
-                        emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)))
+                        emitEffect(
+                            DeliveryEffect.ShowError(
+                                DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)
+                            )
+                        )
                         return@launch
                     }
                     updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.VERIFYING_ORDER) }
@@ -303,7 +332,11 @@ class DeliveryCatalogViewModel(
                 is DeliveryPaymentLaunchResult.Failure -> {
                     if (result.shouldPollOrderStatus) {
                         if (actualOrderId == null) {
-                            emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)))
+                            emitEffect(
+                                DeliveryEffect.ShowError(
+                                    DeliveryUiText.Resource(Res.string.delivery_checkout_missing_order_id)
+                                )
+                            )
                             return@launch
                         }
                         updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.VERIFYING_ORDER) }
@@ -313,7 +346,7 @@ class DeliveryCatalogViewModel(
                             it.copy(
                                 isCheckingOut = false,
                                 pendingPaymentSdkPayloadJson = null,
-                                checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                                checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
                             )
                         }
                         state.value.checkoutQuote?.let { quote ->
@@ -335,7 +368,7 @@ class DeliveryCatalogViewModel(
                         it.copy(
                             isCheckingOut = false,
                             pendingPaymentSdkPayloadJson = null,
-                            checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                            checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
                         )
                     }
                     state.value.checkoutQuote?.let { quote ->
@@ -348,7 +381,11 @@ class DeliveryCatalogViewModel(
                             )
                         )
                     }
-                    emitEffect(DeliveryEffect.ShowToast(DeliveryUiText.Resource(Res.string.delivery_checkout_payment_cancelled)))
+                    emitEffect(
+                        DeliveryEffect.ShowToast(
+                            DeliveryUiText.Resource(Res.string.delivery_checkout_payment_cancelled)
+                        )
+                    )
                 }
             }
         }
@@ -364,44 +401,59 @@ class DeliveryCatalogViewModel(
                                 completeCheckout(order)
                                 return@launch
                             }
-                            CheckoutOrderState.RECOVERABLE_PENDING -> {
-                                // Keep polling
-                            }
+
+                            CheckoutOrderState.RECOVERABLE_PENDING -> Unit
+
                             CheckoutOrderState.FAILURE -> {
                                 activeConfirmIdempotencyKey = null
                                 persistPendingCheckout(null)
                                 updateState {
                                     it.copy(
-                                        checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY
+                                        isCheckingOut = false,
+                                        checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
+                                        pendingPaymentSdkPayloadJson = null,
                                     )
                                 }
-                                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_payment_failed)))
+                                emitEffect(
+                                    DeliveryEffect.ShowError(
+                                        DeliveryUiText.Resource(Res.string.delivery_checkout_payment_failed)
+                                    )
+                                )
                                 return@launch
                             }
                         }
                     },
                     onFailure = {
-                        // Transient error, ignore
+                        Unit
                     }
                 )
                 delay(ORDER_STATUS_POLL_INTERVAL_MS)
             }
 
-            updateState { it.copy(checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY) }
-            emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_checkout_timeout)))
+            updateState {
+                it.copy(
+                    isCheckingOut = false,
+                    checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
+                )
+            }
+            emitEffect(
+                DeliveryEffect.ShowError(
+                    DeliveryUiText.Resource(Res.string.delivery_checkout_timeout)
+                )
+            )
         }
     }
 
     private suspend fun completeCheckout(order: DeliveryOrderDto) {
         activeConfirmIdempotencyKey = null
         persistPendingCheckout(null)
-        val id = order.id ?: ""
+        val id = order.id.orEmpty()
         updateState {
             it.copy(
                 isCheckingOut = false,
                 checkoutPhase = DeliveryCheckoutPhase.COMPLETED,
                 cartItems = emptyMap(),
-                pendingPaymentSdkPayloadJson = null
+                pendingPaymentSdkPayloadJson = null,
             )
         }
         deliveryCheckoutTelemetry.finalOrderState(id, order.paymentStatus, order.status)
@@ -411,26 +463,36 @@ class DeliveryCatalogViewModel(
     private fun discardCheckout() {
         activeConfirmIdempotencyKey = null
         persistPendingCheckout(null)
-        updateState { it.copy(checkoutQuote = null, checkoutPhase = DeliveryCheckoutPhase.IDLE) }
+        updateState {
+            it.copy(
+                checkoutQuote = null,
+                checkoutPhase = DeliveryCheckoutPhase.IDLE,
+                pendingPaymentSdkPayloadJson = null,
+            )
+        }
     }
 
     private fun persistPendingCheckout(checkout: PendingDeliveryCheckout?) {
         viewModelScope.launch {
-            if (checkout != null) pendingDeliveryCheckoutStore.save(checkout)
-            else pendingDeliveryCheckoutStore.clear()
+            if (checkout != null) pendingDeliveryCheckoutStore.save(checkout) else pendingDeliveryCheckoutStore.clear()
         }
     }
 
     private fun restorePendingCheckout() {
         viewModelScope.launch {
             pendingDeliveryCheckoutStore.pendingCheckout.collect { pending ->
-                if (pending != null) {
-                    val now = Clock.System.now().toEpochMilliseconds()
-                    if (!pending.isExpired(now)) {
+                if (pending == null) return@collect
+
+                val now = Clock.System.now().toEpochMilliseconds()
+                if (pending.isExpired(now)) {
+                    pendingDeliveryCheckoutStore.clear()
+                    return@collect
+                }
+
                 updateState {
                     it.copy(
                         checkoutQuote = pending.toUiQuote(),
-                        cartItems = mapOf(pending.productId to 1), // Only 1 coin allowed
+                        cartItems = mapOf(pending.productId to 1),
                         selectedAddressId = pending.addressId,
                         couponCode = pending.couponCode,
                         couponDiscountInr = (
@@ -438,38 +500,38 @@ class DeliveryCatalogViewModel(
                                 pending.verifyQuote.payableChargeInr.toDoubleOrNull().orZero()
                             ).coerceAtLeast(0.0),
                         checkoutPhase = when (pending.stage) {
-                                    PendingDeliveryCheckoutStage.REVIEW -> DeliveryCheckoutPhase.REVIEW_READY
-                                    PendingDeliveryCheckoutStage.CONFIRM_IN_FLIGHT -> DeliveryCheckoutPhase.CONFIRMING
-                                    PendingDeliveryCheckoutStage.SDK_LAUNCH_READY -> DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY
-                                    PendingDeliveryCheckoutStage.SDK_OPENED -> DeliveryCheckoutPhase.PAYMENT_IN_PROGRESS
-                                    PendingDeliveryCheckoutStage.VERIFYING_ORDER -> DeliveryCheckoutPhase.VERIFYING_ORDER
-                                }
-                            )
-                        }
-                        if (pending.stage == PendingDeliveryCheckoutStage.VERIFYING_ORDER && pending.orderId != null) {
-                            pollOrderUntilTerminal(pending.orderId)
-                        }
-                    } else {
-                        pendingDeliveryCheckoutStore.clear()
-                    }
+                            PendingDeliveryCheckoutStage.REVIEW -> DeliveryCheckoutPhase.REVIEW_READY
+                            PendingDeliveryCheckoutStage.CONFIRM_IN_FLIGHT -> DeliveryCheckoutPhase.CONFIRMING
+                            PendingDeliveryCheckoutStage.SDK_LAUNCH_READY -> DeliveryCheckoutPhase.PAYMENT_LAUNCH_READY
+                            PendingDeliveryCheckoutStage.SDK_OPENED -> DeliveryCheckoutPhase.PAYMENT_IN_PROGRESS
+                            PendingDeliveryCheckoutStage.VERIFYING_ORDER -> DeliveryCheckoutPhase.VERIFYING_ORDER
+                        },
+                    )
+                }
+
+                if (pending.stage == PendingDeliveryCheckoutStage.VERIFYING_ORDER && pending.orderId != null) {
+                    pollOrderUntilTerminal(pending.orderId)
                 }
             }
         }
     }
 
-
-
     private fun applyCoupon(code: String) {
         if (code.equals(DELIVERY5_COUPON_CODE, ignoreCase = true)) {
             val totalWeight = state.value.totalWeightGm
             if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM) {
-                updateState { it.copy(couponCode = DELIVERY5_COUPON_CODE, couponDiscountInr = DELIVERY5_DISCOUNT_INR) }
+                updateState {
+                    it.copy(
+                        couponCode = DELIVERY5_COUPON_CODE,
+                        couponDiscountInr = DELIVERY5_DISCOUNT_INR,
+                    )
+                }
                 viewModelScope.launch {
                     emitEffect(
                         DeliveryEffect.ShowToast(
                             DeliveryUiText.Resource(
                                 Res.string.delivery_catalog_coupon_applied,
-                                listOf(DELIVERY5_COUPON_CODE)
+                                listOf(DELIVERY5_COUPON_CODE),
                             )
                         )
                     )
@@ -480,16 +542,19 @@ class DeliveryCatalogViewModel(
                         DeliveryEffect.ShowError(
                             DeliveryUiText.Resource(
                                 Res.string.delivery_catalog_coupon_only_valid,
-                                listOf(DELIVERY5_COUPON_CODE)
+                                listOf(DELIVERY5_COUPON_CODE),
                             )
                         )
                     )
                 }
             }
         } else {
-            // Generic coupon - for now just reject unknown codes
             viewModelScope.launch {
-                emitEffect(DeliveryEffect.ShowError(DeliveryUiText.Resource(Res.string.delivery_catalog_coupon_invalid)))
+                emitEffect(
+                    DeliveryEffect.ShowError(
+                        DeliveryUiText.Resource(Res.string.delivery_catalog_coupon_invalid)
+                    )
+                )
             }
         }
     }
@@ -498,17 +563,20 @@ class DeliveryCatalogViewModel(
         updateState { it.copy(couponCode = null, couponDiscountInr = 0.0) }
     }
 
-    /**
-     * Checks if DELIVERY5 coupon should be auto-applied for the current cart.
-     * Called after cart changes (quantity update / product selection).
-     */
     private fun autoApplyDelivery5IfEligible() {
         val totalWeight = state.value.totalWeightGm
-        val current = state.value.couponCode
-        if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM && current == null) {
-            updateState { it.copy(couponCode = DELIVERY5_COUPON_CODE, couponDiscountInr = DELIVERY5_DISCOUNT_INR) }
-        } else if (totalWeight < DELIVERY5_MIN_WEIGHT_GM && current.equals(DELIVERY5_COUPON_CODE, ignoreCase = true)) {
-            // Remove auto-applied coupon if weight dropped below threshold
+        val currentCoupon = state.value.couponCode
+        if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM && currentCoupon == null) {
+            updateState {
+                it.copy(
+                    couponCode = DELIVERY5_COUPON_CODE,
+                    couponDiscountInr = DELIVERY5_DISCOUNT_INR,
+                )
+            }
+        } else if (
+            totalWeight < DELIVERY5_MIN_WEIGHT_GM &&
+            currentCoupon.equals(DELIVERY5_COUPON_CODE, ignoreCase = true)
+        ) {
             updateState { it.copy(couponCode = null, couponDiscountInr = 0.0) }
         }
     }
@@ -519,12 +587,12 @@ class DeliveryCatalogViewModel(
         const val ORDER_STATUS_POLL_INTERVAL_MS = 2000L
         const val DELIVERY5_COUPON_CODE = "DELIVERY5"
         const val DELIVERY5_MIN_WEIGHT_GM = 5.0
-        const val DELIVERY5_DISCOUNT_INR = 100.0 // Free delivery (full minting charge waiver) for 5g+ coins
+        const val DELIVERY5_DISCOUNT_INR = 100.0
 
         private fun generateIdempotencyKey(): String {
             val chars = ('a'..'f') + ('0'..'9')
-            fun seg(n: Int) = (1..n).map { chars.random() }.joinToString("")
-            return "${seg(8)}-${seg(4)}-${seg(4)}-${seg(4)}-${seg(12)}"
+            fun segment(length: Int) = (1..length).map { chars.random() }.joinToString("")
+            return "${segment(8)}-${segment(4)}-${segment(4)}-${segment(4)}-${segment(12)}"
         }
     }
 }

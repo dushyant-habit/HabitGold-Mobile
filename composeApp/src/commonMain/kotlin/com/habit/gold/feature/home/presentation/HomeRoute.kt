@@ -17,6 +17,8 @@ import com.habit.gold.feature.alerts.presentation.AlertsRoute
 import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
 import com.habit.gold.feature.delivery.presentation.DeliveryRoute
 import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
+import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
+import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
@@ -37,6 +39,8 @@ data class HomeRouteDependencies(
     val appPreferencesStorage: AppPreferencesStorage,
     val getHomePriceHistoryUseCase: GetHomePriceHistoryUseCase,
     val deliveryRouteDependencies: DeliveryRouteDependencies,
+    val deliveryCatalogViewModelFactory: () -> DeliveryCatalogViewModel,
+    val deliveryTrackingViewModelFactory: () -> DeliveryTrackingViewModel,
 )
 
 @Composable
@@ -220,14 +224,18 @@ fun HomeRoute(
             },
             onNavigateToDelivery = {
                 destination = HomeDestination.Delivery(
-                        returnDestination = HomeDestination.Trade(TradeDestination.WithdrawalMode),
+                    returnDestination = HomeDestination.Trade(TradeDestination.WithdrawalMode),
                 )
             },
             modifier = modifier,
         )
         is HomeDestination.Delivery -> {
+            val catalogViewModel = remember { dependencies.deliveryCatalogViewModelFactory() }
+            val trackingViewModel = remember { dependencies.deliveryTrackingViewModelFactory() }
             DeliveryRoute(
                 dependencies = dependencies.deliveryRouteDependencies,
+                catalogViewModel = catalogViewModel,
+                trackingViewModel = trackingViewModel,
                 initialDestination = activeDestination.destination,
                 onBackToHome = { destination = activeDestination.returnDestination },
                 onNavigateToBuyGold = { shortfall ->
