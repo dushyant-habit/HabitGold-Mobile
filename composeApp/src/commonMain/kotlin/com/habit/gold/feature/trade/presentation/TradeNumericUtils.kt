@@ -43,5 +43,5 @@ internal fun formatGoldQuantity(
     value: Double,
     unitsPerGram: Long = 10_000L, // Kept for compatibility, but ignored in favor of global standard.
 ): String {
-    return com.habit.gold.core.util.formatGramsTruncatePlain(value)
+    return com.habit.gold.core.util.formatGramsTruncate(value)
 }
