@@ -30,6 +30,7 @@ import com.habit.gold.feature.delivery.domain.model.CreateAddressDto
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.UpdateAddressDto
 import com.habit.gold.feature.delivery.domain.model.normalizeIndianMobileForApi
+import com.habit.gold.feature.delivery.domain.model.isPincodeServiceable
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
 import com.habit.gold.feature.delivery.presentation.resolve
@@ -74,7 +75,15 @@ fun AddEditAddressScreen(
     var selectedType by remember { mutableStateOf(existing?.type ?: AddressType.HOME) }
 
     // Track the pincode that was last verified so we know when it changes
-    var lastVerifiedPincode by remember { mutableStateOf("") }
+    var lastVerifiedPincode by remember {
+        mutableStateOf(
+            if (isEditing && existing?.isPincodeServiceable() == true) {
+                existing.pincode.orEmpty()
+            } else {
+                ""
+            }
+        )
+    }
 
     // Auto-fill city/state from postal lookup when state updates
     LaunchedEffect(state.postalLookupCity, state.postalLookupState) {
@@ -99,7 +108,8 @@ fun AddEditAddressScreen(
         }
     }
 
-    val isPincodeVerifiedForCurrent = state.deliveryPincodeVerified && pincode == lastVerifiedPincode && pincode.length == 6
+    val isPincodeVerifiedForCurrent = (state.deliveryPincodeVerified && pincode == lastVerifiedPincode && pincode.length == 6) ||
+            (isEditing && existing?.isPincodeServiceable() == true && pincode == existing.pincode)
 
     val canSave = name.isNotBlank() && phone.length >= 10 &&
             pincode.length == 6 && line1.isNotBlank() &&
@@ -135,6 +145,84 @@ fun AddEditAddressScreen(
                     navigationIconContentColor = AppColors.Black,
                 ),
             )
+        },
+        bottomBar = {
+            Surface(
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp,
+                color = AppColors.White,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val normalizedPhone = normalizeIndianMobileForApi(phone)
+                            if (isEditing && existing != null) {
+                                onIntent(
+                                    DeliveryAddressIntent.UpdateAddress(
+                                        id = existing.id,
+                                        body = UpdateAddressDto(
+                                            type = selectedType,
+                                            recipientName = name.trim(),
+                                            phoneNumber = normalizedPhone,
+                                            addressLine1 = line1.trim(),
+                                            addressLine2 = line2.trim().takeIf { it.isNotEmpty() },
+                                            city = city.trim(),
+                                            state = stateField.trim(),
+                                            pincode = pincode.trim(),
+                                            landmark = landmark.trim().takeIf { it.isNotEmpty() },
+                                        ),
+                                    ),
+                                )
+                            } else {
+                                onIntent(
+                                    DeliveryAddressIntent.CreateAddress(
+                                        body = CreateAddressDto(
+                                            type = selectedType,
+                                            recipientName = name.trim(),
+                                            phoneNumber = normalizedPhone,
+                                            addressLine1 = line1.trim(),
+                                            addressLine2 = line2.trim().takeIf { it.isNotEmpty() },
+                                            city = city.trim(),
+                                            state = stateField.trim(),
+                                            pincode = pincode.trim(),
+                                            landmark = landmark.trim().takeIf { it.isNotEmpty() },
+                                        ),
+                                    ),
+                                )
+                            }
+                        },
+                        enabled = canSave,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Purple700,
+                            disabledContainerColor = AppColors.Slate200,
+                            disabledContentColor = AppColors.Slate500,
+                        ),
+                    ) {
+                        if (state.isSavingAddress) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = AppColors.White,
+                                strokeWidth = 2.dp,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = stringResource(Res.string.add_edit_address_save),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
         },
         containerColor = AppColors.SurfaceLight,
     ) { innerPadding ->
@@ -268,91 +356,8 @@ fun AddEditAddressScreen(
                 imeAction = ImeAction.Done,
             )
 
-            // Bottom padding to clear FAB
-            Spacer(Modifier.height(8.dp))
-
-            // Save as & Save Button moved from bottomBar
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-            ) {
-                Text(
-                    text = stringResource(Res.string.delivery_address_save_as),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AppColors.Slate700
-                )
-                Spacer(Modifier.height(8.dp))
-                AddressTypeRow(
-                    selected = selectedType,
-                    onSelect = { selectedType = it },
-                )
-                Spacer(Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        val normalizedPhone = normalizeIndianMobileForApi(phone)
-                        if (isEditing && existing != null) {
-                            onIntent(
-                                DeliveryAddressIntent.UpdateAddress(
-                                    id = existing.id,
-                                    body = UpdateAddressDto(
-                                        type = selectedType,
-                                        recipientName = name.trim(),
-                                        phoneNumber = normalizedPhone,
-                                        addressLine1 = line1.trim(),
-                                        addressLine2 = line2.trim().takeIf { it.isNotEmpty() },
-                                        city = city.trim(),
-                                        state = stateField.trim(),
-                                        pincode = pincode.trim(),
-                                        landmark = landmark.trim().takeIf { it.isNotEmpty() },
-                                    ),
-                                ),
-                            )
-                        } else {
-                            onIntent(
-                                DeliveryAddressIntent.CreateAddress(
-                                    body = CreateAddressDto(
-                                        type = selectedType,
-                                        recipientName = name.trim(),
-                                        phoneNumber = normalizedPhone,
-                                        addressLine1 = line1.trim(),
-                                        addressLine2 = line2.trim().takeIf { it.isNotEmpty() },
-                                        city = city.trim(),
-                                        state = stateField.trim(),
-                                        pincode = pincode.trim(),
-                                        landmark = landmark.trim().takeIf { it.isNotEmpty() },
-                                    ),
-                                ),
-                            )
-                        }
-                    },
-                    enabled = canSave,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Purple700,
-                        disabledContainerColor = AppColors.Purple200,
-                    ),
-                ) {
-                    if (state.isSavingAddress) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = AppColors.White,
-                            strokeWidth = 2.dp,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = stringResource(Res.string.add_edit_address_save),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
+            // Bottom padding to clear sticky bar
+            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -475,41 +480,7 @@ private fun OtpVerificationDialog(
 
 // ── Reusable Form Components ─────────────────────────────────────────────────
 
-@Composable
-private fun AddressTypeRow(
-    selected: AddressType,
-    onSelect: (AddressType) -> Unit,
-) {
-    val types = listOf(
-        AddressType.HOME to "Home",
-        AddressType.WORK to "Work",
-        AddressType.OTHER to "Other",
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        types.forEach { (type, label) ->
-            val isSelected = selected == type
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) AppColors.Purple700 else AppColors.White)
-                    .clickable { onSelect(type) }
-                    .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = label,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) AppColors.White else AppColors.Slate600,
-                )
-            }
-        }
-    }
-}
+
 
 @Composable
 private fun AddressFormField(

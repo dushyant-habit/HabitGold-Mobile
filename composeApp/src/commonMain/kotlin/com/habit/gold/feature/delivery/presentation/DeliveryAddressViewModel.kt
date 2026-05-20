@@ -191,13 +191,25 @@ class DeliveryAddressViewModel(
     }
 
     private fun updateAddress(id: String, body: UpdateAddressDto) {
+        updateState { it.copy(isSavingAddress = true) }
         viewModelScope.launch {
             updateUserAddressUseCase(id, body).fold(
                 onSuccess = {
-                    refreshAddresses()
-                    emitEffect(DeliveryAddressEffect.AddressSaved)
+                    refreshAddressesSuspend()
+                    updateState { it.copy(isSavingAddress = false) }
+                    val existingAddress = state.value.savedAddresses.find { it.id == id }
+                    val userPhone = sessionStore.state.value.user?.phoneNumber
+                    val phoneChanged = existingAddress == null || !indianMobileNumbersMatch(existingAddress.phoneNo, body.phoneNumber)
+                    val matchesUserMobile = indianMobileNumbersMatch(userPhone, body.phoneNumber)
+
+                    if (phoneChanged && !matchesUserMobile) {
+                        sendAddressOtp(id)
+                    } else {
+                        emitEffect(DeliveryAddressEffect.AddressSaved)
+                    }
                 },
                 onFailure = { error ->
+                    updateState { it.copy(isSavingAddress = false) }
                     emitEffect(
                         DeliveryAddressEffect.ShowError(
                             error.message?.asDeliveryUiText()
