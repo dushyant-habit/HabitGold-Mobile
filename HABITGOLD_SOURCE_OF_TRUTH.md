@@ -424,10 +424,14 @@ Later foundation items:
 - screenshot-based parity QA baseline
 - native integration boundary inventory for platform SDK features
 - deferred Gradle / SDK parity items that are intentionally not in the KMP app yet:
-  - iOS keychain-backed secure storage
-  - iOS push / associated-domain project capability verification
   - iOS Firebase / Crashlytics / Performance device verification
+  - iOS APNs / associated-domain on-device verification
   - final Juspay iOS asset-postprocessing environment stability
+
+OTP behavior rule:
+
+- Android uses automatic SMS retrieval where supported.
+- iOS does not mimic Android SMS Retriever. iOS should rely on the system OTP keyboard suggestion / autofill experience, and that platform difference should be documented rather than hidden.
 
 Platform SDK planning rule:
 
@@ -594,6 +598,7 @@ Should capture:
 
 - environments
 - app ids / bundle ids
+- environment-specific app names / icons
 - flavor and scheme behavior
 - release checklist
 - security checks
@@ -625,13 +630,19 @@ That means:
   - Android OTP auto-read
   - shared token/referral bridge state
   - Android/iOS push and referral entry hooks
+- carry forward the later verified Phase 12 branding/runtime additions:
+  - Android/iOS app names now align as `Staging HabitGold`, `Preprod HabitGold`, `HabitGold`
+  - Android launcher icons now mirror the legacy Android project assets
+  - iOS app icons now come from the IconKitchen-exported `AppIcon.appiconset`
+  - iOS Firebase Messaging delegate / FCM token capture is wired
 - carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
   - delivery affordability uses `redeemableGoldGrams`
   - serviceability requires `PINCODE_SERVICEABLE`
   - shortfall-to-buy rounds up to the next `0.5g`
   - buy-back should return to Delivery / Get Coin, not Home
-- finish the remaining iOS secure-storage and project-level push/deep-link parity
+- finish the remaining iOS project-level push/deep-link runtime verification
 - finish the remaining Firebase / crash / performance parity decisions
+- remember that personal-team local iOS builds use empty dev entitlements for signing, so true APNs / associated-domain verification still requires paid-team provisioning
 - keep notification, deep-link, install-referrer, and OTP behavior platform-owned but contract-driven
 - document explicit iOS non-equivalent paths instead of faking Android parity where none exists
 - update docs as each Phase 12 checkpoint moves forward

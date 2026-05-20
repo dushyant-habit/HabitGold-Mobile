@@ -15,9 +15,9 @@ Use this together with:
 - Phase 9 status: `checkpointed, not fully closed`
 - Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
 - Phase 11 status: `shared Delivery / Get Coin checkpoint is live; final device QA and any remaining invoice/detail parity follow-up are still pending`
-- Phase 12 status: `first verified implementation slice live, still in progress`
-- Current focus: `finish the remaining platform parity gaps after the first env/storage/otp/push/referral slice`
-- Next milestone: `complete the remaining iOS secure-storage and Firebase/crash/perf parity decisions`
+- Phase 12 status: `latest implementation slice live, still in progress`
+- Current focus: `finish the remaining iOS runtime/device verification gaps after env/storage/otp/push/referral/app-branding setup`
+- Next milestone: `complete iOS Firebase Messaging/APNs/associated-domain on-device verification`
 
 ## Phase Status
 
@@ -198,21 +198,27 @@ This section keeps the important product flows visible explicitly, even when the
 - [x] Align shared Android and iOS base app version values to the current Android production version line
 - [x] Add Android encrypted secure storage implementation
 - [x] Add Android SMS Retriever bridge behind the shared auth OTP screen
+- [x] Document iOS OTP behavior as system keyboard suggestion autofill instead of Android-style SMS auto-read
 - [x] Add shared platform bridge storage for pending referral and device-token state
 - [x] Add shared device-token sync manager and shared alert recorder
 - [x] Add Android referral deep-link capture
 - [x] Add Android Install Referrer capture
 - [x] Add Android FCM messaging-service callback path
 - [x] Add Android Clarity init and shared route screen-name updates
+- [x] Add iOS Clarity init and build-config/project-id wiring
 - [x] Add iOS APNs registration/token capture hooks
 - [x] Add iOS referral URL capture hooks
 - [x] Add iOS shared-alert persistence hook from notification callbacks
 - [x] Finish true iOS preprod Xcode configuration wiring
 - [x] Add Android Firebase plugin/runtime parity and env `google-services.json` assets
 - [x] Add iOS Firebase pod/runtime wiring plus env plist selection
-- [ ] Finish iOS keychain-backed secure storage
+- [x] Add iOS Firebase Messaging delegate / FCM registration-token wiring
+- [x] Finish iOS keychain-backed secure storage
+- [x] Align Android and iOS environment-specific display names
+- [x] Align Android and iOS app icon assets to current HabitGold branding
 - [ ] Verify iOS Firebase / Crashlytics / Performance on device
-- [ ] Finalize iOS push capability / associated-domain project setup and verify on device
+- [~] Finalize iOS push capability / associated-domain project setup and verify on device
+- personal-team local builds still require empty dev entitlements, so true APNs delivery verification remains tied to paid-team provisioning
 
 ## Completed So Far
 

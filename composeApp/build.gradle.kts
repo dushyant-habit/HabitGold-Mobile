@@ -117,7 +117,7 @@ kotlin {
             implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
             implementation("com.google.firebase:firebase-crashlytics")
             implementation("com.google.firebase:firebase-perf")
-            implementation("com.microsoft.clarity:clarity-compose:3.8.1")
+            implementation("com.microsoft.clarity:clarity-compose:3.8.2")
             implementation("com.google.zxing:core:3.5.4")
         }
         commonMain.dependencies {
@@ -182,7 +182,7 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            resValue("string", "app_name", "HabitGold Staging")
+            resValue("string", "app_name", "Staging HabitGold")
             buildConfigField("String", "APP_ENV", "\"staging\"")
             buildConfigField("String", "API_BASE_URL", "\"$stagingBaseUrl\"")
             buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityStaging")
@@ -193,7 +193,7 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".preprod"
             versionNameSuffix = "-preprod"
-            resValue("string", "app_name", "HabitGold Preprod")
+            resValue("string", "app_name", "Preprod HabitGold")
             buildConfigField("String", "APP_ENV", "\"preprod\"")
             buildConfigField("String", "API_BASE_URL", "\"$preprodBaseUrl\"")
             buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityPreprod")

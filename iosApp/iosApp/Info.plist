@@ -8,6 +8,12 @@
 	<string>$(API_BASE_URL)</string>
 	<key>APP_NAME</key>
 	<string>$(APP_NAME)</string>
+	<key>CFBundleDisplayName</key>
+	<string>$(APP_NAME)</string>
+	<key>CLARITY_PROJECT_ID</key>
+	<string>$(CLARITY_PROJECT_ID)</string>
+	<key>ENABLE_CLARITY</key>
+	<string>$(ENABLE_CLARITY)</string>
 	<key>ENABLE_NETWORK_LOGS</key>
 	<string>$(ENABLE_NETWORK_LOGS)</string>
 	<key>JUSPAY_CLIENT_ID</key>

@@ -1,7 +1,10 @@
 #include "Base.xcconfig"
 
-PRODUCT_NAME=HabitGoldMobile
+PRODUCT_NAME=HabitGold
 APP_ENV=prod
 API_BASE_URL=https:$(SLASH)/api.habitgold.com/v1/
 ENABLE_NETWORK_LOGS=NO
 JUSPAY_ENVIRONMENT=production
+APS_ENVIRONMENT=production
+ENABLE_CLARITY=YES
+FIREBASE_PLIST_SOURCE=GoogleService-Info-Prod.plist
