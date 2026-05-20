@@ -1,40 +1,69 @@
 package com.habit.gold.feature.delivery.presentation.screen
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.habit.gold.core.designsystem.theme.*
+import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.isPincodeServiceable
-import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
-import com.habit.gold.feature.delivery.presentation.resolve
+import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.components.OtpVerificationDialog
+import com.habit.gold.feature.delivery.presentation.resolve
 import habitgoldmobile.composeapp.generated.resources.Res
-import habitgoldmobile.composeapp.generated.resources.*
+import habitgoldmobile.composeapp.generated.resources.common_back
+import habitgoldmobile.composeapp.generated.resources.common_cancel
+import habitgoldmobile.composeapp.generated.resources.delivery_address_add_new
+import habitgoldmobile.composeapp.generated.resources.delivery_address_continue
+import habitgoldmobile.composeapp.generated.resources.delivery_address_delete
+import habitgoldmobile.composeapp.generated.resources.delivery_address_delete_action
+import habitgoldmobile.composeapp.generated.resources.delivery_address_delete_confirmation
+import habitgoldmobile.composeapp.generated.resources.delivery_address_title
 import org.jetbrains.compose.resources.stringResource
 
-/**
- * Delivery Address selection screen.
- *
- * Mirrors GetCoinAddressScreen from legacy Android:
- *  - Lists saved addresses with serviceability chip
- *  - Allows OTP-based phone verification
- *  - "Add New Address" opens AddEditAddressScreen
- *  - Selecting a serviceable address and tapping Continue navigates back to cart
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeliveryAddressScreen(
@@ -49,8 +78,6 @@ fun DeliveryAddressScreen(
     showCheckoutButton: Boolean = true,
 ) {
     var showDeleteConfirm by remember { mutableStateOf<SavedAddress?>(null) }
-
-    // Listen for AddressSaved effect to dismiss OTP dialog
     val selectedAddress = state.savedAddresses.find { it.id == selectedAddressId }
 
     Scaffold(
@@ -128,12 +155,18 @@ fun DeliveryAddressScreen(
                     CircularProgressIndicator(color = AppColors.Purple700)
                 }
             } else if (state.savedAddresses.isEmpty()) {
-                EmptyAddressState(onAddNewAddress = {
-                    onIntent(DeliveryAddressIntent.ClearEditState)
-                    onAddNewAddress()
-                })
+                EmptyAddressState(
+                    onAddNewAddress = {
+                        onIntent(DeliveryAddressIntent.ClearEditState)
+                        onAddNewAddress()
+                    }
+                )
             } else {
-                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
                     OutlinedButton(
                         onClick = {
                             onIntent(DeliveryAddressIntent.ClearEditState)
@@ -159,18 +192,16 @@ fun DeliveryAddressScreen(
                         )
                     }
                 }
-                
+
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-
                     items(state.savedAddresses, key = { it.id }) { address ->
-                        val isSelected = address.id == selectedAddressId
                         DeliveryAddressCard(
                             address = address,
-                            isSelected = isSelected,
+                            isSelected = address.id == selectedAddressId,
                             onSelect = { onSelectAddress(address.id) },
                             onEdit = {
                                 onIntent(DeliveryAddressIntent.LoadAddressForEdit(address.id))
@@ -187,16 +218,11 @@ fun DeliveryAddressScreen(
         }
     }
 
-    // OTP Verification Dialog
-    val otpAddressId = state.otpAddressId
-    if (otpAddressId != null) {
-        val address = state.savedAddresses.find { it.id == otpAddressId }
-        if (address != null) {
+    state.otpAddressId?.let { otpAddressId ->
+        state.savedAddresses.find { it.id == otpAddressId }?.let { address ->
             OtpVerificationDialog(
                 address = address,
-                onDismiss = {
-                    onIntent(DeliveryAddressIntent.DismissOtpDialog)
-                },
+                onDismiss = { onIntent(DeliveryAddressIntent.DismissOtpDialog) },
                 onVerify = { otp ->
                     onIntent(DeliveryAddressIntent.VerifyAddressOtp(address.id, otp))
                 },
@@ -204,12 +230,11 @@ fun DeliveryAddressScreen(
                     onIntent(DeliveryAddressIntent.SendAddressOtp(address.id))
                 },
                 isVerifying = state.isVerifyingOtp,
-                errorMessage = state.otpVerifyError?.resolve()
+                errorMessage = state.otpVerifyError?.resolve(),
             )
         }
     }
 
-    // Delete Confirmation Dialog
     showDeleteConfirm?.let { address ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
@@ -219,16 +244,21 @@ fun DeliveryAddressScreen(
                 Text(
                     stringResource(
                         Res.string.delivery_address_delete_confirmation,
-                        address.name
+                        address.name,
                     )
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    onIntent(DeliveryAddressIntent.DeleteAddress(address.id))
-                    showDeleteConfirm = null
-                }) {
-                    Text(stringResource(Res.string.delivery_address_delete_action), color = AppColors.Danger)
+                TextButton(
+                    onClick = {
+                        onIntent(DeliveryAddressIntent.DeleteAddress(address.id))
+                        showDeleteConfirm = null
+                    }
+                ) {
+                    Text(
+                        stringResource(Res.string.delivery_address_delete_action),
+                        color = AppColors.Danger,
+                    )
                 }
             },
             dismissButton = {

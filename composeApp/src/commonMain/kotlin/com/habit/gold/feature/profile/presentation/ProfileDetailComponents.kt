@@ -84,12 +84,12 @@ import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_back
 import habitgoldmobile.composeapp.generated.resources.common_cancel
 import habitgoldmobile.composeapp.generated.resources.common_ok
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Instant
 
 internal val ProfileScreenBackground = Color(0xFFF8F8FB)
 internal val ProfileCardBorder = Color(0xFFE5E7EB)

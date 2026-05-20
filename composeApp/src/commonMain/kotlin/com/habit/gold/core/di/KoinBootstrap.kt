@@ -22,18 +22,22 @@ fun startKoinIfNeeded(
 ): Koin {
     KoinPlatform.getKoinOrNull()?.let { return it }
 
-    return startKoin {
-        modules(
-            coreModule(appConfig, platformInfo),
-            networkModule,
-            alertsModule,
-            authModule,
-            homeModule,
-            profileModule,
-            rewardsModule,
-            savingsModule,
-            tradeModule,
-            deliveryModule,
-        )
-    }.koin
+    return try {
+        startKoin {
+            modules(
+                coreModule(appConfig, platformInfo),
+                networkModule,
+                alertsModule,
+                authModule,
+                homeModule,
+                profileModule,
+                rewardsModule,
+                savingsModule,
+                tradeModule,
+                deliveryModule,
+            )
+        }.koin
+    } catch (e: Exception) {
+        KoinPlatform.getKoinOrNull() ?: throw e
+    }
 }

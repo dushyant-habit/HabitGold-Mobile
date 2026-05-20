@@ -34,6 +34,8 @@ import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
 import com.habit.gold.feature.delivery.presentation.resolve
 import com.habit.gold.feature.delivery.presentation.components.*
+import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
+import com.habit.gold.feature.delivery.presentation.DeliveryIntent
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -375,4 +377,168 @@ fun AddEditAddressScreen(
             )
         }
     }
+}
+
+// ── OTP Dialog ───────────────────────────────────────────────────────────────
+
+@Composable
+private fun OtpVerificationDialog(
+    onDismiss: () -> Unit,
+    onVerify: (String) -> Unit,
+    onResend: () -> Unit,
+    isVerifying: Boolean,
+    errorMessage: String? = null
+) {
+    var otp by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppColors.White,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text(
+                text = "Verify Address",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppColors.Slate950,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "Enter the 6-digit OTP sent to your phone number to verify this address.",
+                    fontSize = 14.sp,
+                    color = AppColors.Slate600,
+                )
+                OutlinedTextField(
+                    value = otp,
+                    onValueChange = { if (it.length <= 6) otp = it.filter(Char::isDigit) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("OTP") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Purple700,
+                        unfocusedBorderColor = if (errorMessage != null) AppColors.Red600 else AppColors.Slate300,
+                        focusedLabelColor = AppColors.Purple700,
+                    ),
+                    isError = errorMessage != null
+                )
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        fontSize = 12.sp,
+                        color = AppColors.Red600,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+                TextButton(
+                    onClick = onResend,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text("Resend OTP", color = AppColors.Purple700, fontSize = 13.sp)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = AppColors.Slate500)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onVerify(otp) },
+                enabled = otp.length == 6 && !isVerifying,
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.Purple700,
+                    disabledContainerColor = AppColors.Purple200,
+                ),
+            ) {
+                if (isVerifying) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = AppColors.White,
+                        strokeWidth = 2.dp,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text("Verify")
+            }
+        },
+    )
+}
+
+// ── Reusable Form Components ─────────────────────────────────────────────────
+
+@Composable
+private fun AddressTypeRow(
+    selected: AddressType,
+    onSelect: (AddressType) -> Unit,
+) {
+    val types = listOf(
+        AddressType.HOME to "Home",
+        AddressType.WORK to "Work",
+        AddressType.OTHER to "Other",
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        types.forEach { (type, label) ->
+            val isSelected = selected == type
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) AppColors.Purple700 else AppColors.White)
+                    .clickable { onSelect(type) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 14.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) AppColors.White else AppColors.Slate600,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddressFormField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
+    imeAction: ImeAction = ImeAction.Next,
+    prefix: @Composable (() -> Unit)? = null,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        label = { Text(label, fontSize = 13.sp) },
+        prefix = prefix,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            capitalization = capitalization,
+            imeAction = imeAction,
+        ),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = AppColors.Purple700,
+            unfocusedBorderColor = AppColors.Slate300,
+            focusedLabelColor = AppColors.Purple700,
+        ),
+    )
 }
