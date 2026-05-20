@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.theme.AppColors
 import org.jetbrains.compose.resources.stringResource
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
@@ -42,10 +43,10 @@ fun CommonCouponCard(
     availableCoupons: Int = 0,
     onDone: () -> Unit = {},
 ) {
-    val borderColor = Color(0xFFE5E7EB)
-    val primaryTextColor = Color(0xFF0F172A)
-    val mutedTextColor = Color(0xFF6B7280)
-    val brandColor = Color(0xFF7B2CBF)
+    val borderColor = AppColors.Slate200
+    val primaryTextColor = AppColors.Slate900
+    val mutedTextColor = AppColors.Slate500
+    val brandColor = AppColors.Primary
 
     Row(
         modifier = modifier

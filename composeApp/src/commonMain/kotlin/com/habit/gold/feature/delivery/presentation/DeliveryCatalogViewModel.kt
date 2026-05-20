@@ -224,6 +224,10 @@ class DeliveryCatalogViewModel(
         updateState { it.copy(selectedAddressId = id) }
     }
 
+    /**
+     * Secures a pricing quote from the server for the active checkout parameters.
+     * Validates that both a shipping address and a coin selection are present before dispatch.
+     */
     private fun prepareQuote(couponCode: String?) {
         viewModelScope.launch {
             val addressId = state.value.selectedAddressId
@@ -316,6 +320,10 @@ class DeliveryCatalogViewModel(
         }
     }
 
+    /**
+     * Initiates the checkout payment sequence with the gateway.
+     * Prevents duplicate execution by checking the active transaction phase.
+     */
     private fun confirmOrder() {
         val currentState = state.value
         if (currentState.isCheckingOut) return
@@ -481,6 +489,10 @@ class DeliveryCatalogViewModel(
         }
     }
 
+    /**
+     * Polls the order service periodically to confirm payment success.
+     * Stops immediately when a terminal status (success or fatal failure) is resolved.
+     */
     private fun pollOrderUntilTerminal(orderId: String) {
         viewModelScope.launch {
             repeat(MAX_ORDER_STATUS_POLL_ATTEMPTS) {
@@ -572,6 +584,10 @@ class DeliveryCatalogViewModel(
         }
     }
 
+    /**
+     * Re-establishes a pending checkout state after process interruption.
+     * Validates quote expiration timestamps before restoring the state.
+     */
     private fun restorePendingCheckout() {
         viewModelScope.launch {
             pendingDeliveryCheckoutStore.pendingCheckout.collect { pending ->
@@ -683,6 +699,10 @@ class DeliveryCatalogViewModel(
         }
     }
 
+    /**
+     * Evaluates and automatically applies a free delivery coupon if criteria match.
+     * Bypasses auto-apply if the user manually removed a coupon from their cart.
+     */
     private fun autoApplyDeliveryCouponIfEligible() {
         val totalWeight = state.value.totalWeightGm
         val currentCoupon = state.value.couponCode

@@ -71,9 +71,9 @@ internal fun DeliveryCatalogLoadingContent() {
 
     val shimmerBrush = Brush.linearGradient(
         colors = listOf(
-            Color(0xFFE2E8F0),
-            Color(0xFFF1F5F9),
-            Color(0xFFE2E8F0)
+            AppColors.Slate200,
+            AppColors.Slate100,
+            AppColors.Slate200
         ),
         start = Offset(x = -300f + progress * 900f, y = 0f),
         end = Offset(x = progress * 900f, y = 0f)

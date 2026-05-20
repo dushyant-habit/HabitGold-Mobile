@@ -291,6 +291,10 @@ class DeliveryAddressViewModel(
         }
     }
 
+    /**
+     * Checks serviceability status of the address with the logistics provider.
+     * Marks the address as serviceable or shows a fallback error to the user.
+     */
     private suspend fun completeAddressVerification(addressId: String) {
         checkAddressServiceabilityUseCase(addressId).fold(
             onSuccess = { json ->
@@ -324,6 +328,10 @@ class DeliveryAddressViewModel(
         )
     }
 
+    /**
+     * Validates if a raw pincode is serviceable under the current weight tier.
+     * Triggers a status toast or shows an validation error dialog to the user.
+     */
     private fun verifyDeliveryPincode(pincode: String) {
         updateState { it.copy(isVerifyingPincode = true, pincodeVerifyError = null) }
         viewModelScope.launch {
@@ -370,6 +378,10 @@ class DeliveryAddressViewModel(
         }
     }
 
+    /**
+     * Performs a reverse directory lookup on a pincode to extract city and state.
+     * Automatically pre-fills form fields when a match is successfully resolved.
+     */
     private fun lookupPostalPincode(pincode: String) {
         viewModelScope.launch {
             lookupPostalPincodeUseCase(pincode).fold(
