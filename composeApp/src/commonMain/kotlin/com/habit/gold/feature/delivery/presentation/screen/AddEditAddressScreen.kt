@@ -35,8 +35,6 @@ import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressIntent
 import com.habit.gold.feature.delivery.presentation.resolve
 import com.habit.gold.feature.delivery.presentation.components.*
-import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
-import com.habit.gold.feature.delivery.presentation.DeliveryIntent
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource

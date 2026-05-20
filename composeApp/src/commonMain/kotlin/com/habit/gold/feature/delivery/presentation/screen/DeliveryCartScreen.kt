@@ -50,9 +50,6 @@ import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
