@@ -25,6 +25,9 @@ import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryOrderDetailsUse
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryProductsUseCase
 import com.habit.gold.feature.trade.domain.TradeRepository
 import com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon
+import com.habit.gold.feature.trade.domain.model.TradeCouponType
+import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
+import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import com.habit.gold.feature.trade.domain.model.TradeBuyOrder
 import com.habit.gold.feature.trade.domain.model.TradeBuyOrderRequest
 import com.habit.gold.feature.trade.domain.model.TradeCouponOrderType
@@ -108,9 +111,47 @@ class DeliveryCatalogViewModelTest {
         assertEquals("order-123", pendingStore.pendingCheckout.first()?.orderId)
     }
 
+    @Test
+    fun `auto applies free delivery coupon and manually removing it works`() = runTest(dispatcher) {
+        val viewModel = createViewModel(
+            deliveryRepository = FakeDeliveryRepository(),
+        )
+
+        advanceUntilIdle()
+
+        // 1. Initial State: coins list loaded, but cart is empty. No coupon auto-applied yet.
+        assertEquals(0.0, viewModel.state.value.couponDiscountInr)
+        assertEquals(null, viewModel.state.value.couponCode)
+
+        // 2. Select coin "coin-1" -> cart weight becomes 1.0g. Coupon FREE_DELIVERY_TEST should auto-apply.
+        viewModel.onIntent(DeliveryIntent.UpdateQuantity("coin-1", 1))
+        advanceUntilIdle()
+
+        assertEquals("FREE_DELIVERY_TEST", viewModel.state.value.couponCode)
+        assertEquals(100.0, viewModel.state.value.couponDiscountInr)
+        assertEquals(TradeCouponType.FREE_DELIVERY, viewModel.state.value.couponType)
+
+        // 3. Manually remove coupon -> couponCode should be null, and hasManuallyRemovedCoupon should be true
+        viewModel.onIntent(DeliveryIntent.RemoveCoupon)
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.couponCode)
+        assertEquals(0.0, viewModel.state.value.couponDiscountInr)
+        assertEquals(null, viewModel.state.value.couponType)
+
+        // 4. Update quantity or do something that would trigger auto-apply -> should NOT re-apply since user explicitly removed it
+        viewModel.onIntent(DeliveryIntent.UpdateQuantity("coin-1", -1))
+        advanceUntilIdle()
+        viewModel.onIntent(DeliveryIntent.UpdateQuantity("coin-1", 1))
+        advanceUntilIdle()
+
+        assertEquals(null, viewModel.state.value.couponCode)
+    }
+
     private fun createViewModel(
         pendingStore: PendingDeliveryCheckoutStore = FakePendingDeliveryCheckoutStore(null),
         deliveryRepository: DeliveryRepository,
+        tradeRepository: TradeRepository = FakeTradeRepository(),
     ): DeliveryCatalogViewModel {
         return DeliveryCatalogViewModel(
             getDeliveryProductsUseCase = GetDeliveryProductsUseCase(deliveryRepository),
@@ -118,8 +159,10 @@ class DeliveryCatalogViewModelTest {
             confirmDeliveryOrderUseCase = ConfirmDeliveryOrderUseCase(deliveryRepository),
             pendingDeliveryCheckoutStore = pendingStore,
             deliveryCheckoutTelemetry = NoOpDeliveryCheckoutTelemetry(),
-            getSellAvailabilityUseCase = GetSellAvailabilityUseCase(FakeTradeRepository()),
+            getSellAvailabilityUseCase = GetSellAvailabilityUseCase(tradeRepository),
             getDeliveryOrderDetailsUseCase = GetDeliveryOrderDetailsUseCase(deliveryRepository),
+            getTradeAvailableCouponsUseCase = GetTradeAvailableCouponsUseCase(tradeRepository),
+            validateTradeCouponUseCase = ValidateTradeCouponUseCase(tradeRepository),
             sessionStore = createSessionStore(),
         )
     }
@@ -154,7 +197,16 @@ private class NoOpDeliveryCheckoutTelemetry : DeliveryCheckoutTelemetry {
 }
 
 private class FakeDeliveryRepository : DeliveryRepository {
-    override suspend fun getDeliveryProducts() = Result.success(buildJsonArray {})
+    override suspend fun getDeliveryProducts() = Result.success(buildJsonArray {
+        add(buildJsonObject {
+            put("id", "coin-1")
+            put("productName", "1g Gold Coin")
+            put("weightGm", 1.0)
+            put("makingCharge", 100.0)
+            put("metalStamp", "24K")
+            put("imageUrl", "https://example.com/coin.png")
+        })
+    })
 
     override suspend fun validatePincode(pinCode: String, productWeightGrams: Double) =
         Result.success(buildJsonObject { put("serviceable", true) })
@@ -218,14 +270,44 @@ private class FakeTradeRepository : TradeRepository {
     override suspend fun getUserVpas(): ApiResult<List<TradeUserVpa>> = unused()
     override suspend fun setDefaultVpa(vpaId: String): ApiResult<Unit> = unused()
     override suspend fun verifyVpa(vpa: String): ApiResult<TradeVpaVerification> = unused()
+    
     override suspend fun getAvailableCoupons(
         orderType: TradeCouponOrderType,
         amount: Double?,
         grams: Double?,
         deliveryFeeInr: Double?,
-    ): ApiResult<List<TradeAvailableCoupon>> = unused()
+    ): ApiResult<List<TradeAvailableCoupon>> {
+        return ApiResult.Success(
+            listOf(
+                TradeAvailableCoupon(
+                    code = "FREE_DELIVERY_TEST",
+                    description = "Get free delivery",
+                    type = TradeCouponType.FREE_DELIVERY,
+                    estimatedSaving = "100",
+                    maxDiscountAmount = null,
+                    minOrderValue = null,
+                    expiresAt = "2030-01-01T00:00:00Z",
+                    applicableOrderTypes = listOf(TradeCouponOrderType.DELIVERY),
+                    isAssigned = true,
+                )
+            )
+        )
+    }
 
-    override suspend fun validateCoupon(request: TradeCouponValidationRequest): ApiResult<TradeCouponValidation> = unused()
+    override suspend fun validateCoupon(request: TradeCouponValidationRequest): ApiResult<TradeCouponValidation> {
+        return ApiResult.Success(
+            TradeCouponValidation(
+                code = request.code,
+                promoRuleId = "rule-1",
+                promotionalDiscount = "0",
+                promotionalCashback = "0",
+                promotionalExtraGold = "0",
+                promotionalDeliveryDiscount = if (request.code == "FREE_DELIVERY_TEST") "100" else "0",
+                netOrderAmount = "0",
+                netDeliveryFeeInr = if (request.code == "FREE_DELIVERY_TEST") "0" else "100"
+            )
+        )
+    }
 
     private fun <T> unused(): ApiResult<T> {
         error("Not used in DeliveryCatalogViewModelTest")

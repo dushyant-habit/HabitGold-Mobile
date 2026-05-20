@@ -247,6 +247,7 @@ fun HomeRoute(
                         returnDestination = activeDestination,
                     )
                 },
+                onGoToDashboard = { destination = HomeDestination.Dashboard },
             )
         }
         is HomeDestination.Deferred -> HomeDeferredRouteScreen(

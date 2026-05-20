@@ -7,6 +7,9 @@ import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutPhase
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
+import com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon
+import com.habit.gold.feature.trade.domain.model.TradeCouponType
+import kotlin.math.roundToInt
 
 data class DeliveryCatalogState(
     val isLoadingProducts: Boolean = false,
@@ -23,23 +26,21 @@ data class DeliveryCatalogState(
     val pendingPaymentSdkPayloadJson: String? = null,
     val couponCode: String? = null,
     val couponDiscountInr: Double = 0.0,
+    val couponType: TradeCouponType? = null,
+    val availableCoupons: List<TradeAvailableCoupon> = emptyList(),
+    val hasManuallyRemovedCoupon: Boolean = false,
 ) : MviState {
-    val totalCoinsSelected: Int
-        get() = cartItems.values.sum()
-
-    val totalWeightGm: Double
-        get() = cartItems.mapNotNull { (id, qty) ->
-            coins.find { it.id == id }?.let { it.weightGm * qty }
-        }.sum()
-
-    val netAmountPayable: Double
-        get() = cartItems.mapNotNull { (id, qty) ->
-            coins.find { it.id == id }?.let { it.makingCharge * qty }
-        }.sum() - couponDiscountInr
-
-    val isAddressEditingLocked: Boolean
-        get() = checkoutPhase != DeliveryCheckoutPhase.IDLE &&
-            checkoutPhase != DeliveryCheckoutPhase.REVIEW_READY
+    val totalCoinsSelected: Int get() = cartItems.values.sum()
+    
+    val totalWeightGm: Double get() = cartItems.mapNotNull { (id, qty) ->
+        coins.find { it.id == id }?.let { it.weightGm * qty }
+    }.sum()
+    
+    val netAmountPayable: Double get() = (cartItems.mapNotNull { (id, qty) ->
+        coins.find { it.id == id }?.let { it.makingCharge * qty }
+    }.sum() - couponDiscountInr).coerceAtLeast(0.0)
+    
+    val isAddressEditingLocked: Boolean get() = checkoutPhase != DeliveryCheckoutPhase.IDLE && checkoutPhase != DeliveryCheckoutPhase.REVIEW_READY
 }
 
 sealed interface DeliveryIntent : MviIntent {

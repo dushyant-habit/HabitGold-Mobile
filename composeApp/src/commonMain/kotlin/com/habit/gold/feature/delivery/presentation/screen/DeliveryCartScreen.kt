@@ -43,6 +43,7 @@ import com.habit.gold.feature.delivery.presentation.DeliveryCatalogState
 import com.habit.gold.feature.delivery.presentation.DeliveryAddressState
 import com.habit.gold.feature.delivery.presentation.DeliveryIntent
 import com.habit.gold.feature.delivery.presentation.components.*
+import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -73,6 +74,7 @@ fun DeliveryCartScreen(
 
     var showConfirmDialog by remember { mutableStateOf(false) }
     var localCouponCode by remember { mutableStateOf(catalogState.couponCode ?: "") }
+    var showCouponSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(catalogState.couponCode) {
         if (catalogState.couponCode != null) {
@@ -178,6 +180,9 @@ fun DeliveryCartScreen(
             CouponCodeCard(
                 couponCode = localCouponCode,
                 appliedCoupon = catalogState.couponCode,
+                couponType = catalogState.couponType,
+                availableCouponsCount = catalogState.availableCoupons.size,
+                onShowOffers = { showCouponSheet = true },
                 onCodeChange = { localCouponCode = it },
                 onApply = { onIntent(DeliveryIntent.ApplyCoupon(localCouponCode)) },
                 onRemove = {
@@ -193,7 +198,8 @@ fun DeliveryCartScreen(
                 couponDiscountInr = checkoutQuote?.let {
                     (it.mintingChargeInr - it.payableChargeInr).coerceAtLeast(0.0)
                 } ?: catalogState.couponDiscountInr,
-                netAmountPayable = payableAmount
+                netAmountPayable = payableAmount,
+                couponType = catalogState.couponType
             )
 
             SecureOrderNote()
@@ -217,6 +223,25 @@ fun DeliveryCartScreen(
                 onIntent(DeliveryIntent.ConfirmOrder)
             }
         )
+    }
+
+    if (showCouponSheet) {
+        val couponSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showCouponSheet = false },
+            sheetState = couponSheetState,
+            containerColor = AppColors.White
+        ) {
+            DeliveryCouponSheet(
+                coupons = catalogState.availableCoupons,
+                appliedCouponCode = catalogState.couponCode,
+                onApplyCoupon = { code ->
+                    localCouponCode = code
+                    onIntent(DeliveryIntent.ApplyCoupon(code))
+                    showCouponSheet = false
+                }
+            )
+        }
     }
 }
 

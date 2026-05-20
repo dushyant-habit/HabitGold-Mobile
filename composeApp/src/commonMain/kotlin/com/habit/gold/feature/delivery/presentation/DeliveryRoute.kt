@@ -39,7 +39,9 @@ fun DeliveryRoute(
     initialDestination: DeliveryDestination = DeliveryDestination.Catalog,
     onBackToHome: () -> Unit,
     onNavigateToBuyGold: (shortfallGrams: Double) -> Unit,
+    onGoToDashboard: (() -> Unit)? = null,
 ) {
+
     val addressViewModel = viewModel {
         DeliveryAddressViewModel(
             listUserAddressesUseCase = dependencies.listUserAddressesUseCase,
@@ -60,7 +62,7 @@ fun DeliveryRoute(
     val trackingState by trackingViewModel.state.collectAsState()
 
     val paymentLauncher = rememberPlatformDeliveryPaymentLauncher()
-    var destination by rememberSaveable { mutableStateOf<DeliveryDestination>(initialDestination) }
+    var destination by remember { mutableStateOf<DeliveryDestination>(initialDestination) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(catalogViewModel.effects) {
@@ -170,7 +172,7 @@ fun DeliveryRoute(
                 onIntent = catalogViewModel::onIntent,
                 onBackClick = { destination = DeliveryDestination.Catalog },
                 onTrackOrder = { destination = DeliveryDestination.Tracking },
-                onDone = onBackToHome,
+                onDone = onGoToDashboard ?: onBackToHome,
             )
 
             is DeliveryDestination.Tracking -> DeliveryTrackingScreen(

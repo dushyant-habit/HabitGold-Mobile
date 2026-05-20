@@ -20,6 +20,12 @@ import com.habit.gold.feature.delivery.domain.usecase.CreateDeliveryQuoteUseCase
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryOrderDetailsUseCase
 import com.habit.gold.feature.delivery.domain.usecase.GetDeliveryProductsUseCase
 import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
+import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
+import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
+import com.habit.gold.feature.trade.domain.model.TradeCouponOrderType
+import com.habit.gold.feature.trade.domain.model.TradeCouponValidationRequest
+import com.habit.gold.feature.trade.domain.model.TradeCouponType
+import com.habit.gold.core.network.ApiResult
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_applied
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_invalid
@@ -48,7 +54,8 @@ class DeliveryCatalogViewModel(
     private val deliveryCheckoutTelemetry: DeliveryCheckoutTelemetry,
     private val getSellAvailabilityUseCase: GetSellAvailabilityUseCase,
     private val getDeliveryOrderDetailsUseCase: GetDeliveryOrderDetailsUseCase,
-    @Suppress("unused")
+    private val getTradeAvailableCouponsUseCase: GetTradeAvailableCouponsUseCase,
+    private val validateTradeCouponUseCase: ValidateTradeCouponUseCase,
     private val sessionStore: SessionStore,
 ) : MviViewModel<DeliveryCatalogState, DeliveryIntent, DeliveryEffect>(DeliveryCatalogState()) {
 
@@ -89,6 +96,7 @@ class DeliveryCatalogViewModel(
                             coins = applyDeliveryProductFilter(products),
                         )
                     }
+                    loadAvailableCoupons()
                 },
                 onFailure = { error ->
                     updateState { it.copy(isLoadingProducts = false) }
@@ -110,6 +118,37 @@ class DeliveryCatalogViewModel(
         }
     }
 
+    private fun loadAvailableCoupons() {
+        val currentState = state.value
+        val coins = currentState.coins
+        val cartItems = currentState.cartItems
+
+        val selectedCoin = coins.find { cartItems.containsKey(it.id) }
+        val grams = selectedCoin?.weightGm
+        val amount = cartItems.mapNotNull { (id, qty) ->
+            coins.find { it.id == id }?.let { it.makingCharge * qty }
+        }.sum().takeIf { it > 0.0 }
+        
+        val deliveryFee = 100.0 // Standard delivery charge
+
+        viewModelScope.launch {
+            when (val result = getTradeAvailableCouponsUseCase(
+                orderType = TradeCouponOrderType.DELIVERY,
+                amount = amount,
+                grams = grams,
+                deliveryFeeInr = deliveryFee
+            )) {
+                is ApiResult.Success -> {
+                    updateState { it.copy(availableCoupons = result.value) }
+                    autoApplyDeliveryCouponIfEligible()
+                }
+                is ApiResult.Failure -> {
+                    // Fail silently for preloaded list
+                }
+            }
+        }
+    }
+
     private fun updateQuantity(coinId: String, delta: Int) {
         updateState { currentState ->
             val currentQty = currentState.cartItems[coinId] ?: 0
@@ -117,7 +156,48 @@ class DeliveryCatalogViewModel(
             val newCart = if (newQty > 0) mapOf(coinId to newQty) else emptyMap()
             currentState.copy(cartItems = newCart)
         }
-        autoApplyDelivery5IfEligible()
+
+        // Cart changed -> reload available coupons with correct coin parameters
+        loadAvailableCoupons()
+
+        // If the cart is now empty, clear the coupon
+        if (state.value.cartItems.isEmpty()) {
+            updateState { it.copy(couponCode = null, couponDiscountInr = 0.0, couponType = null) }
+        } else {
+            // Re-validate or auto-apply coupon if cart changed
+            val currentCoupon = state.value.couponCode
+            if (currentCoupon != null) {
+                // Re-validate existing coupon for new quantity/weight
+                viewModelScope.launch {
+                    val coins = state.value.coins
+                    val cartItems = state.value.cartItems
+                    val subtotalMakingCharge = cartItems.mapNotNull { (id, qty) ->
+                        coins.find { it.id == id }?.let { it.makingCharge * qty }
+                    }.sum()
+                    val totalWeight = state.value.totalWeightGm
+
+                    val request = TradeCouponValidationRequest(
+                        orderType = TradeCouponOrderType.DELIVERY,
+                        code = currentCoupon,
+                        deliveryFeeInr = subtotalMakingCharge,
+                        deliveryGrams = totalWeight,
+                    )
+                    when (val result = validateTradeCouponUseCase(request)) {
+                        is ApiResult.Success -> {
+                            val validation = result.value
+                            val discount = validation.promotionalDeliveryDiscount.toDoubleOrNull() ?: 0.0
+                            updateState { it.copy(couponDiscountInr = discount) }
+                        }
+                        is ApiResult.Failure -> {
+                            // If it's no longer valid, remove it silently
+                            updateState { it.copy(couponCode = null, couponDiscountInr = 0.0, couponType = null) }
+                        }
+                    }
+                }
+            } else {
+                autoApplyDeliveryCouponIfEligible()
+            }
+        }
     }
 
     private fun refreshGoldBalance() {
@@ -188,14 +268,24 @@ class DeliveryCatalogViewModel(
                 onSuccess = { response ->
                     activeConfirmIdempotencyKey = null
                     val quote = response.toUiQuote(cartItem.key, addressId)
-                    val couponDiscount =
-                        (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
+                    val couponDiscount = (quote.mintingChargeInr - quote.payableChargeInr).coerceAtLeast(0.0)
+                    
+                    val coins = state.value.coins
+                    val cartItems = state.value.cartItems
+                    val subtotalMakingCharge = cartItems.mapNotNull { (id, qty) ->
+                        coins.find { it.id == id }?.let { it.makingCharge * qty }
+                    }.sum()
+
+                    val couponType = state.value.availableCoupons.find { it.code.equals(effectiveCouponCode, ignoreCase = true) }?.type
+                        ?: if (couponDiscount >= subtotalMakingCharge && subtotalMakingCharge > 0.0) TradeCouponType.FREE_DELIVERY else TradeCouponType.DELIVERY_DISCOUNT
+
                     updateState {
                         it.copy(
                             isCheckingOut = false,
                             checkoutQuote = quote,
                             couponCode = effectiveCouponCode,
                             couponDiscountInr = couponDiscount,
+                            couponType = couponType,
                             checkoutPhase = DeliveryCheckoutPhase.REVIEW_READY,
                         )
                     }
@@ -454,6 +544,10 @@ class DeliveryCatalogViewModel(
                 checkoutPhase = DeliveryCheckoutPhase.COMPLETED,
                 cartItems = emptyMap(),
                 pendingPaymentSdkPayloadJson = null,
+                couponCode = null,
+                couponDiscountInr = 0.0,
+                couponType = null,
+                hasManuallyRemovedCoupon = false,
             )
         }
         deliveryCheckoutTelemetry.finalOrderState(id, order.paymentStatus, order.status)
@@ -489,16 +583,22 @@ class DeliveryCatalogViewModel(
                     return@collect
                 }
 
+                val mintingCharge = pending.verifyQuote.mintingChargeInr.toDoubleOrNull().orZero()
+                val payableCharge = pending.verifyQuote.payableChargeInr.toDoubleOrNull().orZero()
+                val couponDiscount = (mintingCharge - payableCharge).coerceAtLeast(0.0)
+
                 updateState {
                     it.copy(
                         checkoutQuote = pending.toUiQuote(),
                         cartItems = mapOf(pending.productId to 1),
                         selectedAddressId = pending.addressId,
                         couponCode = pending.couponCode,
-                        couponDiscountInr = (
-                            pending.verifyQuote.mintingChargeInr.toDoubleOrNull().orZero() -
-                                pending.verifyQuote.payableChargeInr.toDoubleOrNull().orZero()
-                            ).coerceAtLeast(0.0),
+                        couponDiscountInr = couponDiscount,
+                        couponType = if (couponDiscount >= mintingCharge && mintingCharge > 0.0) {
+                            TradeCouponType.FREE_DELIVERY
+                        } else {
+                            TradeCouponType.DELIVERY_DISCOUNT
+                        },
                         checkoutPhase = when (pending.stage) {
                             PendingDeliveryCheckoutStage.REVIEW -> DeliveryCheckoutPhase.REVIEW_READY
                             PendingDeliveryCheckoutStage.CONFIRM_IN_FLIGHT -> DeliveryCheckoutPhase.CONFIRMING
@@ -517,67 +617,117 @@ class DeliveryCatalogViewModel(
     }
 
     private fun applyCoupon(code: String) {
-        if (code.equals(DELIVERY5_COUPON_CODE, ignoreCase = true)) {
+        if (code.isBlank()) return
+        viewModelScope.launch {
+            val coins = state.value.coins
+            val cartItems = state.value.cartItems
+            val subtotalMakingCharge = cartItems.mapNotNull { (id, qty) ->
+                coins.find { it.id == id }?.let { it.makingCharge * qty }
+            }.sum()
             val totalWeight = state.value.totalWeightGm
-            if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM) {
-                updateState {
-                    it.copy(
-                        couponCode = DELIVERY5_COUPON_CODE,
-                        couponDiscountInr = DELIVERY5_DISCOUNT_INR,
-                    )
-                }
-                viewModelScope.launch {
+
+            val request = TradeCouponValidationRequest(
+                orderType = TradeCouponOrderType.DELIVERY,
+                code = code,
+                deliveryFeeInr = subtotalMakingCharge,
+                deliveryGrams = totalWeight,
+            )
+            updateState { it.copy(isCheckingOut = true) }
+            when (val result = validateTradeCouponUseCase(request)) {
+                is ApiResult.Success -> {
+                    val validation = result.value
+                    val discount = validation.promotionalDeliveryDiscount.toDoubleOrNull() ?: 0.0
+                    val couponCode = validation.code ?: code
+                    
+                    val couponType = state.value.availableCoupons.find { it.code.equals(couponCode, ignoreCase = true) }?.type
+                        ?: if (discount >= subtotalMakingCharge && subtotalMakingCharge > 0.0) TradeCouponType.FREE_DELIVERY else TradeCouponType.DELIVERY_DISCOUNT
+
+                    updateState {
+                        it.copy(
+                            isCheckingOut = false,
+                            couponCode = couponCode,
+                            couponDiscountInr = discount,
+                            couponType = couponType,
+                            hasManuallyRemovedCoupon = false,
+                        )
+                    }
                     emitEffect(
                         DeliveryEffect.ShowToast(
                             DeliveryUiText.Resource(
                                 Res.string.delivery_catalog_coupon_applied,
-                                listOf(DELIVERY5_COUPON_CODE),
+                                listOf(couponCode)
                             )
                         )
                     )
                 }
-            } else {
-                viewModelScope.launch {
+                is ApiResult.Failure -> {
+                    updateState { it.copy(isCheckingOut = false) }
                     emitEffect(
                         DeliveryEffect.ShowError(
-                            DeliveryUiText.Resource(
-                                Res.string.delivery_catalog_coupon_only_valid,
-                                listOf(DELIVERY5_COUPON_CODE),
-                            )
+                            DeliveryUiText.Dynamic(result.error.message ?: "Invalid coupon")
                         )
                     )
                 }
-            }
-        } else {
-            viewModelScope.launch {
-                emitEffect(
-                    DeliveryEffect.ShowError(
-                        DeliveryUiText.Resource(Res.string.delivery_catalog_coupon_invalid)
-                    )
-                )
             }
         }
     }
 
     private fun removeCoupon() {
-        updateState { it.copy(couponCode = null, couponDiscountInr = 0.0) }
+        updateState {
+            it.copy(
+                couponCode = null,
+                couponDiscountInr = 0.0,
+                couponType = null,
+                hasManuallyRemovedCoupon = true,
+            )
+        }
     }
 
-    private fun autoApplyDelivery5IfEligible() {
+    private fun autoApplyDeliveryCouponIfEligible() {
         val totalWeight = state.value.totalWeightGm
         val currentCoupon = state.value.couponCode
-        if (totalWeight >= DELIVERY5_MIN_WEIGHT_GM && currentCoupon == null) {
-            updateState {
-                it.copy(
-                    couponCode = DELIVERY5_COUPON_CODE,
-                    couponDiscountInr = DELIVERY5_DISCOUNT_INR,
-                )
+        val hasManuallyRemoved = state.value.hasManuallyRemovedCoupon
+        val availableCoupons = state.value.availableCoupons
+
+        if (!hasManuallyRemoved && currentCoupon == null && totalWeight > 0.0) {
+            val autoCoupon = availableCoupons.firstOrNull {
+                it.type == TradeCouponType.FREE_DELIVERY || it.type == TradeCouponType.DELIVERY_DISCOUNT
             }
-        } else if (
-            totalWeight < DELIVERY5_MIN_WEIGHT_GM &&
-            currentCoupon.equals(DELIVERY5_COUPON_CODE, ignoreCase = true)
-        ) {
-            updateState { it.copy(couponCode = null, couponDiscountInr = 0.0) }
+            if (autoCoupon != null) {
+                viewModelScope.launch {
+                    val coins = state.value.coins
+                    val cartItems = state.value.cartItems
+                    val subtotalMakingCharge = cartItems.mapNotNull { (id, qty) ->
+                        coins.find { it.id == id }?.let { it.makingCharge * qty }
+                    }.sum()
+
+                    val request = TradeCouponValidationRequest(
+                        orderType = TradeCouponOrderType.DELIVERY,
+                        code = autoCoupon.code,
+                        deliveryFeeInr = subtotalMakingCharge,
+                        deliveryGrams = totalWeight,
+                    )
+                    when (val result = validateTradeCouponUseCase(request)) {
+                        is ApiResult.Success -> {
+                            val validation = result.value
+                            val discount = validation.promotionalDeliveryDiscount.toDoubleOrNull() ?: 0.0
+                            val couponCode = validation.code ?: autoCoupon.code
+                            val couponType = autoCoupon.type
+
+                            updateState {
+                                it.copy(
+                                    couponCode = couponCode,
+                                    couponDiscountInr = discount,
+                                    couponType = couponType,
+                                )
+                            }
+                        }
+                        is ApiResult.Failure -> {
+                            // Fail silently for auto-apply
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -585,9 +735,7 @@ class DeliveryCatalogViewModel(
         const val MAX_PRODUCT_UNIT_ESTIMATE_INR = 95000.0
         const val MAX_ORDER_STATUS_POLL_ATTEMPTS = 15
         const val ORDER_STATUS_POLL_INTERVAL_MS = 2000L
-        const val DELIVERY5_COUPON_CODE = "DELIVERY5"
-        const val DELIVERY5_MIN_WEIGHT_GM = 5.0
-        const val DELIVERY5_DISCOUNT_INR = 100.0
+
 
         private fun generateIdempotencyKey(): String {
             val chars = ('a'..'f') + ('0'..'9')
@@ -600,3 +748,4 @@ class DeliveryCatalogViewModel(
 private fun Double?.orZero(): Double = this ?: 0.0
 
 private fun String.asDeliveryUiText(): DeliveryUiText = DeliveryUiText.Dynamic(this)
+
