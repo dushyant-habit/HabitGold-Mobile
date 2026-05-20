@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +31,12 @@ actual fun PlatformOtpAutoFillEffect(
             override fun onReceive(receiverContext: Context?, intent: Intent?) {
                 if (intent?.action != SmsRetriever.SMS_RETRIEVED_ACTION) return
                 val extras = intent.extras ?: return
-                val status = extras.get(SmsRetriever.EXTRA_STATUS) as? Status ?: return
+                val status = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    extras.getParcelable(SmsRetriever.EXTRA_STATUS, Status::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    extras.getParcelable(SmsRetriever.EXTRA_STATUS)
+                } ?: return
                 if (status.statusCode != CommonStatusCodes.SUCCESS) return
                 val message = extras.getString(SmsRetriever.EXTRA_SMS_MESSAGE).orEmpty()
                 val otp = SixDigitOtpRegex.find(message)?.value ?: return

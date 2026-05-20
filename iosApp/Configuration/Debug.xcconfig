@@ -10,3 +10,4 @@ JUSPAY_ENVIRONMENT=sandbox
 APS_ENVIRONMENT=development
 ENABLE_CLARITY=YES
 FIREBASE_PLIST_SOURCE=GoogleService-Info-Staging.plist
+APP_URL_SCHEME=habitgold-staging

@@ -7,7 +7,10 @@ import com.habit.gold.core.network.AuthTokenProvider
 import com.habit.gold.core.network.SessionExpiryHandler
 import com.habit.gold.core.network.UnsupportedTokenRefreshHandler
 import com.habit.gold.core.network.applyHabitGoldHttpClientConfig
+import com.habit.gold.core.platform.PlatformBridgeStore
+import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.SessionStore
+import com.habit.gold.core.storage.KeyValueStorage
 import com.habit.gold.core.storage.InMemorySecureStorage
 import com.habit.gold.core.storage.InMemorySessionMetadataStorage
 import com.habit.gold.core.storage.InMemoryUserProfileStorage
@@ -195,6 +198,20 @@ class ProfileRepositoryImplTest {
         return ProfileRepositoryImpl(
             remoteDataSource = ProfileRemoteDataSource(client),
             sessionStore = sessionStore,
+            deviceTokenSyncManager = DeviceTokenSyncManager(
+                httpClient = client,
+                appConfig = AppConfig(
+                    appName = "HabitGold",
+                    bundleId = "com.habit.gold",
+                    appVersion = "1.0-debug",
+                    appPlatform = "android",
+                    environment = AppEnvironment.Staging,
+                    baseUrl = "https://api.habitgold.com/v1/",
+                    enableNetworkLogs = false,
+                ),
+                sessionStore = sessionStore,
+                platformBridgeStore = PlatformBridgeStore(InMemoryTestKeyValueStorage()),
+            ),
         )
     }
 
@@ -214,4 +231,22 @@ class ProfileRepositoryImplTest {
         status = status,
         headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
     )
+}
+
+private class InMemoryTestKeyValueStorage : KeyValueStorage {
+    private val values = mutableMapOf<String, String>()
+
+    override suspend fun read(key: String): String? = values[key]
+
+    override suspend fun write(key: String, value: String) {
+        values[key] = value
+    }
+
+    override suspend fun delete(key: String) {
+        values.remove(key)
+    }
+
+    override suspend fun clear() {
+        values.clear()
+    }
 }

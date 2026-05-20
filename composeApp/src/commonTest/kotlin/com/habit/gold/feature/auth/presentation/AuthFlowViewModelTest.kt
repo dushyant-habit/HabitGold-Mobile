@@ -8,7 +8,9 @@ import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.network.ApiResult
 import com.habit.gold.core.network.NetworkError
 import com.habit.gold.core.network.NetworkErrorKind
+import com.habit.gold.core.platform.PlatformBridgeStore
 import com.habit.gold.core.session.SessionStore
+import com.habit.gold.core.storage.KeyValueStorage
 import com.habit.gold.core.storage.InMemorySecureStorage
 import com.habit.gold.core.storage.InMemorySessionMetadataStorage
 import com.habit.gold.core.storage.InMemoryUserProfileStorage
@@ -202,6 +204,7 @@ class AuthFlowViewModelTest {
             verifyOtpUseCase = VerifyOtpUseCase(repository),
             submitBasicDetailsUseCase = SubmitBasicDetailsUseCase(repository),
             sessionStore = sessionStore,
+            platformBridgeStore = PlatformBridgeStore(InMemoryTestKeyValueStorage()),
         )
     }
 
@@ -227,6 +230,24 @@ class AuthFlowViewModelTest {
             id = "user-2",
             phoneNumber = "9876543210",
         )
+    }
+}
+
+private class InMemoryTestKeyValueStorage : KeyValueStorage {
+    private val values = mutableMapOf<String, String>()
+
+    override suspend fun read(key: String): String? = values[key]
+
+    override suspend fun write(key: String, value: String) {
+        values[key] = value
+    }
+
+    override suspend fun delete(key: String) {
+        values.remove(key)
+    }
+
+    override suspend fun clear() {
+        values.clear()
     }
 }
 

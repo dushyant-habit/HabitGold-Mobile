@@ -9,6 +9,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import kotlinx.serialization.Serializable
 
 class DeviceTokenSyncManager(
     private val httpClient: HttpClient,
@@ -31,13 +33,15 @@ class DeviceTokenSyncManager(
         val token = platformBridgeStore.readLastRegisteredDeviceToken()
             ?: platformBridgeStore.readCurrentDeviceToken()
             ?: return
-        runCatching {
+        val unregistered = runCatching {
             httpClient.delete("user/device-token") {
                 contentType(ContentType.Application.Json)
                 setBody(UnregisterDeviceTokenDto(token))
             }
+        }.getOrNull()?.status?.isSuccess() == true
+        if (unregistered) {
+            platformBridgeStore.writeLastRegisteredDeviceToken(null)
         }
-        platformBridgeStore.writeLastRegisteredDeviceToken(null)
     }
 
     private suspend fun registerWithBackend(
@@ -45,7 +49,7 @@ class DeviceTokenSyncManager(
         force: Boolean,
     ) {
         if (!force && platformBridgeStore.readLastRegisteredDeviceToken() == token) return
-        runCatching {
+        val registered = runCatching {
             httpClient.post("user/device-token") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -55,17 +59,20 @@ class DeviceTokenSyncManager(
                     )
                 )
             }
-        }.onSuccess {
+        }.getOrNull()?.status?.isSuccess() == true
+        if (registered) {
             platformBridgeStore.writeLastRegisteredDeviceToken(token)
         }
     }
 }
 
+@Serializable
 data class RegisterDeviceTokenDto(
     val token: String,
     val platform: String,
 )
 
+@Serializable
 data class UnregisterDeviceTokenDto(
     val token: String,
 )
