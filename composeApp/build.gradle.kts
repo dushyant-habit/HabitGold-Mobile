@@ -183,6 +183,7 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
             resValue("string", "app_name", "Staging HabitGold")
+            buildConfigField("String", "APP_NAME", "\"Staging HabitGold\"")
             buildConfigField("String", "APP_ENV", "\"staging\"")
             buildConfigField("String", "API_BASE_URL", "\"$stagingBaseUrl\"")
             buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityStaging")
@@ -194,6 +195,7 @@ android {
             applicationIdSuffix = ".preprod"
             versionNameSuffix = "-preprod"
             resValue("string", "app_name", "Preprod HabitGold")
+            buildConfigField("String", "APP_NAME", "\"Preprod HabitGold\"")
             buildConfigField("String", "APP_ENV", "\"preprod\"")
             buildConfigField("String", "API_BASE_URL", "\"$preprodBaseUrl\"")
             buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityPreprod")
@@ -203,6 +205,7 @@ android {
         create("prod") {
             dimension = "environment"
             resValue("string", "app_name", "HabitGold")
+            buildConfigField("String", "APP_NAME", "\"HabitGold\"")
             buildConfigField("String", "APP_ENV", "\"prod\"")
             buildConfigField("String", "API_BASE_URL", "\"$prodBaseUrl\"")
             buildConfigField("Boolean", "CLARITY_ENABLED", "$enableClarityProd")

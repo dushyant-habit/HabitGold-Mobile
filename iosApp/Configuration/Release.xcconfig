@@ -8,3 +8,4 @@ JUSPAY_ENVIRONMENT=production
 APS_ENVIRONMENT=production
 ENABLE_CLARITY=YES
 FIREBASE_PLIST_SOURCE=GoogleService-Info-Prod.plist
+APP_URL_SCHEME=habitgold

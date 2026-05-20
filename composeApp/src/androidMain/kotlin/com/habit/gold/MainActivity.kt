@@ -20,6 +20,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import androidx.lifecycle.lifecycleScope
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
+import com.habit.gold.core.platform.extractReferralCodeFromUrl
 import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 import org.json.JSONObject
@@ -102,9 +103,7 @@ class MainActivity : FragmentActivity(), EmbeddedJuspayCheckoutHost {
 
     private fun captureReferralFromIntent(intent: Intent?) {
         val data = intent?.data ?: return
-        val referralCode = data.getQueryParameter("code")
-            ?: data.lastPathSegment
-            ?: return
+        val referralCode = extractReferralCodeFromUrl(data.toString()) ?: return
         val koin = GlobalContext.getOrNull() ?: return
         val store = koin.get<PlatformBridgeStore>()
         lifecycleScope.launch {
