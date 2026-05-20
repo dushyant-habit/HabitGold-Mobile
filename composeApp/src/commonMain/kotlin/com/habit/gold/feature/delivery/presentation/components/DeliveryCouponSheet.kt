@@ -20,6 +20,10 @@ import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon
 
+import org.jetbrains.compose.resources.stringResource
+import habitgoldmobile.composeapp.generated.resources.Res
+import habitgoldmobile.composeapp.generated.resources.*
+
 @Composable
 fun DeliveryCouponSheet(
     coupons: List<TradeAvailableCoupon>,
@@ -34,14 +38,14 @@ fun DeliveryCouponSheet(
             .padding(bottom = 20.dp)
     ) {
         Text(
-            text = "Available Coupons",
+            text = stringResource(Res.string.delivery_coupon_sheet_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.ExtraBold,
             color = AppColors.Slate950
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Choose a coupon to apply to your delivery order",
+            text = stringResource(Res.string.delivery_coupon_sheet_subtitle),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = AppColors.Slate500
@@ -56,7 +60,7 @@ fun DeliveryCouponSheet(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No available coupons found for delivery",
+                    text = stringResource(Res.string.delivery_coupon_sheet_no_coupons),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = AppColors.Slate500
@@ -73,7 +77,7 @@ fun DeliveryCouponSheet(
                     val isSelected = appliedCouponCode?.equals(coupon.code, ignoreCase = true) == true
                     
                     val subtitle = coupon.description?.takeIf { it.isNotBlank() }
-                        ?: "Save ₹${coupon.estimatedSaving} on delivery charges"
+                        ?: stringResource(Res.string.delivery_coupon_sheet_save_description, coupon.estimatedSaving)
                     
                     Row(
                         modifier = Modifier
@@ -123,7 +127,7 @@ fun DeliveryCouponSheet(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Apply",
+                                    text = stringResource(Res.string.delivery_coupon_sheet_apply),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = AppColors.White
