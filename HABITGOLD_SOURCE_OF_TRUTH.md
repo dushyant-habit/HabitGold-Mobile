@@ -620,39 +620,43 @@ Already in place:
 
 Next major focus:
 
-- Phase 12 platform integrations implementation after the strict audit
+- Phase 13 hardening and QA checkpoint, while keeping the last Phase 12 runtime verification gaps visible
 
 That means:
 
-- continue from the first verified Phase 12 slice:
+- carry forward the verified Phase 12 platform foundations:
   - env/version parity
   - Android secure storage
   - Android OTP auto-read
   - shared token/referral bridge state
   - Android/iOS push and referral entry hooks
-- carry forward the later verified Phase 12 branding/runtime additions:
   - Android/iOS app names now align as `Staging HabitGold`, `Preprod HabitGold`, `HabitGold`
   - Android launcher icons now mirror the legacy Android project assets
   - iOS app icons now come from the IconKitchen-exported `AppIcon.appiconset`
   - iOS Firebase Messaging delegate / FCM token capture is wired
   - iOS Firebase bootstrap now runs earlier from the SwiftUI app initializer
-  - stricter Phase 12 cleanup is live:
-    - iOS runtime bootstrap is split into smaller ownership boundaries
-    - shared referral parsing now owns code extraction across Android and iOS
-    - token-sync success state is only persisted on real `2xx` responses
-    - targeted tests cover referral parsing and device-token sync behavior
-- carry forward the newer Phase 11 delivery checkpoint state while this branch advances:
-  - delivery affordability uses `redeemableGoldGrams`
-  - serviceability requires `PINCODE_SERVICEABLE`
-  - shortfall-to-buy rounds up to the next `0.5g`
-  - buy-back should return to Delivery / Get Coin, not Home
-- finish the remaining iOS project-level push/deep-link runtime verification
-- finish the remaining Firebase / crash / performance parity decisions
-- finish the remaining iOS attribution decision by implementing an equivalent path or documenting the non-equivalent one
-- remember that personal-team local iOS builds use empty dev entitlements for signing, so true APNs / associated-domain verification still requires paid-team provisioning
-- keep notification, deep-link, install-referrer, and OTP behavior platform-owned but contract-driven
-- document explicit iOS non-equivalent paths instead of faking Android parity where none exists
-- update docs as each Phase 12 checkpoint moves forward
+  - shared referral parsing now owns code extraction across Android and iOS
+  - token-sync success state is only persisted on real `2xx` responses
+- start the first verified Phase 13 hardening slice:
+  - dependency and plugin audit is complete for the current shared app surface
+  - Android backup and data-extraction rules are explicitly locked down
+  - Android release assemble now produces a prod unsigned APK plus R8 mapping output
+  - GitHub Actions now runs Android compile, lint, unit-test, and prod release assemble gates on PRs to `main`
+  - targeted regression tests now cover `DeliveryTrackingViewModel`, `DeliveryAddressViewModel`, `BuyTradeViewModel`, `SavingsSetupViewModel`, `ProfileViewModel`, and `ProfileSecurityStore`
+  - current remaining release warnings are upstream/tooling-oriented:
+    - Gradle null-attribute deprecation during release lint-vitals
+    - Kotlin/R8 metadata compatibility warnings during prod minification
+    - native strip and ASM unresolved-class warnings during prod assemble
+- keep the remaining Phase 12 gaps explicit instead of losing them inside Phase 13 work:
+  - finish the remaining iOS project-level push/deep-link runtime verification
+  - finish the remaining Firebase / crash / performance device verification
+  - finish the remaining iOS attribution decision by implementing an equivalent path or documenting the non-equivalent one
+  - remember that personal-team local iOS builds use empty dev entitlements for signing, so true APNs / associated-domain verification still requires paid-team provisioning
+- continue the rest of Phase 13 in this order:
+  - keep the new Android UI-test harness in place, but leave critical-flow UI automation marked pending until it passes on a stable Android 14/15 device or emulator
+  - run explicit Android completed-feature parity QA screen by screen and treat those findings as active closure work
+  - run explicit iOS completed-feature UX verification screen by screen and keep that work pending until the latest shared flows are rechecked
+  - treat those QA items as the final Phase 13 closeout path
 - later navigation improvement candidate: add LinkedIn-style left-edge swipe-back only for child/pushed screens, not for root tab screens
 - if swipe-back is added later, explicitly test it against horizontal gestures such as carousels, sheets, and swipe CTAs before broad rollout
 - for Phase 10 and later UI-heavy phases, keep code quality in focus during implementation and do not commit the phase work until the explicit pre-commit quality gate has been reviewed

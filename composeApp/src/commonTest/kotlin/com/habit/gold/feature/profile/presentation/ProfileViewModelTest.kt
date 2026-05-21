@@ -85,6 +85,48 @@ class ProfileViewModelTest {
         assertEquals("Unable to request deletion", viewModel.state.value.errorMessage)
     }
 
+    @Test
+    fun `refresh failure keeps seeded summary visible and exposes error`() = runTest(dispatcher) {
+        val repository = FakeProfileRepository(
+            summaryResult = ApiResult.Failure(
+                NetworkError(
+                    kind = NetworkErrorKind.Server,
+                    message = "Unable to refresh profile",
+                )
+            ),
+        )
+        val viewModel = createViewModel(
+            repository = repository,
+            initialSummary = profileSummary(name = "Seed Name"),
+        )
+
+        viewModel.onIntent(ProfileIntent.Refresh)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.isLoading)
+        assertFalse(viewModel.state.value.isRefreshing)
+        assertEquals("Seed Name", viewModel.state.value.summary?.user?.name)
+        assertEquals("Unable to refresh profile", viewModel.state.value.errorMessage)
+    }
+
+    @Test
+    fun `logout ignores duplicate taps while request is in flight`() = runTest(dispatcher) {
+        val repository = FakeProfileRepository(
+            summaryResult = ApiResult.Success(profileSummary()),
+            delayOnLogout = true,
+        )
+        val viewModel = createViewModel(repository = repository, initialSummary = profileSummary())
+
+        viewModel.onIntent(ProfileIntent.Logout)
+        runCurrent()
+        viewModel.onIntent(ProfileIntent.Logout)
+        advanceUntilIdle()
+
+        assertEquals(1, repository.logoutCalls)
+        assertFalse(viewModel.state.value.isLogoutInFlight)
+        assertEquals(null, viewModel.state.value.errorMessage)
+    }
+
     private fun createViewModel(
         repository: FakeProfileRepository,
         initialSummary: ProfileSummary?,
@@ -103,7 +145,10 @@ private class FakeProfileRepository(
     private val logoutResult: ApiResult<Unit> = ApiResult.Success(Unit),
     private val deleteResult: ApiResult<Unit> = ApiResult.Success(Unit),
     private val delayOnFetch: Boolean = false,
+    private val delayOnLogout: Boolean = false,
 ) : ProfileRepository {
+    var logoutCalls: Int = 0
+
     override suspend fun getProfileSummary(): ApiResult<ProfileSummary> {
         if (delayOnFetch) delay(1)
         return summaryResult
@@ -122,7 +167,11 @@ private class FakeProfileRepository(
         name: String,
     ): ApiResult<Unit> = error("Not used in ProfileViewModelTest")
 
-    override suspend fun logout(): ApiResult<Unit> = logoutResult
+    override suspend fun logout(): ApiResult<Unit> {
+        logoutCalls += 1
+        if (delayOnLogout) delay(1)
+        return logoutResult
+    }
 
     override suspend fun requestDeleteAccount(): ApiResult<Unit> = deleteResult
 }

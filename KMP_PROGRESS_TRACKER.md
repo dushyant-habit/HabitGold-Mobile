@@ -11,13 +11,14 @@ Use this together with:
 
 ## Current Status
 
-- Current phase: `Phase 12`
+- Current phase: `Phase 13`
 - Phase 9 status: `checkpointed, not fully closed`
 - Phase 10 status: `checkpointed through shared History, Alerts, and Rewards; referral decision work still pending`
 - Phase 11 status: `shared Delivery / Get Coin checkpoint is live; final device QA and any remaining invoice/detail parity follow-up are still pending`
 - Phase 12 status: `implementation and strict code-quality checkpoint are live; remaining work is iOS runtime verification plus attribution decision`
-- Current focus: `finish the remaining iOS runtime/device verification gaps after the Phase 12 cleanup pass`
-- Next milestone: `complete iOS Firebase / Crashlytics / Performance and APNs / associated-domain verification on a properly provisioned device build`
+- Phase 13 status: `engineering hardening checkpoint is live; remaining work is QA-driven closure: stable Android UI-test execution plus manual Android/iOS parity QA`
+- Current focus: `keep the remaining QA issues explicitly pending while we work through Android UI-test execution and manual parity sweeps, without losing the last Phase 12 runtime verification gaps`
+- Next milestone: `rerun Android UI tests on a stable Android 14/15 environment, close the remaining Android/iOS parity QA items, and then treat Phase 13 as fully closed`
 
 ## Phase Status
 
@@ -43,7 +44,7 @@ Use this together with:
 - [ ] Phase 10: History, Rewards, Referral, Alerts
 - [ ] Phase 11: Delivery / Get Coin
 - [~] Phase 12: Platform Integrations
-- [ ] Phase 13: Hardening And QA
+- [~] Phase 13: Hardening And QA
 
 ## Phase 6: Home
 
