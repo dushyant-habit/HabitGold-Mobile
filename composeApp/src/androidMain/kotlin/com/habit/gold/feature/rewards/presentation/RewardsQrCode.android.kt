@@ -1,6 +1,7 @@
 package com.habit.gold.feature.rewards.presentation
 
 import android.graphics.Bitmap
+import androidx.core.graphics.createBitmap
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -44,7 +45,7 @@ private fun generateRewardsQrCodeBitmap(
     return runCatching {
         val content = referralInviteLink(referralCode)
         val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx)
-        Bitmap.createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).apply {
+        createBitmap(matrix.width, matrix.height, Bitmap.Config.ARGB_8888).apply {
             for (x in 0 until matrix.width) {
                 for (y in 0 until matrix.height) {
                     setPixel(

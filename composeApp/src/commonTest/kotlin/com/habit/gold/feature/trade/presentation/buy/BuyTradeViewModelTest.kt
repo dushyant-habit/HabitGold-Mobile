@@ -13,6 +13,8 @@ import com.habit.gold.feature.trade.domain.model.TradeCouponValidation
 import com.habit.gold.feature.trade.domain.model.TradeCouponValidationRequest
 import com.habit.gold.feature.trade.domain.model.TradeInvoice
 import com.habit.gold.feature.trade.domain.model.TradeLivePrice
+import com.habit.gold.feature.trade.domain.model.TradePaymentContext
+import com.habit.gold.feature.trade.domain.model.TradePaymentLaunchRequest
 import com.habit.gold.feature.trade.domain.model.TradePaymentLaunchResult
 import com.habit.gold.feature.trade.domain.model.TradeSellAvailability
 import com.habit.gold.feature.trade.domain.model.TradeSellOrder
@@ -27,6 +29,8 @@ import com.habit.gold.feature.trade.domain.usecase.PollTradeStatusUseCase
 import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +40,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -159,6 +164,59 @@ class BuyTradeViewModelTest {
 
         assertEquals(BuyTradeStep.Entry, viewModel.state.value.step)
         assertEquals("Juspay is not configured.", viewModel.state.value.errorMessage)
+    }
+
+    @Test
+    fun `apply coupon stores validated coupon and clears prior error`() = runTest(dispatcher) {
+        val repository = FakeBuyTradeRepository(
+            buyOrderResult = ApiResult.Success(
+                tradeBuyOrder(
+                    orderId = "order-4",
+                    sdkPayloadJson = null,
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(BuyTradeIntent.ApplyCoupon(code = "SAVE50", amount = 1000.0, grams = null))
+        advanceUntilIdle()
+
+        val appliedCoupon = assertIs<TradeCouponValidation>(viewModel.state.value.appliedCoupon)
+        assertEquals("SAVE50", appliedCoupon.code)
+        assertNull(viewModel.state.value.errorMessage)
+    }
+
+    @Test
+    fun `back pressed after launching payment returns to entry and clears pending request`() = runTest(dispatcher) {
+        val repository = FakeBuyTradeRepository(
+            buyOrderResult = ApiResult.Success(
+                tradeBuyOrder(
+                    orderId = "order-5",
+                    sdkPayloadJson = """{"sdk":"payload"}""",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(
+            BuyTradeIntent.SubmitOneTimeOrder(
+                amount = 500.0,
+                grams = null,
+                buyRateId = "buy-rate-5",
+            )
+        )
+        advanceUntilIdle()
+        assertEquals(BuyTradeStep.Entry, viewModel.state.value.step)
+        assertEquals("order-5", viewModel.state.value.currentOrderId)
+        val pendingRequest = assertIs<TradePaymentLaunchRequest.Juspay>(viewModel.state.value.pendingPaymentRequest)
+        assertEquals(TradePaymentContext.BuyOneTime, pendingRequest.context)
+
+        viewModel.onIntent(BuyTradeIntent.HandlePaymentResult(TradePaymentLaunchResult.BackPressed))
+        advanceUntilIdle()
+
+        assertEquals(BuyTradeStep.Entry, viewModel.state.value.step)
+        assertNull(viewModel.state.value.pendingPaymentRequest)
+        assertNull(viewModel.state.value.errorMessage)
     }
 
     private fun createViewModel(repository: TradeRepository): BuyTradeViewModel {

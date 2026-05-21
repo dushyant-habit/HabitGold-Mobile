@@ -23,7 +23,7 @@ class AppConfigTest {
     @Test
     fun `maps common environment aliases`() {
         assertEquals(AppEnvironment.Development, AppEnvironment.from("debug"))
-        assertEquals(AppEnvironment.Staging, AppEnvironment.from("preprod"))
+        assertEquals(AppEnvironment.Preprod, AppEnvironment.from("preprod"))
         assertEquals(AppEnvironment.Production, AppEnvironment.from("release"))
     }
 }

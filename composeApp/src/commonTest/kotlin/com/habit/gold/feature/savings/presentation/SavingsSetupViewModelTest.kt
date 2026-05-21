@@ -30,6 +30,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -260,6 +261,109 @@ class SavingsSetupViewModelTest {
         advanceUntilIdle()
 
         assertIs<SavingsSetupPhase.Processing>(viewModel.state.value.phase)
+    }
+
+    @Test
+    fun `back pressed from payment resets setup state to form`() = runTest(dispatcher) {
+        val repository = FakeSavingsSetupRepository(
+            createSessionResult = ApiResult.Success(
+                SavingsMandateSession(
+                    mandateId = "mandate-reset",
+                    sdkPayloadJson = """{"sdk":"payload"}""",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+        val effect = async { viewModel.effects.firstEffect() }
+
+        viewModel.onIntent(
+            SavingsSetupIntent.Initialize(
+                SavingsDestination.Setup(
+                    frequency = "Weekly",
+                    initialAmount = "500",
+                    initialExecutionDay = 4,
+                )
+            )
+        )
+        advanceUntilIdle()
+        viewModel.onIntent(SavingsSetupIntent.Submit)
+        advanceUntilIdle()
+        effect.await()
+
+        viewModel.onIntent(SavingsSetupIntent.HandlePaymentResult(TradePaymentLaunchResult.BackPressed))
+        advanceUntilIdle()
+
+        assertIs<SavingsSetupPhase.Form>(viewModel.state.value.phase)
+        assertNull(viewModel.state.value.pendingMandateId)
+        assertNull(viewModel.state.value.inlineErrorMessage)
+        assertTrue(!viewModel.state.value.isSubmitting)
+    }
+
+    @Test
+    fun `payment failure without pending mandate returns to form with message`() = runTest(dispatcher) {
+        val repository = FakeSavingsSetupRepository(
+            createSessionResult = ApiResult.Success(
+                SavingsMandateSession(
+                    mandateId = "mandate-missing",
+                    sdkPayloadJson = """{"sdk":"payload"}""",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(
+            SavingsSetupIntent.Initialize(
+                SavingsDestination.Setup(
+                    frequency = "Daily",
+                    initialAmount = "50",
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        viewModel.onIntent(
+            SavingsSetupIntent.HandlePaymentResult(
+                TradePaymentLaunchResult.Failure(
+                    status = "network_error",
+                    message = "Unable to verify mandate",
+                    shouldPollOrderStatus = false,
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        assertIs<SavingsSetupPhase.Form>(viewModel.state.value.phase)
+        assertEquals("Unable to verify mandate", viewModel.state.value.inlineErrorMessage)
+        assertNull(viewModel.state.value.pendingMandateId)
+    }
+
+    @Test
+    fun `retry polling without pending mandate resets back to form`() = runTest(dispatcher) {
+        val repository = FakeSavingsSetupRepository(
+            createSessionResult = ApiResult.Success(
+                SavingsMandateSession(
+                    mandateId = "mandate-retry",
+                    sdkPayloadJson = """{"sdk":"payload"}""",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(
+            SavingsSetupIntent.Initialize(
+                SavingsDestination.Setup(
+                    frequency = "Monthly",
+                    initialAmount = "2500",
+                    initialExecutionDay = 15,
+                )
+            )
+        )
+        advanceUntilIdle()
+        viewModel.onIntent(SavingsSetupIntent.RetryPolling)
+        advanceUntilIdle()
+
+        assertIs<SavingsSetupPhase.Form>(viewModel.state.value.phase)
+        assertNull(viewModel.state.value.pendingMandateId)
     }
 
     private fun createViewModel(repository: FakeSavingsSetupRepository): SavingsSetupViewModel {

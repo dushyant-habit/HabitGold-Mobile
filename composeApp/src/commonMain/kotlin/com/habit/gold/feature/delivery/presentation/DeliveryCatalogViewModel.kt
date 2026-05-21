@@ -653,7 +653,7 @@ class DeliveryCatalogViewModel(
                 is ApiResult.Success -> {
                     val validation = result.value
                     val discount = validation.promotionalDeliveryDiscount.toDoubleOrNull() ?: 0.0
-                    val couponCode = validation.code ?: code
+                    val couponCode = validation.code?.takeIf { it.isNotBlank() } ?: code
                     
                     val couponType = state.value.availableCoupons.find { it.code.equals(couponCode, ignoreCase = true) }?.type
                         ?: if (discount >= subtotalMakingCharge && subtotalMakingCharge > 0.0) TradeCouponType.FREE_DELIVERY else TradeCouponType.DELIVERY_DISCOUNT
@@ -680,7 +680,7 @@ class DeliveryCatalogViewModel(
                     updateState { it.copy(isCheckingOut = false) }
                     emitEffect(
                         DeliveryEffect.ShowError(
-                            DeliveryUiText.Dynamic(result.error.message ?: "Invalid coupon")
+                            DeliveryUiText.Dynamic(result.error.message)
                         )
                     )
                 }
@@ -768,4 +768,3 @@ class DeliveryCatalogViewModel(
 private fun Double?.orZero(): Double = this ?: 0.0
 
 private fun String.asDeliveryUiText(): DeliveryUiText = DeliveryUiText.Dynamic(this)
-

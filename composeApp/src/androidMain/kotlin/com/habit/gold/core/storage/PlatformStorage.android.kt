@@ -1,7 +1,10 @@
+@file:Suppress("DEPRECATION")
+
 package com.habit.gold.core.storage
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -62,14 +65,20 @@ private class AndroidSharedPreferencesStorage(
     override suspend fun read(key: String): String? = sharedPreferences.getString(key, null)
 
     override suspend fun write(key: String, value: String) {
-        sharedPreferences.edit().putString(key, value).commit()
+        sharedPreferences.edit(commit = true) {
+            putString(key, value)
+        }
     }
 
     override suspend fun delete(key: String) {
-        sharedPreferences.edit().remove(key).commit()
+        sharedPreferences.edit(commit = true) {
+            remove(key)
+        }
     }
 
     override suspend fun clear() {
-        sharedPreferences.edit().clear().commit()
+        sharedPreferences.edit(commit = true) {
+            clear()
+        }
     }
 }

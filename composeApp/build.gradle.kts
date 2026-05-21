@@ -106,12 +106,13 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core.ktx)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
             implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.1.0"))
             implementation("androidx.biometric:biometric:1.1.0")
-            implementation("androidx.fragment:fragment-ktx:1.6.2")
-            implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            implementation("androidx.fragment:fragment-ktx:1.8.9")
+            implementation("androidx.security:security-crypto:1.1.0")
             implementation("com.android.installreferrer:installreferrer:2.2")
             implementation("com.google.android.gms:play-services-auth-api-phone:18.3.0")
             implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
@@ -252,4 +253,7 @@ if (enableJuspayPlugin && isJuspayConfigured) {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.10.5")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.10.5")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
 }

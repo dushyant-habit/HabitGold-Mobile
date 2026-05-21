@@ -461,18 +461,32 @@ These notes came from a deeper pass through the Android app and are here to prev
 
 ### Phase 13: Hardening And QA
 
-- [ ] Review dependencies before adding feature SDKs; avoid carrying over Android-only libraries without a concrete need
-- [ ] Add and maintain minimal dependency set in shared code
-- [ ] Review deferred Gradle/plugin parity items and confirm which ones must land before production rollout
-- [ ] Add Android release hardening rules and expand Proguard/R8 rules only as integrations require them
-- [ ] Verify cleartext remains disabled and backup/security manifest rules stay intact
-- [ ] Add CI quality gates
-- [ ] Add broader unit and repository tests
-- [ ] Add viewmodel/reducer tests for critical features
+- [x] Review dependencies before adding feature SDKs; avoid carrying over Android-only libraries without a concrete need
+- dependency audit completed for the current shared app surface; low-risk Android library updates landed for `fragment-ktx` and `security-crypto`, and dead version-catalog entries were removed
+- [x] Add and maintain minimal dependency set in shared code
+- stale Android launcher resources and unused catalog entries were removed during the hardening sweep; currently shipped shared/runtime dependencies are in active use
+- [x] Review deferred Gradle/plugin parity items and confirm which ones must land before production rollout
+- no additional plugin parity changes are required before rollout beyond later toolchain upgrades for upstream Gradle/R8 warnings
+- [x] Add Android release hardening rules and expand Proguard/R8 rules only as integrations require them
+- release assemble now produces a prod unsigned APK plus R8 mapping output
+- Android backup and data-extraction rules are now explicitly locked down instead of relying on empty defaults
+- no new app-specific R8 keep rules are required yet beyond current integrations; remaining Kotlin/R8 metadata warnings are toolchain-level and should be revisited during future Kotlin/AGP upgrades
+- [x] Verify cleartext remains disabled and backup/security manifest rules stay intact
+- [x] Add CI quality gates
+- GitHub Actions now runs Android compile, lint, unit-test, and prod release assemble gates on PRs to `main`
+- [x] Add broader unit and repository tests
+- [x] Add viewmodel/reducer tests for critical features
+- targeted Phase 13 regression coverage now includes `DeliveryTrackingViewModel`, `DeliveryAddressViewModel`, `BuyTradeViewModel`, `SavingsSetupViewModel`, `ProfileViewModel`, and `ProfileSecurityStore`
 - [ ] Add UI tests for critical flows
-- [ ] Add analytics and crash-reporting hooks
+- first Android Compose instrumented/UI tests are now added for `AuthLoginScreen` and `WithdrawalModeScreen`
+- current connected execution is still pending closure because the Android 16 test environment failed inside Espresso input injection with `InputManager.getInstance` lookup issues before app assertions ran
+- rerun the UI suite on a stable Android 14/15 device or emulator before treating critical-flow UI automation as complete
+- [x] Add analytics and crash-reporting hooks
+- Android/iOS Firebase Messaging, Crashlytics, Performance, and Clarity/Firebase runtime hooks are already wired from the Phase 12 platform-integration pass
 - [ ] Perform Android parity QA screen by screen
+- treat Android parity QA as an active remaining Phase 13 workstream, not a later nice-to-have
 - [ ] Verify both Android and iOS UX for each completed feature
+- keep iOS UX verification pending until the completed features have been rechecked screen by screen against the latest shared flows
 
 ## Android Source Mapping
 
