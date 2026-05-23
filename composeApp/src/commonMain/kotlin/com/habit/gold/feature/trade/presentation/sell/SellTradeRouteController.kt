@@ -2,6 +2,8 @@ package com.habit.gold.feature.trade.presentation.sell
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,6 +17,7 @@ internal fun SellTradeRouteController(
     destination: TradeDestination,
     onNavigate: (TradeDestination) -> Unit,
     onBackToHome: () -> Unit,
+    onTradeMutation: () -> Unit,
     onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -30,6 +33,7 @@ internal fun SellTradeRouteController(
     }
     val livePriceState = dependencies.livePriceStore.state.collectAsStateWithLifecycle()
     val state = sellTradeViewModel.state.collectAsStateWithLifecycle()
+    val lastReportedMutationOrderId = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(destination) {
         when (destination) {
@@ -39,6 +43,17 @@ internal fun SellTradeRouteController(
                 sellTradeViewModel.onIntent(SellTradeIntent.StartPolling(destination.orderId))
             }
             else -> Unit
+        }
+    }
+
+    LaunchedEffect(state.value.createdOrder?.orderId, state.value.pollingSnapshot?.orderId, state.value.step) {
+        val orderId = state.value.createdOrder?.orderId ?: state.value.pollingSnapshot?.orderId
+        val isTerminalStep = state.value.step == SellTradeStep.Success ||
+            state.value.step == SellTradeStep.Failure ||
+            state.value.step == SellTradeStep.Pending
+        if (orderId != null && isTerminalStep && lastReportedMutationOrderId.value != orderId) {
+            lastReportedMutationOrderId.value = orderId
+            onTradeMutation()
         }
     }
 

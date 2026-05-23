@@ -1,7 +1,6 @@
 package com.habit.gold.feature.home.presentation
 
 import com.habit.gold.feature.home.domain.model.HomeDashboardSummary
-import com.habit.gold.feature.home.domain.model.HomeRecentTransactionPreview
 import com.habit.gold.feature.profile.presentation.ProfileDestination
 import com.habit.gold.feature.savings.presentation.SavingsDestination
 import com.habit.gold.feature.delivery.presentation.DeliveryDestination
@@ -19,7 +18,6 @@ internal sealed interface HomeDestination {
         val destination: SavingsDestination,
         val returnDestination: HomeDestination = Dashboard,
     ) : HomeDestination
-    data class TransactionDetails(val item: HomeRecentTransactionPreview) : HomeDestination
     data class Trade(
         val destination: TradeDestination,
         val returnDestination: HomeDestination = Dashboard,

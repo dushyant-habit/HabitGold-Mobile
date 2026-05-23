@@ -15,6 +15,7 @@ internal fun SavingsSetupRouteController(
     livePriceStore: TradeLivePriceStore,
     paymentLauncher: TradePaymentLauncher,
     onBackToHome: () -> Unit,
+    onSavingsMutation: () -> Unit,
     onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -73,6 +74,7 @@ internal fun SavingsSetupRouteController(
         onSubmit = { viewModel.onIntent(SavingsSetupIntent.Submit) },
         onRetryPolling = { viewModel.onIntent(SavingsSetupIntent.RetryPolling) },
         onGoHome = {
+            onSavingsMutation()
             viewModel.onIntent(SavingsSetupIntent.ResetToForm)
             onBackToHome()
         },

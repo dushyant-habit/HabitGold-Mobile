@@ -54,7 +54,7 @@ class PollTradeStatusUseCase(
             }
 
             if (attempt < policy.maxAttempts) {
-                delay(policy.intervalMillis)
+                delay(policy.attemptIntervalsMillis.getOrElse(attempt - 1) { 0L })
             }
         }
 

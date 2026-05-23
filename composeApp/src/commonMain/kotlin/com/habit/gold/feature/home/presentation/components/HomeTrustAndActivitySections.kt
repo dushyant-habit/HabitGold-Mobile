@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -23,7 +24,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocalShipping
@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.feature.home.domain.model.HomeRecentTransactionPreview
 import com.habit.gold.feature.home.presentation.formatCreatedAt
+import com.habit.gold.feature.home.presentation.formatCreatedAtWithTime
 import com.habit.gold.feature.home.presentation.formatInr
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_gold_unit_short
@@ -77,6 +78,18 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_re
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_real_gold_title
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_stored_safely_description
 import habitgoldmobile.composeapp.generated.resources.home_screen_trust_slide_stored_safely_title
+import habitgoldmobile.composeapp.generated.resources.home_screen_view_all
+import habitgoldmobile.composeapp.generated.resources.history_screen_status_failed
+import habitgoldmobile.composeapp.generated.resources.history_screen_status_in_progress
+import habitgoldmobile.composeapp.generated.resources.history_screen_status_success
+import habitgoldmobile.composeapp.generated.resources.history_screen_title_gold_delivery
+import habitgoldmobile.composeapp.generated.resources.history_screen_title_gold_purchase
+import habitgoldmobile.composeapp.generated.resources.history_screen_title_gold_sale
+import habitgoldmobile.composeapp.generated.resources.history_screen_title_gold_savings
+import habitgoldmobile.composeapp.generated.resources.history_screen_title_transaction
+import habitgoldmobile.composeapp.generated.resources.ic_buy_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_delivery_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_sell_gold_icon
 import habitgoldmobile.composeapp.generated.resources.img_bis_safety
 import habitgoldmobile.composeapp.generated.resources.img_habitgold_intro
 import habitgoldmobile.composeapp.generated.resources.img_liquid_accessible
@@ -92,9 +105,9 @@ internal fun HomeTrustHighlightsSection(onOpenIntroSheet: (Int) -> Unit) {
     val trustItems = remember {
         listOf(
             HomeTrustItem(0, Res.string.home_screen_trust_slide_real_gold_title, Res.string.home_screen_trust_slide_real_gold_description, Icons.Default.WorkspacePremium, listOf(Color(0xFFFDE68A), Gold500.copy(alpha = 0.18f))),
-            HomeTrustItem(1, Res.string.home_screen_trust_slide_stored_safely_title, Res.string.home_screen_trust_slide_stored_safely_description, Icons.Default.Verified, listOf(Blue50Alt, HomeWhite)),
-            HomeTrustItem(2, Res.string.home_screen_trust_slide_free_delivery_title, Res.string.home_screen_trust_slide_free_delivery_description, Icons.Default.LocalShipping, listOf(Color(0xFFE8FFF0), HomeWhite)),
-            HomeTrustItem(3, Res.string.home_screen_trust_slide_earn_every_time_title, Res.string.home_screen_trust_slide_earn_every_time_description, Icons.Default.LocalOffer, listOf(Purple50, HomeWhite)),
+            HomeTrustItem(1, Res.string.home_screen_trust_slide_earn_every_time_title, Res.string.home_screen_trust_slide_earn_every_time_description, Icons.Default.LocalOffer, listOf(Purple50, HomeWhite)),
+            HomeTrustItem(2, Res.string.home_screen_trust_slide_stored_safely_title, Res.string.home_screen_trust_slide_stored_safely_description, Icons.Default.Verified, listOf(Blue50Alt, HomeWhite)),
+            HomeTrustItem(3, Res.string.home_screen_trust_slide_free_delivery_title, Res.string.home_screen_trust_slide_free_delivery_description, Icons.Default.LocalShipping, listOf(Color(0xFFE8FFF0), HomeWhite)),
         )
     }
     val pagerState = rememberPagerState(pageCount = { trustItems.size })
@@ -157,11 +170,11 @@ internal fun HomeTrustHighlightsSection(onOpenIntroSheet: (Int) -> Unit) {
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(HomeWhite.copy(alpha = 0.88f))
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(HomeWhite.copy(alpha = 0.88f))
                                 .border(1.dp, HomeWhite.copy(alpha = 0.92f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -183,17 +196,34 @@ internal fun HomeTrustHighlightsSection(onOpenIntroSheet: (Int) -> Unit) {
 internal fun RecentActivitySection(
     items: List<HomeRecentTransactionPreview>,
     onOpenTransaction: (HomeRecentTransactionPreview) -> Unit,
+    onViewAllClick: () -> Unit,
 ) {
+    val recentItems = remember(items) { items.take(3) }
+
     Column {
-        Text(
-            text = stringResource(Res.string.home_screen_recent_activity),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.home_screen_recent_activity),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.Black,
+            )
+            Text(
+                text = stringResource(Res.string.home_screen_view_all),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = HomePrimary,
+                modifier = Modifier.clickable(onClick = onViewAllClick),
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
-        if (items.isEmpty()) {
+        if (recentItems.isEmpty()) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -210,94 +240,102 @@ internal fun RecentActivitySection(
                 )
             }
         } else {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(items, key = { it.id }) { recentTransaction ->
-                    val config = recentActivityConfigFor(recentTransaction)
-                    Card(
-                        modifier = Modifier
-                            .width(220.dp)
-                            .clickable { onOpenTransaction(recentTransaction) },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = HomeWhite),
-                        border = BorderStroke(1.dp, Slate200.copy(alpha = 0.72f)),
+                recentItems.forEach { recentTransaction ->
+                    RecentActivityListItem(
+                        item = recentTransaction,
+                        config = recentActivityConfigFor(recentTransaction),
+                        onClick = { onOpenTransaction(recentTransaction) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentActivityListItem(
+    item: HomeRecentTransactionPreview,
+    config: RecentActivityConfig,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = HomeWhite),
+        border = BorderStroke(1.dp, Slate200.copy(alpha = 0.9f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(config.icon),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+            )
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = config.title,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = config.statusBackground,
+                        border = BorderStroke(1.dp, Slate200.copy(alpha = 0.85f)),
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(config.iconBackground),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = config.icon,
-                                        contentDescription = null,
-                                        tint = config.iconTint,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = config.title,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Slate900,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Text(
-                                        text = formatCreatedAt(recentTransaction.createdAt),
-                                        fontSize = 11.sp,
-                                        color = Slate500,
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = "₹${recentTransaction.amount.toDoubleOrNull()?.let(::formatInr) ?: recentTransaction.amount}",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Slate900,
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(999.dp),
-                                    color = config.statusBackground,
-                                ) {
-                                    Text(
-                                        text = recentTransaction.status.replaceFirstChar { it.uppercase() },
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = config.statusTint,
-                                    )
-                                }
-                                if (recentTransaction.goldQuantity.isNotBlank()) {
-                                    Text(
-                                        text = "${recentTransaction.goldQuantity} ${stringResource(Res.string.common_gold_unit_short)}",
-                                        fontSize = 11.sp,
-                                        color = Slate600,
-                                        fontWeight = FontWeight.Medium,
-                                    )
-                                }
-                            }
-                        }
+                        Text(
+                            text = config.statusLabel,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = config.statusTint,
+                        )
                     }
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = formatCreatedAtWithTime(item.createdAt),
+                        fontSize = 11.sp,
+                        color = Slate500,
+                    )
+
+                    Text(
+                        text = formattedActivityAmount(item.amount, config.amountPrefix),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = config.amountTint,
+                    )
+
                 }
             }
         }
@@ -355,11 +393,12 @@ private data class HomeIntroCardItem(
 
 private data class RecentActivityConfig(
     val title: String,
-    val icon: ImageVector,
-    val iconBackground: Color,
-    val iconTint: Color,
+    val icon: DrawableResource,
+    val statusLabel: String,
     val statusBackground: Color,
     val statusTint: Color,
+    val amountTint: Color,
+    val amountPrefix: String,
 )
 
 @Composable
@@ -367,38 +406,50 @@ private fun recentActivityConfigFor(item: HomeRecentTransactionPreview): RecentA
     val isBuy = item.type.equals("BUY", ignoreCase = true)
     val isSell = item.type.equals("SELL", ignoreCase = true)
     val isDelivery = item.type.contains("delivery", ignoreCase = true)
-    val title = when {
-        item.isSip -> item.sipName?.ifBlank { stringResource(Res.string.home_screen_gold_savings_sip) }
-            ?: stringResource(Res.string.home_screen_gold_savings_sip)
-        isSell -> stringResource(Res.string.home_screen_sell_gold)
-        isDelivery -> stringResource(Res.string.home_screen_coin_delivery)
-        isBuy -> stringResource(Res.string.home_screen_buy_gold)
-        else -> stringResource(Res.string.home_screen_transaction_generic)
-    }
     val isFailure = item.status.contains("fail", ignoreCase = true) || item.status.contains("cancel", ignoreCase = true)
+    val isPending = item.status.contains("pending", ignoreCase = true) || item.status.contains("progress", ignoreCase = true)
+    val title = when {
+        item.isSip -> item.sipName?.ifBlank { stringResource(Res.string.history_screen_title_gold_savings) }
+            ?: stringResource(Res.string.history_screen_title_gold_savings)
+        isSell -> stringResource(Res.string.history_screen_title_gold_sale)
+        isDelivery -> stringResource(Res.string.history_screen_title_gold_delivery)
+        isBuy -> stringResource(Res.string.history_screen_title_gold_purchase)
+        else -> stringResource(Res.string.history_screen_title_transaction)
+    }
     return RecentActivityConfig(
         title = title,
         icon = when {
-            isBuy -> Icons.Default.Savings
-            isSell -> Icons.AutoMirrored.Filled.TrendingDown
-            isDelivery -> Icons.Default.LocalShipping
-            else -> Icons.Default.CheckCircle
+            isBuy -> Res.drawable.ic_buy_gold_icon
+            isSell -> Res.drawable.ic_sell_gold_icon
+            isDelivery -> Res.drawable.ic_delivery_gold_icon
+            else -> Res.drawable.ic_buy_gold_icon
         },
-        iconBackground = when {
-            isBuy -> Green25
-            isSell -> Red25
-            isDelivery -> Blue25
-            else -> Blue50Alt
+        statusLabel = when {
+            isFailure -> stringResource(Res.string.history_screen_status_failed)
+            isPending -> stringResource(Res.string.history_screen_status_in_progress)
+            else -> stringResource(Res.string.history_screen_status_success)
         },
-        iconTint = when {
-            isBuy -> Green500Soft
-            isSell -> RedTint
-            isDelivery -> Blue600
-            else -> HomePrimary
+        statusBackground = when {
+            isFailure -> RedSoft
+            isPending -> GoldSurface
+            else -> GreenSoft
         },
-        statusBackground = if (isFailure) RedSoft else GreenSoft,
-        statusTint = if (isFailure) RedTint else Color(0xFF15803D),
+        statusTint = when {
+            isFailure -> RedTint
+            isPending -> Gold650
+            else -> Color(0xFF15803D)
+        },
+        amountTint = when {
+            isFailure -> RedTint
+            isPending -> Slate900
+            else -> Color(0xFF16A34A)
+        },
+        amountPrefix = if (isFailure) "" else "+",
     )
+}
+
+private fun formattedActivityAmount(amount: String, prefix: String): String {
+    return "${prefix}₹${amount.toDoubleOrNull()?.let(::formatInr) ?: amount}"
 }
 
 @Composable

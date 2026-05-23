@@ -17,6 +17,7 @@ data class HomeState(
 sealed interface HomeIntent : MviIntent {
     data object Load : HomeIntent
     data object Refresh : HomeIntent
+    data object BackgroundRefresh : HomeIntent
     data object RestorePreferences : HomeIntent
     data object ToggleBalanceVisibility : HomeIntent
 }

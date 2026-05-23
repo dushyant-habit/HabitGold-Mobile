@@ -1,13 +1,10 @@
 package com.habit.gold.feature.trade.presentation.sell
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -63,7 +60,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
@@ -183,6 +184,7 @@ internal fun SellTradePayoutScreen(
                 livePriceState = livePriceState,
                 enabled = draftRequest != null && selectedVpa != null && !state.isLoading,
                 isLoading = state.isLoading,
+                errorMessage = state.resolveErrorMessage(),
                 onSwipeComplete = {
                     if (selectedVpa != null) {
                         showConfirmationDialog = true
@@ -194,6 +196,7 @@ internal fun SellTradePayoutScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 12.dp),
@@ -221,16 +224,6 @@ internal fun SellTradePayoutScreen(
                         )
                     }
                 }
-            }
-
-            state.resolveErrorMessage()?.takeIf { it.isNotBlank() }?.let { message ->
-                Text(
-                    text = message,
-                    color = Color(0xFFB42318),
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp,
-                    fontWeight = FontWeight.Medium,
-                )
             }
 
             Text(
@@ -528,6 +521,7 @@ internal fun SellTradeSwipeFooter(
     livePriceState: TradeLivePriceState,
     enabled: Boolean,
     isLoading: Boolean,
+    errorMessage: String?,
     onSwipeComplete: () -> Unit,
 ) {
     Column(
@@ -536,6 +530,19 @@ internal fun SellTradeSwipeFooter(
             .background(Color.White),
     ) {
         HorizontalDivider(color = TradeSectionBorder)
+        errorMessage?.takeIf { it.isNotBlank() }?.let { message ->
+            Text(
+                text = message,
+                color = Color(0xFFDC2626),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 10.dp),
+            )
+            HorizontalDivider(color = TradeSectionBorder)
+        }
         SellTradeLivePriceBar(livePriceState = livePriceState)
         HorizontalDivider(color = TradeSectionBorder)
         Box(
@@ -650,6 +657,7 @@ internal fun SellTradeActionFooter(
     label: String,
     enabled: Boolean,
     isLoading: Boolean,
+    errorMessage: String?,
     onActionClick: () -> Unit,
 ) {
     Column(
@@ -658,6 +666,19 @@ internal fun SellTradeActionFooter(
             .background(Color.White),
     ) {
         HorizontalDivider(color = TradeSectionBorder)
+        errorMessage?.takeIf { it.isNotBlank() }?.let { message ->
+            Text(
+                text = message,
+                color = Color(0xFFDC2626),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 10.dp),
+            )
+            HorizontalDivider(color = TradeSectionBorder)
+        }
         SellTradeLivePriceBar(livePriceState = livePriceState)
         HorizontalDivider(color = TradeSectionBorder)
         Box(
@@ -751,7 +772,7 @@ internal fun SellTradeLivePriceBar(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "₹${formatMoney(livePrice.sell)}/gm",
+                    text = "₹${formatMoney(livePrice.sell)}/g",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF020617),
@@ -781,42 +802,49 @@ private fun SellLiveWaveIndicator(
     tint: Color,
     modifier: Modifier = Modifier,
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "sellLiveWave")
-    val alphaA by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "sellLiveWaveA",
-    )
-    val alphaB by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.35f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "sellLiveWaveB",
-    )
+    Canvas(modifier = modifier) {
+        val center = center
+        val dotRadius = 2.2.dp.toPx()
+        val innerRadius = 5.2.dp.toPx()
+        val outerRadius = 8.0.dp.toPx()
+        val stroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 6.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
+        drawCircle(color = tint, radius = dotRadius, center = center)
+        drawArc(
+            color = tint.copy(alpha = 0.72f),
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+            size = Size(innerRadius * 2, innerRadius * 2),
+            style = stroke,
         )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 10.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaB)),
+        drawArc(
+            color = tint.copy(alpha = 0.72f),
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+            size = Size(innerRadius * 2, innerRadius * 2),
+            style = stroke,
         )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 7.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
+        drawArc(
+            color = tint.copy(alpha = 0.42f),
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+            size = Size(outerRadius * 2, outerRadius * 2),
+            style = stroke,
+        )
+        drawArc(
+            color = tint.copy(alpha = 0.42f),
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+            size = Size(outerRadius * 2, outerRadius * 2),
+            style = stroke,
         )
     }
 }
@@ -831,7 +859,8 @@ private fun SellTradeReceiveSummaryCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFFF1E5FF), RoundedCornerShape(18.dp))
+            .background(Color(0xFFFCFAFF), RoundedCornerShape(18.dp))
+            .border(1.dp, Color(0xFFE9D5FF), RoundedCornerShape(18.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -847,6 +876,23 @@ private fun SellTradeReceiveSummaryCard(
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
         )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(10.dp),
+            )
+            Text(
+                text = "Adjusted according to proper gold quantity.",
+                color = Color(0xFF94A3B8),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
         Spacer(modifier = Modifier.height(6.dp))
         SellTradeSummaryValueRow(
             label = stringResource(Res.string.trade_sell_summary_gold_price),

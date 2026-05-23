@@ -42,17 +42,15 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
         }
 
         let appEnv = IosRuntimeBootstrap.currentAppEnv()
-        let logLevel: ClarityLogLevel = appEnv == "prod" ? .none : .verbose
         let clarityConfig = ClarityConfig(
             projectId: projectId,
-            logLevel: logLevel,
+            logLevel: .none,
             applicationFramework: .native
         )
 
         if ClaritySDK.initialize(config: clarityConfig) {
             Crashlytics.crashlytics().setCustomValue(projectId, forKey: "clarity_project_id")
             Crashlytics.crashlytics().log("Clarity initialized for APP_ENV=\(appEnv)")
-            NSLog("Clarity initialized for APP_ENV=\(appEnv).")
         } else {
             Crashlytics.crashlytics().log("Clarity initialization returned false for APP_ENV=\(appEnv)")
             NSLog("Clarity initialization returned false for APP_ENV=\(appEnv).")

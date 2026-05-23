@@ -514,6 +514,9 @@ internal fun ProfileDatePickerDialog(
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
+        colors = DatePickerDefaults.colors(
+            containerColor = Color.White,
+        ),
         confirmButton = {
             TextButton(
                 onClick = {
@@ -553,9 +556,22 @@ internal fun ProfileDatePickerDialog(
         DatePicker(
             state = datePickerState,
             colors = DatePickerDefaults.colors(
+                containerColor = Color.White,
+                titleContentColor = ProfilePrimaryText,
+                headlineContentColor = ProfilePrimaryText,
+                weekdayContentColor = ProfileMutedText,
+                subheadContentColor = ProfileMutedText,
+                navigationContentColor = ProfilePrimaryText,
+                yearContentColor = ProfilePrimaryText,
+                currentYearContentColor = HabitGoldPalette.plum,
+                selectedYearContentColor = Color.White,
+                dayContentColor = ProfilePrimaryText,
+                selectedDayContentColor = Color.White,
+                todayContentColor = HabitGoldPalette.plum,
                 selectedDayContainerColor = HabitGoldPalette.plum,
                 selectedYearContainerColor = HabitGoldPalette.plum,
                 todayDateBorderColor = HabitGoldPalette.plum,
+                dividerColor = Color(0xFFE5E7EB),
             ),
         )
     }

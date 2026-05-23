@@ -11,7 +11,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -27,9 +26,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -93,7 +94,6 @@ import com.habit.gold.feature.home.presentation.ChildPrimaryText
 import com.habit.gold.feature.home.presentation.formatInr
 import com.habit.gold.feature.trade.domain.TradeLivePriceState
 import com.habit.gold.feature.trade.presentation.buy.BuyCouponSheet
-import com.habit.gold.feature.trade.presentation.buy.BuyTradeLivePriceBar
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_help
 import habitgoldmobile.composeapp.generated.resources.common_retry
@@ -144,6 +144,10 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalFocusManager
+import com.habit.gold.feature.trade.presentation.buy.BuySlate400
+import com.habit.gold.feature.trade.presentation.buy.BuyTradeEntryMode
+import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
+import habitgoldmobile.composeapp.generated.resources.trade_buy_select_grams
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -312,10 +316,16 @@ internal fun SavingsSetupScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = stringResource(Res.string.savings_setup_amount_label),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ChildPrimaryText,
+                        text = stringResource(Res.string.trade_buy_enter_amount),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BuySlate400,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .padding(start = 2.dp)
+                            .offset(y=(4).dp),
+                        textAlign = TextAlign.Start,
                     )
                     SavingsAmountCard(
                         value = state.amountText,
@@ -354,6 +364,8 @@ internal fun SavingsSetupScreen(
                     )
                 }
 
+//                Spacer(modifier = Modifier.height(8.dp))
+
                 SavingsCouponRow(
                     availableCoupons = state.availableCoupons.size,
                     couponDraft = state.couponDraft,
@@ -366,6 +378,8 @@ internal fun SavingsSetupScreen(
                     isApplyingEnabled = state.couponDraft.isNotBlank() && state.appliedCoupon?.code != state.couponDraft,
                     onDone = { focusManager.clearFocus(force = true) },
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 compoundingSummary?.let { summary ->
                     SavingsCompoundingPreviewCard(
@@ -535,46 +549,52 @@ private fun SavingsQuickAmountRow(
     onQuickAmountSelected: (Int) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         quickAmounts.forEach { option ->
             Box(
-                contentAlignment = Alignment.TopCenter,
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.BottomCenter,
             ) {
                 OutlinedButton(
                     onClick = { onQuickAmountSelected(option.amount) },
-                    modifier = Modifier.padding(bottom = if (option.tag != null) 10.dp else 0.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (option.tag != null) 10.dp else 0.dp),
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(
                         if (selectedAmountText == option.amount.toString()) 1.5.dp else 1.dp,
                         if (selectedAmountText == option.amount.toString()) HabitGoldPalette.plum else HabitGoldPalette.plum.copy(alpha = 0.3f),
                     ),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
                 ) {
                     Text(
                         text = "₹${formatInr(option.amount.toDouble())}",
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = if (selectedAmountText == option.amount.toString()) HabitGoldPalette.plum else ChildPrimaryText,
                         fontWeight = if (selectedAmountText == option.amount.toString()) FontWeight.Bold else FontWeight.SemiBold,
+                        maxLines = 1,
                     )
                 }
                 option.tag?.let { tag ->
                     Surface(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .align(Alignment.BottomCenter),
-                        shape = RoundedCornerShape(2.dp),
+                        shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
                         color = HabitGoldPalette.plum,
-                        border = BorderStroke(1.dp, HabitGoldPalette.white.copy(alpha = 0.22f)),
+//                        border = BorderStroke(1.dp, HabitGoldPalette.white.copy(alpha = 0.22f)),
                     ) {
                         Text(
                             text = tag,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 7.dp, vertical = 0.dp),
                             fontSize = 8.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = HabitGoldPalette.white,
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }

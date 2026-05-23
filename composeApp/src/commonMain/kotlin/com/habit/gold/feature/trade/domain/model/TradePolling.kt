@@ -6,7 +6,7 @@ enum class TradePollingTimeoutOutcome {
 }
 
 data class TradePollingPolicy(
-    val intervalMillis: Long,
+    val attemptIntervalsMillis: List<Long>,
     val maxAttempts: Int,
     val successStatuses: Set<String>,
     val failureStatuses: Set<String>,
@@ -29,9 +29,10 @@ sealed interface TradePollingOutcome {
 
 object TradePollingPolicies {
     fun buy(): TradePollingPolicy {
+        val intervals = listOf(1_000L, 1_000L, 1_000L, 1_000L, 1_000L, 3_000L, 3_000L, 3_000L, 3_000L, 3_000L)
         return TradePollingPolicy(
-            intervalMillis = 5_000L,
-            maxAttempts = 6,
+            attemptIntervalsMillis = intervals,
+            maxAttempts = intervals.size + 1,
             successStatuses = setOf("COMPLETED", "SUCCESS"),
             failureStatuses = setOf("FAILED"),
             nonTerminalStatuses = setOf(
@@ -45,9 +46,10 @@ object TradePollingPolicies {
     }
 
     fun sell(): TradePollingPolicy {
+        val intervals = listOf(5_000L)
         return TradePollingPolicy(
-            intervalMillis = 5_000L,
-            maxAttempts = 2,
+            attemptIntervalsMillis = intervals,
+            maxAttempts = intervals.size + 1,
             successStatuses = setOf("COMPLETED", "SUCCESS"),
             failureStatuses = setOf("FAILED"),
             nonTerminalStatuses = setOf("PENDING", "PAYMENT_RECEIVED", "PAYOUT_PROCESSING"),
@@ -55,4 +57,3 @@ object TradePollingPolicies {
         )
     }
 }
-

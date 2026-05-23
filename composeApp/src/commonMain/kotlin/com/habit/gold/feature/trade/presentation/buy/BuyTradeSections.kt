@@ -3,6 +3,8 @@ package com.habit.gold.feature.trade.presentation.buy
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
@@ -21,7 +23,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -46,6 +51,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -54,6 +60,7 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -119,7 +126,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_to_be_pai
 import habitgoldmobile.composeapp.generated.resources.trade_buy_applied_coupon_format
 import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
 import habitgoldmobile.composeapp.generated.resources.trade_buy_breakdown_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_chip_max
 import habitgoldmobile.composeapp.generated.resources.trade_buy_change
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_discount_off
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_min_order_required
@@ -142,6 +148,7 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_grams
 import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_rupees
 import habitgoldmobile.composeapp.generated.resources.trade_buy_offers
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pay_now
+import habitgoldmobile.composeapp.generated.resources.trade_buy_popular_tag
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_body
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_title
 import habitgoldmobile.composeapp.generated.resources.trade_buy_plus_gst
@@ -177,6 +184,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+import kotlin.math.abs
 
 @Composable
 internal fun BuyTradeInfoPill(
@@ -225,27 +233,44 @@ internal fun BuyTradeEntryModeTabs(
     activeMode: BuyTradeEntryMode,
     onSelectMode: (BuyTradeEntryMode) -> Unit,
 ) {
-    Row(
+    BoxWithConstraints(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(40.dp))
+            .fillMaxWidth(0.8f)
+            .clip(RoundedCornerShape(32.dp))
             .background(BuySlate50)
-            .border(1.dp, BuySlate200, RoundedCornerShape(40.dp))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .border(1.dp, BuySlate200, RoundedCornerShape(32.dp))
+            .padding(3.dp),
     ) {
-        BuyTradeModeChip(
-            label = stringResource(Res.string.trade_buy_mode_rupees),
-            selected = activeMode == BuyTradeEntryMode.Rupees,
-            onClick = { onSelectMode(BuyTradeEntryMode.Rupees) },
-            modifier = Modifier.weight(1f),
+        val segmentWidth = maxWidth / 2
+        val selectorOffset by animateDpAsState(
+            targetValue = if (activeMode == BuyTradeEntryMode.Rupees) 0.dp else segmentWidth,
+            animationSpec = tween(durationMillis = 280),
+            label = "buyTradeModeSelectorOffset",
         )
-        BuyTradeModeChip(
-            label = stringResource(Res.string.trade_buy_mode_grams),
-            selected = activeMode == BuyTradeEntryMode.Grams,
-            onClick = { onSelectMode(BuyTradeEntryMode.Grams) },
-            modifier = Modifier.weight(1f),
-        )
+        Box(
+            modifier = Modifier
+                .width(segmentWidth)
+                .height(40.dp)
+                .padding(end = 3.dp)
+                .offset(x = selectorOffset)
+                .clip(RoundedCornerShape(32.dp))
+                .background(BuyWhite)
+                .border(1.dp, BuySlate200, RoundedCornerShape(32.dp)),
+        ) {}
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BuyTradeModeChip(
+                label = stringResource(Res.string.trade_buy_mode_rupees),
+                selected = activeMode == BuyTradeEntryMode.Rupees,
+                onClick = { onSelectMode(BuyTradeEntryMode.Rupees) },
+                modifier = Modifier.weight(1f),
+            )
+            BuyTradeModeChip(
+                label = stringResource(Res.string.trade_buy_mode_grams),
+                selected = activeMode == BuyTradeEntryMode.Grams,
+                onClick = { onSelectMode(BuyTradeEntryMode.Grams) },
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -256,24 +281,25 @@ internal fun BuyTradeModeChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val labelColor by animateColorAsState(
+        targetValue = if (selected) BuyPrimary else BuySlate500,
+        animationSpec = tween(durationMillis = 220),
+        label = "buyTradeModeChipLabel",
+    )
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(40.dp))
-            .background(if (selected) BuyWhite else Color.Transparent)
-            .then(
-                if (selected) {
-                    Modifier.border(1.dp, BuySlate200, RoundedCornerShape(40.dp))
-                } else {
-                    Modifier
-                },
+            .height(40.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
             )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 32.dp, vertical = 11.dp),
+            .padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            color = if (selected) BuyPrimary else BuySlate500,
+            color = labelColor,
             fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -399,7 +425,7 @@ internal fun BuyTradeGramInput(
             )
 
             Text(
-                text = "gm",
+                text = "g",
                 fontSize = 20.sp,
                 color = BuySlate500,
                 fontWeight = FontWeight.Bold,
@@ -431,11 +457,11 @@ internal fun BuyTradeCircleStepper(
             .border(1.dp, BuyPrimary, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = symbol,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Medium,
-            color = BuyPrimary,
+        Icon(
+            imageVector = if (symbol == "+") Icons.Default.Add else Icons.Default.Remove,
+            contentDescription = null,
+            tint = BuyPrimary,
+            modifier = Modifier.size(18.dp),
         )
     }
 }
@@ -487,8 +513,8 @@ internal fun BuyTradeGramSlider(
             .padding(top = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("0.1 gm", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
-        Text("${formatGramsPlain(parseOneTimeGrams(maxValue.toString(), maxValue.toDouble()))} gm", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
+        Text("0.1 g", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
+        Text("${formatGramsPlain(parseOneTimeGrams(maxValue.toString(), maxValue.toDouble()))} g", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
     }
 }
 
@@ -496,13 +522,14 @@ internal fun BuyTradeGramSlider(
 internal fun BuyTradeQuickAmounts(
     entryMode: BuyTradeEntryMode,
     maxSelectableGrams: Double,
+    selectedValue: String,
     onSelectRupees: (String) -> Unit,
     onSelectGrams: (String) -> Unit,
 ) {
     val chips = if (entryMode == BuyTradeEntryMode.Rupees) {
-        listOf("1000", "5000", stringResource(Res.string.trade_buy_chip_max))
+        listOf("₹1000", "₹5000", "₹10000")
     } else {
-        listOf("1g", "5g", stringResource(Res.string.trade_buy_chip_max))
+        listOf("0.5g", "1g", "2g")
     }
 
     Row(
@@ -510,42 +537,92 @@ internal fun BuyTradeQuickAmounts(
         horizontalArrangement = Arrangement.Center,
     ) {
         chips.forEachIndexed { index, chip ->
-            Box(
-                modifier = Modifier
-                    .width(74.dp)
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .clickable {
+            val isPopular = chip == "₹10000" || chip == "2g"
+            val chipValue = if (entryMode == BuyTradeEntryMode.Rupees) {
+                chip.removePrefix("₹")
+            } else {
+                chip.removeSuffix("g")
+            }
+            val isSelected = when (entryMode) {
+                BuyTradeEntryMode.Rupees -> selectedValue == chipValue
+                BuyTradeEntryMode.Grams -> {
+                    val selected = selectedValue.toDoubleOrNull()
+                    val chipNumeric = chipValue.toDoubleOrNull()
+                    selected != null && chipNumeric != null && abs(selected - chipNumeric) < 0.0001
+                }
+            }
+            Column(
+                modifier = Modifier.width(84.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+
+                OutlinedButton(
+                    onClick = {
                         if (entryMode == BuyTradeEntryMode.Rupees) {
                             val target = when (chip) {
-                                "1000" -> "1000"
-                                "5000" -> "5000"
-                                else -> OneTimeUpiLimit.toInt().toString()
+                                "₹1000" -> "1000"
+                                "₹5000" -> "5000"
+                                else -> "10000"
                             }
                             onSelectRupees(target)
                         } else {
                             val targetGrams = when (chip) {
+                                "0.5g" -> 0.5
                                 "1g" -> 1.0
-                                "5g" -> 5.0
+                                "2g" -> 2.0
                                 else -> maxSelectableGrams
                             }
                             onSelectGrams(formatGramsPlain(parseOneTimeGrams(targetGrams.toString(), maxSelectableGrams)))
                         }
+                    },
+                    modifier = Modifier
+                        .width(84.dp),
+                    shape = if (!isPopular) RoundedCornerShape(8.dp) else
+                        RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 0.dp, bottomStart = 0.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        if (isSelected) 1.5.dp else 0.5.dp,
+                        if (isSelected) BuyPrimary else BuySlate200,
+                    ),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        text = chip,
+                        fontSize = 13.sp,
+                        color = if (isSelected) BuyPrimary else BuySlate950,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                    )
+                }
+
+                if (isPopular) {
+                    Surface(
+                        modifier = Modifier
+                            .width(84.dp)
+                            .offset(y = (-6).dp)
+                            .height(20.dp),
+                        shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 8.dp, bottomStart = 8.dp),
+                        color = BuyPrimary,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.trade_buy_popular_tag),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(y = (-2).dp)
+                                .padding(horizontal = 7.dp),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = BuyWhite,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    .background(BuyWhite)
-                    .border(1.dp, BuySlate200, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = chip,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = BuySlate600,
-                )
+                } else {
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
             }
 
             if (index < chips.lastIndex) {
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(12.dp))
             }
         }
     }
@@ -577,9 +654,11 @@ internal fun BuyTradeCouponRow(
 }
 
 @Composable
-internal fun BuyTradePoweredByRow() {
+internal fun BuyTradePoweredByRow(
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -603,16 +682,9 @@ internal fun BuyTradePoweredByRow() {
 @Composable
 internal fun buyTradeAppliedCouponSummary(
     validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation,
+    fallbackAmount: Double,
 ): String? {
-    val parts = buildList {
-//        validation.promotionalCashback.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it cashback") }
-        validation.promotionalDiscount.takeIf { it != "0" && it.isNotBlank() }?.let {
-            add(stringResource(Res.string.trade_buy_coupon_discount_off, it))
-        }
-//        validation.promotionalExtraGold.takeIf { it != "0" && it.isNotBlank() }?.let { add("+$it g gold") }
-//        validation.promotionalDeliveryDiscount.takeIf { it != "0" && it.isNotBlank() }?.let { add("₹$it delivery off") }
-    }
-    return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
+    return appliedCouponSummary(validation = validation, fallbackAmount = fallbackAmount)
 }
 
 internal fun buyCouponMinOrderAmount(
@@ -638,10 +710,13 @@ internal fun buyCouponDisabledReason(
 }
 
 internal data class BuyTradeCalculation(
+    val baseTotalPayable: Double,
     val totalPayable: Double,
     val goldValue: Double,
     val gstAmount: Double,
     val goldQuantity: Double,
+    val couponDiscount: Double = 0.0,
+    val appliedCouponCode: String? = null,
 )
 
 internal fun calculateBuyTrade(
@@ -650,29 +725,39 @@ internal fun calculateBuyTrade(
     numericGrams: Double,
     goldPrice: Double,
     gstRate: Double,
+    appliedCoupon: com.habit.gold.feature.trade.domain.model.TradeCouponValidation? = null,
 ): BuyTradeCalculation {
     return when (entryMode) {
         BuyTradeEntryMode.Rupees -> {
-            val totalAmount = numericRupees
-            val gstAmount = inclusiveGstAmount(totalAmount, gstRate)
-            val goldValue = (totalAmount - gstAmount).coerceAtLeast(0.0)
+            val baseTotalAmount = numericRupees
+            val gstAmount = inclusiveGstAmount(baseTotalAmount, gstRate)
+            val goldValue = (baseTotalAmount - gstAmount).coerceAtLeast(0.0)
             val goldQuantity = if (goldPrice > 0.0) roundToGoldScale(goldValue / goldPrice) else 0.0
+            val payableAmount = netPayableFromValidation(appliedCoupon, baseTotalAmount)
             BuyTradeCalculation(
-                totalPayable = totalAmount,
+                baseTotalPayable = baseTotalAmount,
+                totalPayable = payableAmount,
                 goldValue = goldValue,
                 gstAmount = gstAmount,
                 goldQuantity = goldQuantity,
+                couponDiscount = roundToMoney((baseTotalAmount - payableAmount).coerceAtLeast(0.0)),
+                appliedCouponCode = appliedCoupon?.code,
             )
         }
         BuyTradeEntryMode.Grams -> {
             val goldQuantity = roundToGoldScale(numericGrams)
             val goldValue = roundToMoney(goldQuantity * goldPrice)
             val gstAmount = roundToMoney(goldValue * gstRate)
+            val baseTotalPayable = roundToMoney(goldValue + gstAmount)
+            val payableAmount = netPayableFromValidation(appliedCoupon, baseTotalPayable)
             BuyTradeCalculation(
-                totalPayable = roundToMoney(goldValue + gstAmount),
+                baseTotalPayable = baseTotalPayable,
+                totalPayable = payableAmount,
                 goldValue = goldValue,
                 gstAmount = gstAmount,
                 goldQuantity = goldQuantity,
+                couponDiscount = roundToMoney((baseTotalPayable - payableAmount).coerceAtLeast(0.0)),
+                appliedCouponCode = appliedCoupon?.code,
             )
         }
     }
@@ -692,7 +777,7 @@ internal fun inclusiveGstAmount(totalAmount: Double, gstRate: Double): Double {
 }
 
 internal fun parseOneTimeGrams(value: String, maxGrams: Double): Double {
-    return (value.toDoubleOrNull() ?: 0.5).coerceIn(0.1, maxGrams)
+    return (value.toDoubleOrNull() ?: 0.1).coerceIn(0.1, maxGrams)
 }
 
 internal fun stepOneTimeGrams(current: String, deltaSteps: Int, maxGrams: Double): String {
@@ -708,4 +793,86 @@ internal fun formatGramsPlain(value: Double): String {
 
 internal fun formatConversionGrams(value: Double): String {
     return formatGoldQuantity(value)
+}
+
+internal fun netPayableFromValidation(
+    validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation?,
+    fallback: Double,
+): Double {
+    val netAmount = validation?.netOrderAmount?.trim()?.toDoubleOrNull()
+    return when {
+        netAmount == null || netAmount <= 0.0 -> fallback
+        else -> roundToMoney(netAmount)
+    }
+}
+
+internal fun promoAmount(value: String?): Double = value?.trim()?.toDoubleOrNull() ?: 0.0
+
+private fun formatPromoRupees(value: Double): String {
+    val rounded = roundToMoney(value)
+    return if (abs(rounded - rounded.toInt()) < 0.01) {
+        rounded.toInt().toString()
+    } else {
+        formatMoney(rounded)
+    }
+}
+
+internal fun couponBenefitDisplay(
+    validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation,
+): Pair<Boolean, String> {
+    val rupeeTotal = roundToMoney(
+        promoAmount(validation.promotionalDiscount) +
+            promoAmount(validation.promotionalCashback) +
+            promoAmount(validation.promotionalDeliveryDiscount),
+    )
+    val extraGold = promoAmount(validation.promotionalExtraGold)
+    val parts = buildList {
+        if (rupeeTotal > 0.0) {
+            add("-₹${formatMoney(rupeeTotal)}")
+        }
+        if (extraGold > 0.0) {
+            add("+${validation.promotionalExtraGold.trim()} g gold")
+        }
+    }
+    return parts.isNotEmpty() to parts.joinToString(" • ")
+}
+
+internal fun appliedCouponSummary(
+    validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation?,
+    fallbackAmount: Double,
+    payLabel: String? = null,
+): String? {
+    validation ?: return null
+    val (showBenefit, benefitText) = couponBenefitDisplay(validation)
+    val net = netPayableFromValidation(validation, fallbackAmount)
+    val saved = roundToMoney((fallbackAmount - net).coerceAtLeast(0.0))
+    val parts = buildList {
+        if (showBenefit) {
+            add(benefitText)
+        } else if (saved > 0.01) {
+            add("Save ₹${formatMoney(saved)}")
+        }
+        if (payLabel != null && net > 0.0 && abs(net - fallbackAmount) > 0.01) {
+            add("$payLabel ₹${formatMoney(net)}")
+        }
+    }
+    return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
+}
+
+internal fun couponBreakdownDisplay(
+    validation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation?,
+    grossAmount: Double,
+    payableAmount: Double,
+    appliedCouponCode: String? = validation?.code,
+): Pair<String, String>? {
+    val code = appliedCouponCode?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    validation ?: return "Coupon ($code)" to "Applied"
+    val payableReduction = roundToMoney((grossAmount - payableAmount).coerceAtLeast(0.0))
+    val value = if (payableReduction > 0.01) {
+        "-₹${formatMoney(payableReduction)}"
+    } else {
+        val (_, benefitText) = couponBenefitDisplay(validation)
+        benefitText.takeIf { it.isNotBlank() } ?: "Applied"
+    }
+    return "Coupon ($code)" to value
 }

@@ -29,8 +29,8 @@ class AppRootViewModel(
 
         viewModelScope.launch {
             val session = sessionStore.restore()
-            // Provide a 1.8-second delay so that the beautiful custom branded splash screen displays nicely
-            delay(1800)
+            // Keep a short branded splash while startup routing settles.
+            delay(1200)
             syncFromSession(session)
             sessionStore.state
                 .drop(1)

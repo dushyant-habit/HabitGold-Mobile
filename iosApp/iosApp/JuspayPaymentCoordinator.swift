@@ -64,7 +64,7 @@ final class JuspayPaymentCoordinator {
         self.hostViewControllerProvider = hostViewControllerProvider
         self.baseViewProvider = baseViewProvider
         hyperServices.shouldUseViewController = false
-        hyperServices.shouldPresentInFullScreen = false
+        hyperServices.shouldPresentInFullScreen = true
         hyperServices.shouldUseAppNavigationController = false
     }
 
@@ -278,6 +278,8 @@ final class JuspayPaymentCoordinator {
                 IosDeliveryPaymentBridgeApi.shared.completeBackPressed(requestId: requestId)
             }
         }
+
+        recycleSdkSession()
     }
 
     private func completeFailure(
@@ -305,6 +307,21 @@ final class JuspayPaymentCoordinator {
                 message: message
             )
         }
+
+        recycleSdkSession()
+    }
+
+    private func recycleSdkSession() {
+        pendingProcessPayload = nil
+        if isInitiated || isInitiating {
+            hyperServices.terminate()
+        }
+        isInitiated = false
+        isInitiating = false
+
+        guard config.enabled else { return }
+        guard let hostViewController = hostViewControllerProvider() else { return }
+        initiateIfNeeded(on: hostViewController)
     }
 
     private func buildInitiatePayload() -> [String: Any] {

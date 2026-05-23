@@ -37,6 +37,7 @@ import com.habit.gold.feature.delivery.presentation.resolve
 import com.habit.gold.feature.delivery.presentation.components.*
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.painterResource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
@@ -296,18 +297,16 @@ private fun DeliveryOrderCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Icon circle
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(AppColors.Gold100),
+                        .size(48.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.LocalShipping,
+                        painter = painterResource(Res.drawable.ic_delivery_gold_icon),
                         contentDescription = "Delivery",
-                        tint = AppColors.Purple700,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(48.dp),
                     )
                 }
 

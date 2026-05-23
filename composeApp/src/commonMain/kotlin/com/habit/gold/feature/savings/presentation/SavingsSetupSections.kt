@@ -93,7 +93,6 @@ import com.habit.gold.feature.home.presentation.ChildPrimaryText
 import com.habit.gold.feature.home.presentation.formatInr
 import com.habit.gold.feature.trade.domain.TradeLivePriceState
 import com.habit.gold.feature.trade.presentation.buy.BuyCouponSheet
-import com.habit.gold.feature.trade.presentation.buy.BuyTradeLivePriceBar
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_help
 import habitgoldmobile.composeapp.generated.resources.common_retry
@@ -195,7 +194,7 @@ internal fun SavingsAmountCard(
         ) {
             Text(
                 text = "₹",
-                fontSize = 18.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = HabitGoldPalette.plum,
             )
@@ -543,7 +542,7 @@ internal fun SavingsCompoundingInfoSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.5f)
+            .fillMaxHeight(0.56f)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 8.dp)
             .padding(bottom = 24.dp),
@@ -691,7 +690,6 @@ internal fun SavingsSetupBottomBar(
                 .padding(bottom = 12.dp),
         ) {
             HorizontalDivider(color = ChildCardBorder)
-            BuyTradeLivePriceBar(livePriceState = livePriceState)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

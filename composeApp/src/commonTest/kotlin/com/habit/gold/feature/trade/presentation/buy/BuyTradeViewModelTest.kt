@@ -42,6 +42,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BuyTradeViewModelTest {
@@ -183,6 +184,40 @@ class BuyTradeViewModelTest {
 
         val appliedCoupon = assertIs<TradeCouponValidation>(viewModel.state.value.appliedCoupon)
         assertEquals("SAVE50", appliedCoupon.code)
+        assertEquals("SAVE50", viewModel.state.value.appliedCouponCode)
+        assertNull(viewModel.state.value.errorMessage)
+    }
+
+    @Test
+    fun `silent coupon refresh keeps selected code but clears stale validation on failure`() = runTest(dispatcher) {
+        val repository = FakeBuyTradeRepository(
+            buyOrderResult = ApiResult.Success(
+                tradeBuyOrder(
+                    orderId = "order-4b",
+                    sdkPayloadJson = null,
+                )
+            ),
+            validationResult = ApiResult.Failure(
+                NetworkError(
+                    kind = NetworkErrorKind.Validation,
+                    message = "Coupon no longer valid for this amount.",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(
+            BuyTradeIntent.ApplyCoupon(
+                code = "SAVE50",
+                amount = 1500.0,
+                grams = 0.2,
+                silent = true,
+            )
+        )
+        advanceUntilIdle()
+
+        assertEquals("SAVE50", viewModel.state.value.appliedCouponCode)
+        assertNull(viewModel.state.value.appliedCoupon)
         assertNull(viewModel.state.value.errorMessage)
     }
 
@@ -219,6 +254,90 @@ class BuyTradeViewModelTest {
         assertNull(viewModel.state.value.errorMessage)
     }
 
+    @Test
+    fun `expired buy rate failure refreshes live price instead of surfacing stale error`() = runTest(dispatcher) {
+        val repository = FakeBuyTradeRepository(
+            buyOrderResult = ApiResult.Failure(
+                NetworkError(
+                    kind = NetworkErrorKind.Validation,
+                    message = "The selected gold rate has expired or changed. Please refresh and try again.",
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+        val effectDeferred = async { viewModel.effects.first() }
+
+        viewModel.onIntent(
+            BuyTradeIntent.SubmitOneTimeOrder(
+                amount = 100.0,
+                grams = null,
+                buyRateId = "expired-rate",
+            )
+        )
+        advanceUntilIdle()
+
+        assertEquals(BuyTradeEffect.RefreshLivePrice, effectDeferred.await())
+        assertEquals(BuyTradeStep.Entry, viewModel.state.value.step)
+        assertNull(viewModel.state.value.errorMessage)
+    }
+
+    @Test
+    fun `buy calculation uses coupon net payable without changing credited gold`() {
+        val validation = TradeCouponValidation(
+            code = "SAVE10",
+            promoRuleId = "promo-10",
+            promotionalDiscount = "10",
+            promotionalCashback = "0",
+            promotionalExtraGold = "0",
+            promotionalDeliveryDiscount = "0",
+            netOrderAmount = "90",
+        )
+
+        val calculation = calculateBuyTrade(
+            entryMode = BuyTradeEntryMode.Rupees,
+            numericRupees = 100.0,
+            numericGrams = 0.0,
+            goldPrice = 1000.0,
+            gstRate = 0.03,
+            appliedCoupon = validation,
+        )
+
+        assertEquals(100.0, calculation.baseTotalPayable)
+        assertEquals(90.0, calculation.totalPayable)
+        assertEquals(10.0, calculation.couponDiscount)
+        assertTrue(calculation.goldQuantity > 0.0)
+    }
+
+    @Test
+    fun `submit revalidates applied coupon against current values before order creation`() = runTest(dispatcher) {
+        val repository = FakeBuyTradeRepository(
+            buyOrderResult = ApiResult.Success(
+                tradeBuyOrder(
+                    orderId = "order-6",
+                    sdkPayloadJson = null,
+                )
+            ),
+        )
+        val viewModel = createViewModel(repository)
+
+        viewModel.onIntent(
+            BuyTradeIntent.SubmitOneTimeOrder(
+                amount = 1000.0,
+                grams = null,
+                buyRateId = "buy-rate-6",
+                couponCode = "SAVE50",
+                couponValidationAmount = 1000.0,
+                couponValidationGrams = 0.9,
+            )
+        )
+        advanceUntilIdle()
+
+        assertEquals("SAVE50", repository.lastValidationRequest?.code)
+        assertEquals(1000.0, repository.lastValidationRequest?.amount)
+        assertEquals(0.9, repository.lastValidationRequest?.grams)
+        assertEquals("SAVE50", repository.lastBuyOrderRequest?.couponCode)
+    }
+
     private fun createViewModel(repository: TradeRepository): BuyTradeViewModel {
         return BuyTradeViewModel(
             createBuyOrderUseCase = CreateBuyOrderUseCase(repository),
@@ -232,11 +351,17 @@ class BuyTradeViewModelTest {
 private class FakeBuyTradeRepository(
     private val buyOrderResult: ApiResult<TradeBuyOrder>,
     private val statusResponses: List<ApiResult<TradeStatus>> = emptyList(),
+    private val validationResult: ApiResult<TradeCouponValidation>? = null,
 ) : TradeRepository {
 
     private var statusIndex = 0
+    var lastValidationRequest: TradeCouponValidationRequest? = null
+    var lastBuyOrderRequest: TradeBuyOrderRequest? = null
 
-    override suspend fun createBuyOrder(request: TradeBuyOrderRequest): ApiResult<TradeBuyOrder> = buyOrderResult
+    override suspend fun createBuyOrder(request: TradeBuyOrderRequest): ApiResult<TradeBuyOrder> {
+        lastBuyOrderRequest = request
+        return buyOrderResult
+    }
 
     override suspend fun getTradeStatus(orderId: String): ApiResult<TradeStatus> {
         val fallback = ApiResult.Failure(
@@ -274,7 +399,8 @@ private class FakeBuyTradeRepository(
     }
 
     override suspend fun validateCoupon(request: TradeCouponValidationRequest): ApiResult<TradeCouponValidation> {
-        return ApiResult.Success(
+        lastValidationRequest = request
+        return validationResult ?: ApiResult.Success(
             TradeCouponValidation(
                 code = request.code,
                 promoRuleId = "promo-1",

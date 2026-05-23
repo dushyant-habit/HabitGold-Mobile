@@ -20,10 +20,11 @@ class HomeViewModel(
                 if (!hasLoaded) {
                     hasLoaded = true
                     restorePreferences()
-                    loadSummary(isUserRefresh = false)
+                    loadSummary(mode = HomeRefreshMode.Initial)
                 }
             }
-            HomeIntent.Refresh -> loadSummary(isUserRefresh = true)
+            HomeIntent.Refresh -> loadSummary(mode = HomeRefreshMode.UserVisible)
+            HomeIntent.BackgroundRefresh -> loadSummary(mode = HomeRefreshMode.Silent)
             HomeIntent.RestorePreferences -> restorePreferences()
             HomeIntent.ToggleBalanceVisibility -> toggleBalanceVisibility()
         }
@@ -44,13 +45,15 @@ class HomeViewModel(
         }
     }
 
-    private fun loadSummary(isUserRefresh: Boolean) {
+    private fun loadSummary(mode: HomeRefreshMode) {
         viewModelScope.launch {
             updateState { current ->
-                val shouldKeepContentVisible = isUserRefresh && current.summary != null
+                val shouldKeepContentVisible = current.summary != null &&
+                    mode != HomeRefreshMode.Initial
+                val shouldShowRefreshIndicator = mode == HomeRefreshMode.UserVisible && current.summary != null
                 current.copy(
                     isLoading = !shouldKeepContentVisible,
-                    isRefreshing = shouldKeepContentVisible,
+                    isRefreshing = shouldShowRefreshIndicator,
                     errorMessage = null,
                 )
             }
@@ -92,4 +95,10 @@ class HomeViewModel(
             )
         }
     }
+}
+
+private enum class HomeRefreshMode {
+    Initial,
+    UserVisible,
+    Silent,
 }

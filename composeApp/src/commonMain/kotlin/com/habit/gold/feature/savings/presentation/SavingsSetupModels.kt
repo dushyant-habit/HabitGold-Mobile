@@ -49,10 +49,9 @@ internal enum class SavingsFrequency(
         maxAmount = 15000,
         quickAmounts = listOf(
             SavingsQuickAmount(500),
-            SavingsQuickAmount(1000),
-            SavingsQuickAmount(2500, "Popular"),
+            SavingsQuickAmount(2500),
             SavingsQuickAmount(5000),
-            SavingsQuickAmount(10000),
+            SavingsQuickAmount(10000, "Popular"),
         ),
     ),
     ;

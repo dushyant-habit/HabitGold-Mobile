@@ -102,6 +102,8 @@ import com.habit.gold.feature.trade.domain.usecase.PollTradeStatusUseCase
 import com.habit.gold.feature.trade.domain.usecase.SetDefaultTradeVpaUseCase
 import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import com.habit.gold.feature.trade.domain.usecase.VerifyTradeVpaUseCase
+import com.habit.gold.feature.trade.presentation.TradeInvoiceViewerScreen
+import com.habit.gold.feature.trade.presentation.TradeTransactionDetailsScreen
 import com.habit.gold.feature.trade.presentation.rememberPlatformTradePaymentLauncher
 import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
 import habitgoldmobile.composeapp.generated.resources.Res
@@ -122,6 +124,14 @@ private val MainBottomNavSelected = HabitGoldPalette.plum
 private val MainBottomNavUnselected = Color(0xFF80858F)
 private val MainShellBackground = Color(0xFFF8F8FB)
 
+private sealed interface MainShellOverlayDestination {
+    data class TransactionDetails(val transactionId: String) : MainShellOverlayDestination
+    data class InvoiceViewer(
+        val invoiceUrl: String,
+        val transactionId: String,
+    ) : MainShellOverlayDestination
+}
+
 private data class MainTabUi(
     val tab: MainTab,
     val icon: ImageVector,
@@ -137,6 +147,7 @@ fun AppMainShellScreen(
     modifier: Modifier = Modifier,
 ) {
     var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
+    var activeOverlayDestination by remember { mutableStateOf<MainShellOverlayDestination?>(null) }
     val biometricAuthenticator = rememberProfileBiometricAuthenticator()
     val biometricSecurityStore = remember(appKoin) { ProfileSecurityStore(appKoin.get<SecureStorage>()) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -156,8 +167,19 @@ fun AppMainShellScreen(
     var showBiometricUnlockOverlay by remember { mutableStateOf(false) }
     val biometricPromptInFlightState by rememberUpdatedState(biometricPromptInFlight)
     PlatformBackHandler(
-        enabled = selectedTab != MainTab.Home,
+        enabled = activeOverlayDestination == null && selectedTab != MainTab.Home,
         onBack = { onSelectTab(MainTab.Home) },
+    )
+    PlatformBackHandler(
+        enabled = activeOverlayDestination != null,
+        onBack = {
+            activeOverlayDestination = when (val destination = activeOverlayDestination) {
+                is MainShellOverlayDestination.InvoiceViewer ->
+                    MainShellOverlayDestination.TransactionDetails(destination.transactionId)
+                is MainShellOverlayDestination.TransactionDetails -> null
+                null -> null
+            }
+        },
     )
 
     val paymentLauncher = rememberPlatformTradePaymentLauncher()
@@ -222,7 +244,6 @@ fun AppMainShellScreen(
     val historyDependencies = remember(appKoin) {
         HistoryRouteDependencies(
             getTradeTransactionsUseCase = appKoin.get<GetTradeTransactionsUseCase>(),
-            getTradeInvoiceUseCase = appKoin.get<GetTradeInvoiceUseCase>(),
         )
     }
     val rewardsDependencies = remember(appKoin) {
@@ -345,7 +366,7 @@ fun AppMainShellScreen(
         snackbarHost = { SnackbarHost(hostState = biometricSnackbarHostState) },
         bottomBar = {
             AnimatedVisibility(
-                visible = shouldShowBottomBar,
+                visible = shouldShowBottomBar && activeOverlayDestination == null,
                 enter = fadeIn(animationSpec = tween(durationMillis = 220)) +
                     slideInVertically(
                         initialOffsetY = { it / 2 },
@@ -393,6 +414,10 @@ fun AppMainShellScreen(
                         tradeDependencies = tradeDependencies,
                         session = session,
                         onSelectTab = onSelectTab,
+                        onOpenTransactionDetails = { transactionId ->
+                            activeOverlayDestination =
+                                MainShellOverlayDestination.TransactionDetails(transactionId)
+                        },
                         onBottomBarVisibilityChange = { visible ->
                             shouldShowBottomBar = visible
                         },
@@ -415,6 +440,10 @@ fun AppMainShellScreen(
                     )
                     MainTab.History -> HistoryRoute(
                         dependencies = historyDependencies,
+                        onOpenTransactionDetails = { transactionId ->
+                            activeOverlayDestination =
+                                MainShellOverlayDestination.TransactionDetails(transactionId)
+                        },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -443,6 +472,40 @@ fun AppMainShellScreen(
                     },
                     modifier = Modifier.fillMaxSize(),
                 )
+            }
+
+            when (val overlayDestination = activeOverlayDestination) {
+                is MainShellOverlayDestination.TransactionDetails -> {
+                    TradeTransactionDetailsScreen(
+                        transactionId = overlayDestination.transactionId,
+                        getTradeTransactionsUseCase = tradeDependencies.getTradeTransactionsUseCase,
+                        getTradeInvoiceUseCase = tradeDependencies.getTradeInvoiceUseCase,
+                        onBackClick = {
+                            activeOverlayDestination = null
+                        },
+                        onOpenInvoice = { invoiceUrl ->
+                            activeOverlayDestination = MainShellOverlayDestination.InvoiceViewer(
+                                invoiceUrl = invoiceUrl,
+                                transactionId = overlayDestination.transactionId,
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                is MainShellOverlayDestination.InvoiceViewer -> {
+                    TradeInvoiceViewerScreen(
+                        invoiceUrl = overlayDestination.invoiceUrl,
+                        onBackClick = {
+                            activeOverlayDestination = MainShellOverlayDestination.TransactionDetails(
+                                overlayDestination.transactionId,
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+
+                null -> Unit
             }
         }
     }

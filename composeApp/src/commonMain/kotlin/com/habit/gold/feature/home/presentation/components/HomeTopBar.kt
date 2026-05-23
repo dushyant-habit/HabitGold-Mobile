@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,10 +32,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +53,9 @@ import habitgoldmobile.composeapp.generated.resources.common_alerts
 import habitgoldmobile.composeapp.generated.resources.home_screen_hello
 import habitgoldmobile.composeapp.generated.resources.home_screen_live_gold_price
 import org.jetbrains.compose.resources.stringResource
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val HomeToolbarBorder = Color(0x0D000000)
 private val HomeAvatarBackground = HabitGoldPalette.plum.copy(alpha = 0.10f)
@@ -128,41 +136,41 @@ internal fun HomeTopBar(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (liveRate > 0) {
-                Surface(
-                    onClick = onOpenGoldPrice,
-                    shape = RoundedCornerShape(24.dp),
-                    color = HomeLivePillBackground,
-                    border = BorderStroke(1.dp, HomePrimary.copy(alpha = 0.15f)),
-                    modifier = Modifier.padding(end = 10.dp),
+            Surface(
+                onClick = onOpenGoldPrice,
+                shape = RoundedCornerShape(24.dp),
+                color = HomeLivePillBackground,
+                border = BorderStroke(1.dp, HomePrimary.copy(alpha = 0.15f)),
+                modifier = Modifier
+                    .padding(end = 10.dp)
+                    .alpha(if (liveRate > 0) 1f else 0f),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    HomeLiveWaveIndicator(
+                        tint = HomePrimary,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
                     ) {
-                        HomeLiveWaveIndicator(
-                            tint = HomePrimary,
-                            modifier = Modifier.size(10.dp),
+                        Text(
+                            text = stringResource(Res.string.home_screen_live_gold_price),
+                            fontSize = 8.sp,
+                            lineHeight = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = HomePrimary.copy(alpha = 0.85f),
                         )
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(1.dp),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.home_screen_live_gold_price),
-                                fontSize = 7.sp,
-                                lineHeight = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = HomePrimary.copy(alpha = 0.85f),
-                            )
-                            Text(
-                                text = formatLiveRate(liveRate),
-                                fontSize = 9.sp,
-                                lineHeight = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = HomePrimary,
-                            )
-                        }
+                        Text(
+                            text = if (liveRate > 0) formatLiveRate(liveRate) else " ",
+                            fontSize = 10.sp,
+                            lineHeight = 12.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = HomePrimary,
+                        )
                     }
                 }
             }
@@ -199,44 +207,74 @@ internal fun HomeTopBar(
 @Composable
 private fun HomeLiveWaveIndicator(
     tint: Color,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.size(18.dp),
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "homeLiveWave")
-    val alphaA by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
+    val transition = rememberInfiniteTransition(label = "homeLiveWave")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "homeLiveWaveA",
-    )
-    val alphaB by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.35f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "homeLiveWaveB",
+        animationSpec = infiniteRepeatable(animation = tween(2000), repeatMode = androidx.compose.animation.core.RepeatMode.Restart),
+        label = "homeLiveWavePhase",
     )
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 6.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
-        )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 10.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaB)),
-        )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 7.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
-        )
+    fun smoothPulse(progress: Float, start: Float, end: Float): Float {
+        val t = ((progress - start) / (end - start)).coerceIn(0f, 1f)
+        return (0.5f - 0.5f * cos(t * PI)).toFloat()
+    }
+
+    val innerAlpha = smoothPulse(phase, 0.05f, 0.45f)
+    val outerAlpha = smoothPulse(phase, 0.30f, 0.85f)
+    val dotScale = 0.95f + 0.1f * sin(phase * (2 * PI)).toFloat()
+
+    Canvas(modifier = modifier) {
+        val center = this.center
+        val dotRadius = 2.2.dp.toPx()
+        val innerRadius = 5.2.dp.toPx()
+        val outerRadius = 8.0.dp.toPx()
+        val stroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
+
+        drawCircle(color = tint, radius = dotRadius * dotScale, center = center)
+
+        if (innerAlpha > 0f) {
+            drawArc(
+                color = tint.copy(alpha = innerAlpha),
+                startAngle = 135f,
+                sweepAngle = 90f,
+                useCenter = false,
+                topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+                size = Size(innerRadius * 2, innerRadius * 2),
+                style = stroke,
+            )
+            drawArc(
+                color = tint.copy(alpha = innerAlpha),
+                startAngle = -45f,
+                sweepAngle = 90f,
+                useCenter = false,
+                topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+                size = Size(innerRadius * 2, innerRadius * 2),
+                style = stroke,
+            )
+        }
+
+        if (outerAlpha > 0f) {
+            drawArc(
+                color = tint.copy(alpha = outerAlpha),
+                startAngle = 135f,
+                sweepAngle = 90f,
+                useCenter = false,
+                topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                size = Size(outerRadius * 2, outerRadius * 2),
+                style = stroke,
+            )
+            drawArc(
+                color = tint.copy(alpha = outerAlpha),
+                startAngle = -45f,
+                sweepAngle = 90f,
+                useCenter = false,
+                topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+                size = Size(outerRadius * 2, outerRadius * 2),
+                style = stroke,
+            )
+        }
     }
 }

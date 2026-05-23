@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -50,14 +51,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.HabitGoldPalette
@@ -71,6 +79,7 @@ import com.habit.gold.feature.home.presentation.formatInr
 import com.habit.gold.feature.savings.domain.model.SavingsMandate
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_retry
+import habitgoldmobile.composeapp.generated.resources.ic_buy_gold_icon
 import habitgoldmobile.composeapp.generated.resources.savings_manage_action_cancelled
 import habitgoldmobile.composeapp.generated.resources.savings_manage_action_paused
 import habitgoldmobile.composeapp.generated.resources.savings_manage_action_resumed
@@ -103,6 +112,8 @@ import habitgoldmobile.composeapp.generated.resources.savings_manage_status_paus
 import habitgoldmobile.composeapp.generated.resources.savings_manage_status_success
 import habitgoldmobile.composeapp.generated.resources.savings_manage_title
 import habitgoldmobile.composeapp.generated.resources.savings_manage_upcoming_execution
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
@@ -117,6 +128,9 @@ private val SavingsSuccessBorder = Color(0xFFBBF7D0)
 private val SavingsPausedTint = Color(0xFFB45309)
 private val SavingsPausedContainer = Color(0xFFFEF3C7)
 private val SavingsPausedBorder = Color(0xFFFCD34D)
+private val SavingsCancelledTint = Color(0xFF475569)
+private val SavingsCancelledContainer = Color(0xFFF8FAFC)
+private val SavingsCancelledBorder = Color(0xFFE2E8F0)
 private val SavingsFailedTint = Color(0xFFB91C1C)
 private val SavingsFailedContainer = Color(0xFFFEE2E2)
 private val SavingsFailedBorder = Color(0xFFFCA5A5)
@@ -231,10 +245,7 @@ internal fun SavingsScreen(
     ) { paddingValues ->
         when {
             state.isLoading && state.mandates.isEmpty() -> {
-                HomeChildEmptyState(
-                    paddingValues = paddingValues,
-                    message = stringResource(Res.string.savings_manage_loading_message),
-                )
+                SavingsManageLoadingShimmer(paddingValues = paddingValues)
             }
 
             state.errorMessage != null && state.mandates.isEmpty() -> {
@@ -356,6 +367,76 @@ internal fun SavingsScreen(
 }
 
 @Composable
+private fun SavingsManageLoadingShimmer(
+    paddingValues: PaddingValues,
+) {
+    val transition = rememberInfiniteTransition(label = "savings-manage-shimmer")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 1300, easing = LinearEasing)),
+        label = "savings-manage-shimmer-progress",
+    )
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(Color(0xFFE8ECF3), Color(0xFFF6F8FB), Color(0xFFE8ECF3)),
+        start = androidx.compose.ui.geometry.Offset(-260f + (520f * progress), 0f),
+        end = androidx.compose.ui.geometry.Offset(0f + (520f * progress), 220f),
+    )
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+        items(3) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, ChildCardBorder),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.42f)
+                            .height(18.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(shimmerBrush),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.68f)
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(shimmerBrush),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(shimmerBrush),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.56f)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(shimmerBrush),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SavingsErrorState(
     paddingValues: PaddingValues,
     message: String,
@@ -452,21 +533,31 @@ private fun SavingsMandateCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(style.iconContainerColor),
+                            .background(
+                                if (style.showIconBackground) style.iconContainerColor else Color.Transparent,
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = style.icon,
-                            contentDescription = null,
-                            tint = style.iconTint,
-                            modifier = Modifier.size(22.dp),
-                        )
+                        when {
+                            style.iconRes != null -> Icon(
+                                painter = painterResource(style.iconRes),
+                                contentDescription = null,
+                                tint = style.iconTint,
+                                modifier = Modifier.size(style.iconSize),
+                            )
+                            style.icon != null -> Icon(
+                                imageVector = style.icon,
+                                contentDescription = null,
+                                tint = style.iconTint,
+                                modifier = Modifier.size(style.iconSize),
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = mandate.name.ifBlank { stringResource(Res.string.savings_manage_default_name) },
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = ChildPrimaryText,
                             maxLines = 1,
@@ -480,7 +571,7 @@ private fun SavingsMandateCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = amountLabel,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = HabitGoldPalette.plum,
                     )
@@ -666,24 +757,13 @@ private fun SavingsStatusChip(style: SavingsStatusStyle) {
         color = style.containerColor,
         border = BorderStroke(1.dp, style.borderColor),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = style.icon,
-                contentDescription = null,
-                tint = style.textColor,
-                modifier = Modifier.size(12.dp),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = style.label,
-                fontSize = 12.sp,
-                color = style.textColor,
-                fontWeight = FontWeight.Medium,
-            )
-        }
+        Text(
+            text = style.label,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            fontSize = 10.sp,
+            color = style.textColor,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 
@@ -783,6 +863,7 @@ private fun SavingsConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = Color.White,
         title = {
             Text(
                 text = title,
@@ -827,19 +908,22 @@ private fun SavingsConfirmationDialog(
         },
         confirmButton = {
             Button(
-                onClick = onConfirm,
+                onClick = onDismiss,
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = confirmContainerColor,
                     contentColor = Color.White,
                 ),
             ) {
-                Text(text = confirmLabel)
+                Text(text = stringResource(Res.string.savings_manage_dismiss_message))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(Res.string.savings_manage_dismiss_message), color = ChildMutedText)
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = confirmLabel,
+                    color = ChildMutedText,
+                )
             }
         },
     )
@@ -850,9 +934,12 @@ private data class SavingsStatusStyle(
     val textColor: Color,
     val containerColor: Color,
     val borderColor: Color,
-    val icon: ImageVector,
+    val icon: ImageVector? = null,
+    val iconRes: DrawableResource? = null,
     val iconTint: Color,
     val iconContainerColor: Color,
+    val iconSize: Dp = 22.dp,
+    val showIconBackground: Boolean = true,
     val primaryActionContentColor: Color,
     val primaryActionBorderColor: Color,
 )
@@ -865,9 +952,11 @@ private fun SavingsStatusBucket.style(): SavingsStatusStyle {
             textColor = SavingsSuccessTint,
             containerColor = SavingsSuccessContainer,
             borderColor = SavingsSuccessBorder,
-            icon = Icons.Default.CheckCircle,
+            iconRes = Res.drawable.ic_buy_gold_icon,
             iconTint = SavingsSuccessTint,
             iconContainerColor = SavingsSuccessContainer,
+            iconSize = 40.dp,
+            showIconBackground = false,
             primaryActionContentColor = SavingsSuccessTint,
             primaryActionBorderColor = SavingsSuccessBorder,
         )
@@ -884,14 +973,14 @@ private fun SavingsStatusBucket.style(): SavingsStatusStyle {
         )
         SavingsStatusBucket.Cancelled -> SavingsStatusStyle(
             label = stringResource(Res.string.savings_manage_status_cancelled),
-            textColor = SavingsFailedTint,
-            containerColor = SavingsFailedContainer,
-            borderColor = SavingsFailedBorder,
-            icon = Icons.Default.Warning,
-            iconTint = SavingsFailedTint,
-            iconContainerColor = SavingsFailedContainer,
-            primaryActionContentColor = SavingsFailedTint,
-            primaryActionBorderColor = SavingsFailedBorder,
+            textColor = SavingsCancelledTint,
+            containerColor = SavingsCancelledContainer,
+            borderColor = SavingsCancelledBorder,
+            icon = Icons.Default.Cancel,
+            iconTint = SavingsCancelledTint,
+            iconContainerColor = SavingsCancelledContainer,
+            primaryActionContentColor = SavingsCancelledTint,
+            primaryActionBorderColor = SavingsCancelledBorder,
         )
         SavingsStatusBucket.Failed -> SavingsStatusStyle(
             label = stringResource(Res.string.savings_manage_status_failed),

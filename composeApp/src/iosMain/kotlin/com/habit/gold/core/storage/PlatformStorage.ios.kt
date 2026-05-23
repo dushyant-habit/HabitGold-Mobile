@@ -25,14 +25,17 @@ import platform.CoreFoundation.CFDataCreate
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableDictionary
 import platform.Foundation.NSCopyingProtocol
+import platform.Foundation.NSLog
 import platform.Foundation.NSUserDefaults
 import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
+import platform.Security.SecItemUpdate
+import platform.Security.errSecDuplicateItem
 import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessible
-import platform.Security.kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+import platform.Security.kSecAttrAccessibleAfterFirstUnlock
 import platform.Security.kSecAttrAccount
 import platform.Security.kSecAttrService
 import platform.Security.kSecClass
@@ -43,85 +46,116 @@ import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
 private const val SECURE_SERVICE_NAME = "com.habit.gold.secure"
+private const val SECURE_SUITE_NAME = "com.habit.gold.secure"
 private const val APP_SUITE_NAME = "com.habit.gold.app"
 private const val KEY_REGISTRY_STORAGE_KEY = "secure.storage.keys"
-private typealias CFDictionaryPointer = CPointer<__CFDictionary>
 private typealias CFStringPointer = CPointer<__CFString>
 
 actual fun createPlatformSecureStorage(): SecureStorage {
     return AppleKeychainStorage(
-        registryDefaults = NSUserDefaults(suiteName = APP_SUITE_NAME),
+        registryDefaults = resolveUserDefaults(APP_SUITE_NAME),
+        legacySecureDefaults = resolveUserDefaults(SECURE_SUITE_NAME),
     )
 }
 
 actual fun createPlatformPreferencesStorage(): KeyValueStorage {
-    val defaults = try {
-        val suite = NSUserDefaults(suiteName = APP_SUITE_NAME)
-        suite.dictionaryRepresentation() // Verify the Objective-C object is non-nil
-        suite
-    } catch (e: Throwable) {
-        NSUserDefaults.standardUserDefaults
-    }
-    return AppleUserDefaultsStorage(userDefaults = defaults)
+    return AppleUserDefaultsStorage(userDefaults = resolveUserDefaults(APP_SUITE_NAME))
 }
 
 private class AppleKeychainStorage(
     private val registryDefaults: NSUserDefaults,
+    private val legacySecureDefaults: NSUserDefaults,
 ) : SecureStorage {
 
     override suspend fun read(key: String): String? {
-        val query = keychainQuery(
-            kSecClass to cfObject(kSecClassGenericPassword),
-            kSecAttrService to SECURE_SERVICE_NAME,
-            kSecAttrAccount to key,
-            kSecReturnData to cfObject(platform.CoreFoundation.kCFBooleanTrue),
-            kSecMatchLimit to cfObject(kSecMatchLimitOne),
-        )
-        return memScoped {
-            val result = alloc<COpaquePointerVar>()
-            val status = SecItemCopyMatching(query, result.ptr.reinterpret())
-            when (status) {
-                errSecSuccess -> result.ptr.pointed.value
-                    ?.let { interpretObjCPointerOrNull<NSData>(it.rawValue) }
-                    ?.toUtf8String()
-                errSecItemNotFound -> null
-                else -> null
+        val legacyValue = legacySecureDefaults.stringForKey(key)
+        return when (val result = readKeychainValue(key)) {
+            is KeychainReadResult.Success -> result.value ?: legacyValue
+            KeychainReadResult.Missing -> legacyValue
+            is KeychainReadResult.Failure -> {
+                if (legacyValue == null) {
+                    NSLog("Keychain read failed for key=$key status=${result.status}")
+                }
+                legacyValue
             }
         }
     }
 
     override suspend fun write(key: String, value: String) {
-        deleteKeychainValue(key)
-        val query = keychainQuery(
-            kSecClass to cfObject(kSecClassGenericPassword),
-            kSecAttrService to SECURE_SERVICE_NAME,
-            kSecAttrAccount to key,
-            kSecValueData to value.toNSData(),
-            kSecAttrAccessible to cfObject(kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
-        )
-        if (SecItemAdd(query, null) == errSecSuccess) {
-            persistKnownKeys(knownKeys() + key)
+        legacySecureDefaults.setObject(value, forKey = key)
+        when (val status = upsertKeychainValue(key, value.toNSData())) {
+            errSecSuccess -> persistKnownKeys(knownKeys() + key)
+            else -> NSLog("Keychain write failed for key=$key status=$status")
         }
     }
 
     override suspend fun delete(key: String) {
         deleteKeychainValue(key)
+        legacySecureDefaults.removeObjectForKey(key)
         persistKnownKeys(knownKeys() - key)
     }
 
     override suspend fun clear() {
         val keys = knownKeys()
         keys.forEach(::deleteKeychainValue)
+        val legacyKeys = legacySecureDefaults.dictionaryRepresentation().keys
+        for (legacyKey in legacyKeys) {
+            val stringKey = legacyKey as? String ?: continue
+            legacySecureDefaults.removeObjectForKey(stringKey)
+        }
         persistKnownKeys(emptySet())
     }
 
     private fun deleteKeychainValue(key: String) {
-        val query = keychainQuery(
-            kSecClass to cfObject(kSecClassGenericPassword),
-            kSecAttrService to SECURE_SERVICE_NAME,
-            kSecAttrAccount to key,
+        val query = keychainItemQuery(key)
+        SecItemDelete(query.asCFDictionary())
+    }
+
+    private fun readKeychainValue(key: String): KeychainReadResult = memScoped {
+        val result = alloc<COpaquePointerVar>()
+        val query = keychainItemQuery(
+            key = key,
+            kSecReturnData to cfObject(platform.CoreFoundation.kCFBooleanTrue),
+            kSecMatchLimit to cfObject(kSecMatchLimitOne),
         )
-        SecItemDelete(query)
+        when (val status = SecItemCopyMatching(query.asCFDictionary(), result.ptr.reinterpret())) {
+            errSecSuccess -> {
+                val data = result.ptr.pointed.value
+                    ?.let { interpretObjCPointerOrNull<NSData>(it.rawValue) }
+                KeychainReadResult.Success(data?.toUtf8String())
+            }
+            errSecItemNotFound -> KeychainReadResult.Missing
+            else -> KeychainReadResult.Failure(status)
+        }
+    }
+
+    private fun upsertKeychainValue(key: String, value: NSData): Int {
+        val lookupQuery = keychainItemQuery(key)
+        val addQuery = keychainItemQuery(
+            key = key,
+            kSecValueData to value,
+            kSecAttrAccessible to cfObject(kSecAttrAccessibleAfterFirstUnlock),
+        )
+        return when (val addStatus = SecItemAdd(addQuery.asCFDictionary(), null)) {
+            errSecSuccess -> errSecSuccess
+            errSecDuplicateItem -> {
+                val updateAttributes = keychainQuery(
+                    kSecValueData to value,
+                    kSecAttrAccessible to cfObject(kSecAttrAccessibleAfterFirstUnlock),
+                )
+                SecItemUpdate(
+                    lookupQuery.asCFDictionary(),
+                    updateAttributes.asCFDictionary(),
+                )
+            }
+            else -> addStatus
+        }
+    }
+
+    private sealed interface KeychainReadResult {
+        data class Success(val value: String?) : KeychainReadResult
+        data object Missing : KeychainReadResult
+        data class Failure(val status: Int) : KeychainReadResult
     }
 
     private fun knownKeys(): Set<String> {
@@ -139,7 +173,29 @@ private class AppleKeychainStorage(
     }
 }
 
-private fun keychainQuery(vararg entries: Pair<CFStringPointer?, Any?>): CFDictionaryPointer {
+private fun resolveUserDefaults(suiteName: String): NSUserDefaults {
+    return try {
+        val suite = NSUserDefaults(suiteName = suiteName)
+        suite.dictionaryRepresentation()
+        suite
+    } catch (e: Throwable) {
+        NSUserDefaults.standardUserDefaults
+    }
+}
+
+private fun keychainItemQuery(
+    key: String,
+    vararg entries: Pair<CFStringPointer?, Any?>,
+): NSMutableDictionary {
+    return keychainQuery(
+        kSecClass to cfObject(kSecClassGenericPassword),
+        kSecAttrService to SECURE_SERVICE_NAME,
+        kSecAttrAccount to key,
+        *entries,
+    )
+}
+
+private fun keychainQuery(vararg entries: Pair<CFStringPointer?, Any?>): NSMutableDictionary {
     val dictionary = NSMutableDictionary()
     entries.forEach { (key, value) ->
         val keyObject = cfStringObject(key)
@@ -147,7 +203,11 @@ private fun keychainQuery(vararg entries: Pair<CFStringPointer?, Any?>): CFDicti
             dictionary.setObject(value, forKey = keyObject)
         }
     }
-    return interpretCPointer(dictionary.objcPtr())
+    return dictionary
+}
+
+private fun NSMutableDictionary.asCFDictionary(): CPointer<__CFDictionary> {
+    return interpretCPointer(objcPtr())
         ?: error("Failed to bridge NSMutableDictionary to CFDictionary for Keychain.")
 }
 

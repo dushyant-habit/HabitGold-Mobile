@@ -36,7 +36,15 @@ class BuyTradeViewModel(
             is BuyTradeIntent.ChangeEntryMode -> updateState { it.copy(entryMode = intent.mode) }
             is BuyTradeIntent.ChangeTab -> updateState { it.copy(activeTab = intent.tab) }
             BuyTradeIntent.RefreshPrice -> updateState { it.copy(errorMessage = null) }
-            BuyTradeIntent.ClearAppliedCoupon -> updateState { it.copy(appliedCoupon = null, errorMessage = null) }
+            BuyTradeIntent.ClearAppliedCoupon -> updateState {
+                it.copy(
+                    appliedCouponCode = null,
+                    appliedCouponValidatedAmount = null,
+                    appliedCouponValidatedGrams = null,
+                    appliedCoupon = null,
+                    errorMessage = null,
+                )
+            }
             is BuyTradeIntent.SubmitOneTimeOrder -> submitOneTimeOrder(intent)
             is BuyTradeIntent.HandlePaymentResult -> handlePaymentResult(intent.result)
             is BuyTradeIntent.StartPolling -> startPolling(intent.orderId)
@@ -44,6 +52,7 @@ class BuyTradeViewModel(
                 code = intent.code,
                 amount = intent.amount,
                 grams = intent.grams,
+                silent = intent.silent,
             )
         }
     }
@@ -68,13 +77,46 @@ class BuyTradeViewModel(
                     errorMessage = null,
                 )
             }
+
+            val validatedCouponCode = intent.couponCode?.takeIf { it.isNotBlank() }?.let { couponCode ->
+                val validationRequest = com.habit.gold.feature.trade.domain.model.TradeCouponValidationRequest(
+                    orderType = TradeCouponOrderType.BUY,
+                    code = couponCode,
+                    amount = intent.couponValidationAmount,
+                    grams = intent.couponValidationGrams,
+                )
+                when (val validationResult = validateTradeCouponUseCase(validationRequest)) {
+                    is ApiResult.Success -> {
+                        updateState {
+                            it.copy(
+                                appliedCouponCode = validationResult.value.code?.takeIf(String::isNotBlank) ?: couponCode,
+                                appliedCouponValidatedAmount = intent.couponValidationAmount,
+                                appliedCouponValidatedGrams = intent.couponValidationGrams,
+                                appliedCoupon = validationResult.value,
+                            )
+                        }
+                        validationResult.value.code?.takeIf { it.isNotBlank() } ?: couponCode
+                    }
+                    is ApiResult.Failure -> {
+                        updateState {
+                            it.copy(
+                                isLoading = false,
+                                step = BuyTradeStep.Entry,
+                                errorMessage = validationResult.error.message,
+                            )
+                        }
+                        return@launch
+                    }
+                }
+            }
+
             when (
                 val result = createBuyOrderUseCase(
                     com.habit.gold.feature.trade.domain.model.TradeBuyOrderRequest(
                         amount = intent.amount,
                         grams = intent.grams,
                         buyRateId = intent.buyRateId,
-                        couponCode = intent.couponCode,
+                        couponCode = validatedCouponCode,
                         useRewardsInr = intent.useRewardsInr,
                     )
                 )
@@ -103,12 +145,23 @@ class BuyTradeViewModel(
                     }
                 }
                 is ApiResult.Failure -> {
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            step = BuyTradeStep.Entry,
-                            errorMessage = result.error.message,
-                        )
+                    if (isLiveRateExpiredMessage(result.error.message)) {
+                        updateState {
+                            it.copy(
+                                isLoading = false,
+                                step = BuyTradeStep.Entry,
+                                errorMessage = null,
+                            )
+                        }
+                        emitEffect(BuyTradeEffect.RefreshLivePrice)
+                    } else {
+                        updateState {
+                            it.copy(
+                                isLoading = false,
+                                step = BuyTradeStep.Entry,
+                                errorMessage = result.error.message,
+                            )
+                        }
                     }
                 }
             }
@@ -228,6 +281,7 @@ class BuyTradeViewModel(
         code: String,
         amount: Double?,
         grams: Double?,
+        silent: Boolean,
     ) {
         if (code.isBlank()) return
         viewModelScope.launch {
@@ -238,9 +292,37 @@ class BuyTradeViewModel(
                 grams = grams,
             )
             when (val result = validateTradeCouponUseCase(request)) {
-                is ApiResult.Success -> updateState { it.copy(appliedCoupon = result.value, errorMessage = null) }
-                is ApiResult.Failure -> updateState { it.copy(errorMessage = result.error.message) }
+                is ApiResult.Success -> updateState {
+                    it.copy(
+                        appliedCouponCode = result.value.code?.takeIf(String::isNotBlank) ?: code,
+                        appliedCouponValidatedAmount = amount,
+                        appliedCouponValidatedGrams = grams,
+                        appliedCoupon = result.value,
+                        errorMessage = null,
+                    )
+                }
+                is ApiResult.Failure -> updateState {
+                    if (silent) {
+                        it.copy(
+                            appliedCouponCode = code,
+                            appliedCouponValidatedAmount = null,
+                            appliedCouponValidatedGrams = null,
+                            errorMessage = null,
+                        )
+                    } else {
+                        it.copy(errorMessage = result.error.message)
+                    }
+                }
             }
         }
+    }
+
+    private fun isLiveRateExpiredMessage(message: String): Boolean {
+        val normalized = message.lowercase()
+        return normalized.contains("selected gold rate has expired") ||
+            normalized.contains("gold rate has expired") ||
+            normalized.contains("gold rate has changed") ||
+            normalized.contains("rate has expired") ||
+            normalized.contains("rate has changed")
     }
 }

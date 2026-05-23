@@ -2,12 +2,14 @@ package com.habit.gold.feature.home.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +48,11 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_si
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_status
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_type
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_unknown
+import habitgoldmobile.composeapp.generated.resources.ic_buy_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_delivery_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_sell_gold_icon
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -53,6 +60,8 @@ internal fun HomeTransactionDetailsScreen(
     transactionPreview: HomeRecentTransactionPreview,
     onBackClick: () -> Unit,
 ) {
+    val visual = rememberHomeTransactionVisual(transactionPreview)
+    val amountColor = homeTransactionValueColor(transactionPreview.status)
     HomeChildScaffold(
         title = stringResource(Res.string.home_screen_transaction_details_heading),
         onBackClick = onBackClick,
@@ -75,17 +84,29 @@ internal fun HomeTransactionDetailsScreen(
                     modifier = Modifier.padding(18.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(
-                        text = transactionTitleFor(transactionPreview),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ChildPrimaryText,
-                    )
-                    Text(
-                        text = formatCreatedAt(transactionPreview.createdAt),
-                        fontSize = 12.sp,
-                        color = ChildMutedText,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            painter = painterResource(visual.icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(44.dp),
+                        )
+                        Column {
+                            Text(
+                                text = transactionTitleFor(transactionPreview),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ChildPrimaryText,
+                            )
+                            Text(
+                                text = formatCreatedAt(transactionPreview.createdAt),
+                                fontSize = 12.sp,
+                                color = ChildMutedText,
+                            )
+                        }
+                    }
                     HorizontalDivider(color = ChildCardBorder)
                     HomeDetailRow(
                         label = stringResource(Res.string.home_screen_transaction_id),
@@ -109,10 +130,13 @@ internal fun HomeTransactionDetailsScreen(
                     HomeDetailRow(
                         label = stringResource(Res.string.home_screen_transaction_amount),
                         value = "₹${transactionPreview.amount.toDoubleOrNull()?.let(::formatInr) ?: transactionPreview.amount}",
+                        valueColor = amountColor,
+                        emphasize = true,
                     )
                     HomeDetailRow(
                         label = stringResource(Res.string.home_screen_transaction_gold_quantity),
                         value = "${transactionPreview.goldQuantity} ${stringResource(Res.string.common_gold_unit_short)}",
+                        valueColor = amountColor,
                     )
                     HomeDetailRow(
                         label = stringResource(Res.string.home_screen_transaction_date),
@@ -121,6 +145,35 @@ internal fun HomeTransactionDetailsScreen(
                 }
             }
         }
+    }
+}
+
+private data class HomeTransactionVisual(
+    val icon: DrawableResource,
+)
+
+private fun rememberHomeTransactionVisual(transactionPreview: HomeRecentTransactionPreview): HomeTransactionVisual {
+    val isBuy = transactionPreview.type.equals("BUY", ignoreCase = true)
+    val isSell = transactionPreview.type.equals("SELL", ignoreCase = true)
+    val isDelivery = transactionPreview.type.contains("delivery", ignoreCase = true)
+    return HomeTransactionVisual(
+        icon = when {
+            isBuy -> Res.drawable.ic_buy_gold_icon
+            isSell -> Res.drawable.ic_sell_gold_icon
+            isDelivery -> Res.drawable.ic_delivery_gold_icon
+            else -> Res.drawable.ic_buy_gold_icon
+        },
+    )
+}
+
+private fun homeTransactionValueColor(status: String): Color {
+    val normalized = status.lowercase()
+    return when {
+        normalized.contains("refund") -> ChildPrimaryText
+        normalized.contains("progress") || normalized.contains("pending") -> ChildPrimaryText
+        normalized.contains("fail") || normalized.contains("cancel") -> Color(0xFF15803D)
+        normalized.contains("complete") || normalized.contains("success") -> Color(0xFF15803D)
+        else -> ChildPrimaryText
     }
 }
 
