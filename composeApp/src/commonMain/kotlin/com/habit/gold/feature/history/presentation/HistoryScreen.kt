@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,10 +28,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Sell
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -59,7 +56,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -96,6 +92,11 @@ import habitgoldmobile.composeapp.generated.resources.history_screen_title_gold_
 import habitgoldmobile.composeapp.generated.resources.history_screen_title_reward
 import habitgoldmobile.composeapp.generated.resources.history_screen_title_transaction
 import habitgoldmobile.composeapp.generated.resources.history_screen_transactions
+import habitgoldmobile.composeapp.generated.resources.ic_buy_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_delivery_gold_icon
+import habitgoldmobile.composeapp.generated.resources.ic_sell_gold_icon
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private val HistoryBackground = Color(0xFFF8FAFC)
@@ -586,26 +587,16 @@ private fun HistoryTransactionRow(
         HistoryTransactionStatusKind.Neutral -> HistoryNeutralBg
     }
     val amountColor = when (statusKind) {
-        HistoryTransactionStatusKind.Failure -> HistoryFailure
-        HistoryTransactionStatusKind.Pending -> HistoryPending
-        HistoryTransactionStatusKind.Refund -> HistoryRefund
-        else -> when (transaction.type) {
-            HistoryTransactionType.Buy -> HistorySuccess
-            HistoryTransactionType.Sell -> HistoryFailure
-            HistoryTransactionType.Delivery -> Color(0xFF0F172A)
-            else -> Color.Black
-        }
+        HistoryTransactionStatusKind.Failure -> HistorySuccess
+        HistoryTransactionStatusKind.Pending -> Color.Black
+        HistoryTransactionStatusKind.Refund -> Color.Black
+        else -> HistorySuccess
     }
     val weightColor = when (statusKind) {
-        HistoryTransactionStatusKind.Failure -> HistoryFailure
-        HistoryTransactionStatusKind.Pending -> HistoryPending
-        HistoryTransactionStatusKind.Refund -> HistoryRefund
-        else -> when (transaction.type) {
-            HistoryTransactionType.Buy -> HistorySuccess
-            HistoryTransactionType.Sell -> HistoryFailure
-            HistoryTransactionType.Delivery -> HistoryMutedText
-            else -> HistoryMutedText
-        }
+        HistoryTransactionStatusKind.Failure -> HistorySuccess
+        HistoryTransactionStatusKind.Pending -> Color.Black
+        HistoryTransactionStatusKind.Refund -> Color.Black
+        else -> HistorySuccess
     }
     val sipBadgeLabel = remember(transaction.sipFrequency) {
         transaction.sipFrequency
@@ -628,20 +619,11 @@ private fun HistoryTransactionRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.Top) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(historyIconBackground(transaction.type)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = historyTypeIcon(transaction.type),
-                    contentDescription = null,
-                    tint = historyIconTint(transaction.type),
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            Image(
+                painter = painterResource(historyTypeIcon(transaction.type)),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp),
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
@@ -656,38 +638,40 @@ private fun HistoryTransactionRow(
                     color = HistoryMutedText,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    color = statusContainerColor,
-                    shape = RoundedCornerShape(999.dp),
-                ) {
-                    Text(
-                        text = statusLabel,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = statusColor,
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = statusContainerColor,
+                        shape = RoundedCornerShape(999.dp),
+                        border = BorderStroke(1.dp, HistorySectionBorder.copy(alpha = 0.85f)),
+                    ) {
+                        Text(
+                            text = statusLabel,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = statusColor,
+                        )
+                    }
+                    if (transaction.isSip && !sipBadgeLabel.isNullOrBlank()) {
+                        Surface(
+                            color = HistoryPrimary.copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(999.dp),
+                            border = BorderStroke(1.dp, HistoryPrimary.copy(alpha = 0.18f)),
+                        ) {
+                            Text(
+                                text = sipBadgeLabel,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = HistoryPrimary,
+                            )
+                        }
+                    }
                 }
             }
         }
 
         Column(horizontalAlignment = Alignment.End) {
-            if (transaction.isSip && !sipBadgeLabel.isNullOrBlank()) {
-                Surface(
-                    color = HistoryPrimary.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(999.dp),
-                ) {
-                    Text(
-                        text = sipBadgeLabel,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = HistoryPrimary,
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
             Text(
                 text = transaction.amountLabel,
                 fontSize = 15.sp,
@@ -748,13 +732,13 @@ private fun HistoryStatusFilter.displayLabel(): String {
     }
 }
 
-private fun historyTypeIcon(type: HistoryTransactionType): ImageVector {
+private fun historyTypeIcon(type: HistoryTransactionType): DrawableResource {
     return when (type) {
-        HistoryTransactionType.Buy -> Icons.Default.ShoppingCart
-        HistoryTransactionType.Sell -> Icons.Default.Sell
-        HistoryTransactionType.Delivery -> Icons.Default.LocalShipping
+        HistoryTransactionType.Buy -> Res.drawable.ic_buy_gold_icon
+        HistoryTransactionType.Sell -> Res.drawable.ic_sell_gold_icon
+        HistoryTransactionType.Delivery -> Res.drawable.ic_delivery_gold_icon
         HistoryTransactionType.Reward,
-        HistoryTransactionType.Other -> Icons.Default.CardGiftcard
+        HistoryTransactionType.Other -> Res.drawable.ic_buy_gold_icon
     }
 }
 
@@ -765,16 +749,6 @@ private fun historyIconBackground(type: HistoryTransactionType): Color {
         HistoryTransactionType.Delivery -> Color(0xFFEFF6FF)
         HistoryTransactionType.Reward,
         HistoryTransactionType.Other -> Color(0xFFF3E8FF)
-    }
-}
-
-private fun historyIconTint(type: HistoryTransactionType): Color {
-    return when (type) {
-        HistoryTransactionType.Buy -> HistorySuccess
-        HistoryTransactionType.Sell -> HistoryFailure
-        HistoryTransactionType.Delivery -> HistoryRefund
-        HistoryTransactionType.Reward,
-        HistoryTransactionType.Other -> HistoryPrimary
     }
 }
 

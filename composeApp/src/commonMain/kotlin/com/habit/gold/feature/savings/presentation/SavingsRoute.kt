@@ -1,6 +1,7 @@
 package com.habit.gold.feature.savings.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +37,7 @@ fun SavingsRoute(
     dependencies: SavingsRouteDependencies,
     destination: SavingsDestination,
     onBackToHome: () -> Unit,
+    onSavingsMutation: () -> Unit = {},
     onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,6 +52,12 @@ fun SavingsRoute(
                 )
             }
             val state = viewModel.state.collectAsStateWithLifecycle()
+
+            LaunchedEffect(state.value.actionMessage) {
+                if (state.value.actionMessage != null) {
+                    onSavingsMutation()
+                }
+            }
 
             PlatformBackHandler(
                 enabled = true,
@@ -87,6 +95,7 @@ fun SavingsRoute(
                 livePriceStore = dependencies.livePriceStore,
                 paymentLauncher = dependencies.paymentLauncher,
                 onBackToHome = onBackToHome,
+                onSavingsMutation = onSavingsMutation,
                 onOpenHelp = onOpenHelp,
                 modifier = modifier,
             )

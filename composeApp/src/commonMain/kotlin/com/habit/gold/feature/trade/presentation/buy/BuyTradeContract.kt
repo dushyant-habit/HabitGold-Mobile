@@ -38,6 +38,9 @@ data class BuyTradeState(
     val pendingPaymentRequest: TradePaymentLaunchRequest? = null,
     val pollingSnapshot: TradePollingSnapshot? = null,
     val availableCoupons: List<TradeAvailableCoupon> = emptyList(),
+    val appliedCouponCode: String? = null,
+    val appliedCouponValidatedAmount: Double? = null,
+    val appliedCouponValidatedGrams: Double? = null,
     val appliedCoupon: TradeCouponValidation? = null,
     val errorMessage: String? = null,
 ) : MviState
@@ -52,6 +55,8 @@ sealed interface BuyTradeIntent : MviIntent {
         val grams: Double?,
         val buyRateId: String,
         val couponCode: String? = null,
+        val couponValidationAmount: Double? = amount,
+        val couponValidationGrams: Double? = grams,
         val useRewardsInr: Double? = null,
     ) : BuyTradeIntent
     data class HandlePaymentResult(val result: TradePaymentLaunchResult) : BuyTradeIntent
@@ -59,6 +64,7 @@ sealed interface BuyTradeIntent : MviIntent {
         val code: String,
         val amount: Double?,
         val grams: Double?,
+        val silent: Boolean = false,
     ) : BuyTradeIntent
     data object ResetToEntry : BuyTradeIntent
     data object ClearAppliedCoupon : BuyTradeIntent
@@ -68,4 +74,5 @@ sealed interface BuyTradeIntent : MviIntent {
 sealed interface BuyTradeEffect : MviEffect {
     data class LaunchPayment(val request: TradePaymentLaunchRequest) : BuyTradeEffect
     data class ShowMessage(val message: String) : BuyTradeEffect
+    data object RefreshLivePrice : BuyTradeEffect
 }

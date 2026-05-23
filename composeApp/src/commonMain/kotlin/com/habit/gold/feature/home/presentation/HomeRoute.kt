@@ -52,6 +52,7 @@ fun HomeRoute(
     tradeDependencies: TradeRouteDependencies,
     session: AuthSession,
     onSelectTab: (MainTab) -> Unit,
+    onOpenTransactionDetails: (String) -> Unit,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
     onDashboardVisibilityChange: (Boolean) -> Unit = {},
     onBiometricStateChanged: (Boolean) -> Unit = {},
@@ -65,6 +66,15 @@ fun HomeRoute(
     }
     val uiState = homeViewModel.state.collectAsStateWithLifecycle()
     var destination by remember { mutableStateOf<HomeDestination>(HomeDestination.Dashboard) }
+    var hasPendingMutationRefresh by remember { mutableStateOf(false) }
+
+    fun returnToDestination(next: HomeDestination) {
+        destination = next
+        if (hasPendingMutationRefresh) {
+            hasPendingMutationRefresh = false
+            homeViewModel.onIntent(HomeIntent.BackgroundRefresh)
+        }
+    }
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.onIntent(HomeIntent.Load)
@@ -131,7 +141,8 @@ fun HomeRoute(
                     returnDestination = HomeDestination.Dashboard,
                 )
             },
-            onOpenTransaction = { item -> destination = HomeDestination.TransactionDetails(item) },
+            onOpenTransaction = { item -> onOpenTransactionDetails(item.id) },
+            onOpenAllTransactions = { onSelectTab(MainTab.History) },
             onOpenSupport = {
                 destination = HomeDestination.Profile(
                     destination = ProfileDestination.HelpCenter(),
@@ -147,7 +158,7 @@ fun HomeRoute(
         )
         is HomeDestination.GoldValueDetails -> HomeGoldValueDetailsScreen(
             dashboard = activeDestination.dashboard,
-            onBackClick = { destination = HomeDestination.Dashboard },
+            onBackClick = { returnToDestination(HomeDestination.Dashboard) },
             onBuyGoldClick = {
                 destination = HomeDestination.Trade(
                     destination = TradeDestination.Buy(),
@@ -165,7 +176,7 @@ fun HomeRoute(
             dependencies = profileDependencies,
             destination = activeDestination.destination,
             session = session,
-            onBackToHome = { destination = activeDestination.returnDestination },
+            onBackToHome = { returnToDestination(activeDestination.returnDestination) },
             onNavigate = { nextProfileDestination ->
                 destination = HomeDestination.Profile(
                     destination = nextProfileDestination,
@@ -190,14 +201,11 @@ fun HomeRoute(
             },
             modifier = modifier,
         )
-        is HomeDestination.TransactionDetails -> HomeTransactionDetailsScreen(
-            transactionPreview = activeDestination.item,
-            onBackClick = { destination = HomeDestination.Dashboard },
-        )
         is HomeDestination.Savings -> SavingsRoute(
             dependencies = savingsDependencies,
             destination = activeDestination.destination,
-            onBackToHome = { destination = activeDestination.returnDestination },
+            onBackToHome = { returnToDestination(activeDestination.returnDestination) },
+            onSavingsMutation = { hasPendingMutationRefresh = true },
             onOpenHelp = {
                 destination = HomeDestination.Profile(
                     destination = ProfileDestination.HelpCenter(),
@@ -209,7 +217,8 @@ fun HomeRoute(
         is HomeDestination.Trade -> TradeRoute(
             dependencies = tradeDependencies,
             destination = activeDestination.destination,
-            onBackToHome = { destination = activeDestination.returnDestination },
+            onBackToHome = { returnToDestination(activeDestination.returnDestination) },
+            onTradeMutation = { hasPendingMutationRefresh = true },
             onNavigate = { nextTradeDestination ->
                 destination = HomeDestination.Trade(
                     destination = nextTradeDestination,
@@ -237,7 +246,7 @@ fun HomeRoute(
                 catalogViewModel = catalogViewModel,
                 trackingViewModel = trackingViewModel,
                 initialDestination = activeDestination.destination,
-                onBackToHome = { destination = activeDestination.returnDestination },
+                onBackToHome = { returnToDestination(activeDestination.returnDestination) },
                 onNavigateToBuyGold = { shortfall ->
                     destination = HomeDestination.Trade(
                         destination = TradeDestination.Buy(

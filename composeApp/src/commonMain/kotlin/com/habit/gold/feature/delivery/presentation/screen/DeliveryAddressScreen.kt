@@ -19,6 +19,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -43,6 +48,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -151,9 +159,7 @@ fun DeliveryAddressScreen(
                 .padding(innerPadding),
         ) {
             if (state.isLoadingAddresses) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = AppColors.Purple700)
-                }
+                DeliveryAddressLoadingShimmer()
             } else if (state.savedAddresses.isEmpty()) {
                 EmptyAddressState(
                     onAddNewAddress = {
@@ -267,5 +273,68 @@ fun DeliveryAddressScreen(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun DeliveryAddressLoadingShimmer() {
+    val transition = rememberInfiniteTransition(label = "delivery-address-shimmer")
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 1300, easing = LinearEasing)),
+        label = "delivery-address-shimmer-progress",
+    )
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(Color(0xFFE8ECF3), Color(0xFFF6F8FB), Color(0xFFE8ECF3)),
+        start = androidx.compose.ui.geometry.Offset(-260f + (520f * progress), 0f),
+        end = androidx.compose.ui.geometry.Offset(0f + (520f * progress), 220f),
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(shimmerBrush),
+        )
+        repeat(3) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.42f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(shimmerBrush),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(shimmerBrush),
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.72f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(shimmerBrush),
+                )
+            }
+        }
     }
 }

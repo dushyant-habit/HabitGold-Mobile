@@ -216,7 +216,7 @@ internal fun ProfileScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if ((summary == null && state.isLoading) || state.isRefreshing) {
+            if (summary == null && (state.isLoading || state.isRefreshing)) {
                 ProfileHubShimmer()
             } else {
                 Column(

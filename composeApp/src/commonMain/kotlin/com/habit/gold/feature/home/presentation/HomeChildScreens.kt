@@ -8,10 +8,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,9 +67,6 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_total_gold_bal
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_type_buy
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_type_generic
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_type_sell
-import habitgoldmobile.composeapp.generated.resources.home_value_details_average_buy_price
-import habitgoldmobile.composeapp.generated.resources.home_value_details_buy_sell_spread
-import habitgoldmobile.composeapp.generated.resources.home_value_details_current_sell_price
 import habitgoldmobile.composeapp.generated.resources.home_value_details_current_value
 import habitgoldmobile.composeapp.generated.resources.home_value_details_empty_state
 import habitgoldmobile.composeapp.generated.resources.home_value_details_final_payout
@@ -107,6 +106,39 @@ internal fun HomeGoldValueDetailsScreen(
         }
 
         val rewardsApplied = dashboard.rewardsApplied ?: 0.0
+        val goldPurchasedAmount = (dashboard.totalCost - dashboard.gstPaid).coerceAtLeast(0.0)
+        var showSpreadInfo by remember { mutableStateOf(false) }
+
+        if (showSpreadInfo) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showSpreadInfo = false },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = { showSpreadInfo = false }) {
+                        Text(
+                            text = "Got it",
+                            color = HabitGoldPalette.plum,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = "Buy/Sell Price Difference",
+                        fontWeight = FontWeight.Bold,
+                        color = ChildPrimaryText,
+                    )
+                },
+                text = {
+                    Text(
+                        text = "The gap between the buy price and today's sell price.",
+                        color = ChildMutedText,
+                        lineHeight = 20.sp,
+                    )
+                },
+                containerColor = Color.White,
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -115,62 +147,75 @@ internal fun HomeGoldValueDetailsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = HabitGoldPalette.plum),
+            HomeGoldValueHeroCard(dashboard.totalGoldBalanceGrams)
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                HomeGoldValueTimelineItem(
+                    indicatorColor = ChildCardBorder,
+                    connectorColor = ChildCardBorder,
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AccountBalance,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.9f),
-                            modifier = Modifier.size(16.dp),
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HomeGoldValueSummaryRow(
+                            label = stringResource(Res.string.home_value_details_gold_purchased),
+                            value = "₹${formatInr(goldPurchasedAmount)}",
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(Res.string.home_screen_total_gold_balance),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White.copy(alpha = 0.88f),
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = formatGoldBalance(dashboard.totalGoldBalanceGrams),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                        )
-                        Text(
-                            text = stringResource(Res.string.common_gold_unit_short),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = 0.85f),
-                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+                        if (rewardsApplied > 0.0) {
+                            HomeGoldValueSummaryRow(
+                                label = stringResource(Res.string.home_value_details_rewards_applied),
+                                value = "+₹${formatInr(rewardsApplied)}",
+                                valueColor = ChildSuccess,
+                            )
+                        }
+                        HomeGoldValueSummaryRow(
+                            label = stringResource(Res.string.home_value_details_gst_paid),
+                            value = "₹${formatInr(dashboard.gstPaid)}",
+                            valueColor = ChildMutedText,
                         )
                     }
                 }
+
+                HomeGoldValueTimelineItem(
+                    indicatorColor = HabitGoldPalette.plum.copy(alpha = 0.16f),
+                    innerColor = HabitGoldPalette.plum,
+                    connectorColor = ChildCardBorder,
+                ) {
+                    HomeGoldValueInfoCard(
+                        title = stringResource(Res.string.home_value_details_total_cost).uppercase(),
+                        value = "₹${formatInr(dashboard.totalCost)}",
+                    )
+                }
+
+                HomeGoldValueTimelineItem(
+                    indicatorColor = HabitGoldPalette.plum.copy(alpha = 0.16f),
+                    innerColor = HabitGoldPalette.plum,
+                    connectorColor = ChildCardBorder,
+                ) {
+                    HomeGoldValueInfoCard(
+                        title = stringResource(Res.string.home_value_details_current_value).uppercase(),
+                        value = "₹${formatInr(dashboard.currentValue)}",
+                    )
+                }
+
+                HomeGoldValueTimelineItem(
+                    indicatorColor = ChildCardBorder,
+                    isLast = true,
+                ) {
+                    HomeGoldValueSummaryRow(
+                        label = "Buy/Sell Price Difference",
+                        value = "₹${formatInr(dashboard.buySellPriceDifference)}",
+                        valueColor = ChildMutedText,
+                        supportingText = "The gap between the buy price and today's sell price.",
+                        showInfo = true,
+                        onInfoClick = { showSpreadInfo = true },
+                    )
+                }
             }
 
-            HomeValueBreakdownCard(
-                valueRows = buildList {
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_gold_purchased), "₹${formatInr(dashboard.totalCost - dashboard.gstPaid - rewardsApplied)}"))
-                    if (rewardsApplied > 0.0) {
-                        add(HomeValueRow(stringResource(Res.string.home_value_details_rewards_applied), "+₹${formatInr(rewardsApplied)}", valueColor = ChildSuccess))
-                    }
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_gst_paid), "₹${formatInr(dashboard.gstPaid)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_total_cost), "₹${formatInr(dashboard.totalCost)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_current_value), "₹${formatInr(dashboard.currentValue)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_current_sell_price), "₹${formatInr(dashboard.liveSellPricePerGram)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_average_buy_price), "₹${formatInr(dashboard.averageBuyPricePerGram)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_buy_sell_spread), "₹${formatInr(dashboard.buySellPriceDifference)}"))
-                    add(HomeValueRow(stringResource(Res.string.home_value_details_final_payout), "₹${formatInr(dashboard.finalPayoutAmount)}", valueColor = ChildPrimaryText, emphasize = true))
-                },
+            HomeGoldValuePayoutCard(
+                finalPayoutAmount = dashboard.finalPayoutAmount,
+                liveSellPricePerGram = dashboard.liveSellPricePerGram,
             )
 
             Row(
@@ -205,6 +250,118 @@ internal fun HomeGoldValueDetailsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+@Composable
+private fun HomeGoldValueTimelineItem(
+    indicatorColor: Color,
+    innerColor: Color = Color.Transparent,
+    connectorColor: Color = ChildCardBorder,
+    isLast: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .width(24.dp)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .background(indicatorColor),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (innerColor != Color.Transparent) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(innerColor),
+                    )
+                }
+            }
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .weight(1f)
+                        .padding(top = 6.dp, bottom = 2.dp)
+                        .background(connectorColor),
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 1.dp),
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun HomeGoldValueSummaryRow(
+    label: String,
+    value: String,
+    valueColor: Color = ChildPrimaryText,
+    supportingText: String? = null,
+    showInfo: Boolean = false,
+    onInfoClick: () -> Unit = {},
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = if (supportingText == null) Alignment.CenterVertically else Alignment.Top,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = label,
+                    color = ChildMutedText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                if (showInfo) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = ChildMutedText,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .clickable(onClick = onInfoClick),
+                    )
+                }
+            }
+            if (supportingText != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = supportingText,
+                    color = ChildMutedText,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = value,
+            color = valueColor,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+        )
     }
 }
 
@@ -394,6 +551,133 @@ internal data class HomeValueRow(
     val valueColor: Color = ChildPrimaryText,
     val emphasize: Boolean = false,
 )
+
+@Composable
+private fun HomeGoldValueHeroCard(totalGoldBalanceGrams: Double) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = HabitGoldPalette.plum),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.home_screen_total_gold_balance),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = formatGoldBalance(totalGoldBalanceGrams),
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(Res.string.common_gold_unit_short),
+                        fontSize = 16.sp,
+                        color = Color.White,
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.Default.Payments,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.18f),
+                modifier = Modifier
+                    .size(64.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeGoldValueInfoCard(
+    title: String,
+    value: String,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = HabitGoldPalette.plum.copy(alpha = 0.06f)),
+        border = BorderStroke(1.dp, HabitGoldPalette.plum.copy(alpha = 0.12f)),
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = title.uppercase(),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = ChildMutedText,
+            )
+            Text(
+                text = value,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = ChildPrimaryText,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeGoldValuePayoutCard(
+    finalPayoutAmount: Double,
+    liveSellPricePerGram: Double,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = HabitGoldPalette.plum),
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(Res.string.home_value_details_final_payout).uppercase(),
+                fontSize = 10.sp,
+                color = Color.White.copy(alpha = 0.72f),
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = "₹${formatInr(finalPayoutAmount)}",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White,
+            )
+            HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Live Sell Price: ₹${formatInr(liveSellPricePerGram)}",
+                    fontSize = 9.sp,
+                    color = Color.White.copy(alpha = 0.75f),
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalance,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.8f),
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Direct to Bank Account",
+                        fontSize = 9.sp,
+                        color = Color.White.copy(alpha = 0.8f),
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 internal fun transactionTypeLabel(transactionPreview: HomeRecentTransactionPreview): String {

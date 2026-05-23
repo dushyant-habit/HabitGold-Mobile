@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,7 +101,7 @@ internal fun BuyTradeProcessingScreen(
 
     val pollCount = pollingSnapshot?.attempt ?: 1
     val initialRemainingSeconds = remember(orderId, pollCount) {
-        (BuyPollingWindowSeconds - ((pollCount - 1) * BuyPollIntervalSeconds)).coerceAtLeast(0)
+        (BuyPollingWindowSeconds - BuyPollingScheduleSeconds.take((pollCount - 1).coerceAtLeast(0)).sum()).coerceAtLeast(0)
     }
     var remainingSeconds by remember(orderId, pollCount) {
         mutableStateOf(initialRemainingSeconds)
@@ -128,36 +129,31 @@ internal fun BuyTradeProcessingScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Spacer(modifier = Modifier.weight(1f))
-        Box(contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(120.dp),
-                color = BuyPrimary.copy(alpha = 0.18f),
-                strokeWidth = 8.dp,
-                progress = { 1f },
-            )
-            CircularProgressIndicator(
-                modifier = Modifier.size(120.dp),
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = "${remainingSeconds}s",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
                 color = BuyPrimary,
-                strokeWidth = 8.dp,
-                progress = {
-                    if (BuyPollingWindowSeconds > 0) {
-                        (BuyPollingWindowSeconds - remainingSeconds) / BuyPollingWindowSeconds.toFloat()
-                    } else 1f
-                },
             )
             Surface(
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                color = BuyPrimaryLight,
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(10.dp),
+                shape = RoundedCornerShape(999.dp),
+                color = BuyPrimary.copy(alpha = 0.12f),
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "${remainingSeconds}s",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = BuyPrimary,
-                    )
-                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(if (BuyPollingWindowSeconds > 0) remainingSeconds / BuyPollingWindowSeconds.toFloat() else 0f)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(BuyPrimary),
+                )
             }
         }
         Spacer(modifier = Modifier.height(40.dp))
@@ -183,12 +179,12 @@ internal fun BuyTradeProcessingScreen(
             shape = RoundedCornerShape(12.dp),
             color = BuySlate50,
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = stringResource(Res.string.trade_buy_processing_order_id_label),
@@ -603,17 +599,25 @@ internal fun BuyTradeDetailRow(
 }
 
 internal fun calculateOrderTotalPaid(order: TradeBuyOrder): Double {
-    return roundToMoney((order.goldQuantityGrams * order.goldPricePerGram) + order.gstAmount)
+    return roundToMoney((order.goldQuantityGrams * order.goldPricePerGram) + order.gstGrossAmount)
 }
 
 @Composable
 internal fun BuyAmountBreakdownSheet(
     calculation: BuyTradeCalculation,
     gstRate: Double,
+    appliedCouponCode: String?,
+    couponValidation: com.habit.gold.feature.trade.domain.model.TradeCouponValidation?,
     onPayNowClick: () -> Unit,
     isPayNowEnabled: Boolean,
     isLoading: Boolean,
 ) {
+    val couponBreakdown = couponBreakdownDisplay(
+        validation = couponValidation,
+        grossAmount = calculation.baseTotalPayable,
+        payableAmount = calculation.totalPayable,
+        appliedCouponCode = appliedCouponCode,
+    )
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -643,8 +647,15 @@ internal fun BuyAmountBreakdownSheet(
             )
             BreakdownRow(
                 title = stringResource(Res.string.trade_buy_quantity),
-                value = "${formatConversionGrams(calculation.goldQuantity)} gm",
+                value = "${formatConversionGrams(calculation.goldQuantity)} g",
             )
+            couponBreakdown?.let { (title, value) ->
+                BreakdownRow(
+                    title = title,
+                    value = value,
+                    valueColor = BuySuccess700,
+                )
+            }
             HorizontalDivider(color = BuySlate200)
             BreakdownRow(
                 title = stringResource(Res.string.trade_buy_amount_to_be_paid),

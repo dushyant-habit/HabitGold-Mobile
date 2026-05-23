@@ -1,14 +1,16 @@
 package com.habit.gold.feature.trade.presentation.buy
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -48,8 +51,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,6 +81,7 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_updating_price
 import habitgoldmobile.composeapp.generated.resources.trade_buy_updates_in
 import habitgoldmobile.composeapp.generated.resources.trade_buy_view_breakdown
 import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
 
 @Composable
 internal fun BuyCouponSheet(
@@ -207,6 +216,7 @@ internal fun BuyCouponSheet(
 internal fun BuyTradeBottomBar(
     livePriceState: TradeLivePriceState,
     totalPayable: Double,
+    showPoweredBySafeGold: Boolean,
     enabled: Boolean,
     isLoading: Boolean,
     errorMessage: String?,
@@ -226,7 +236,6 @@ internal fun BuyTradeBottomBar(
                 .padding(bottom = 12.dp),
         ) {
             HorizontalDivider(color = BuySlate100)
-            BuyTradeLivePriceBar(livePriceState = livePriceState)
             errorMessage?.takeIf { it.isNotBlank() }?.let { message ->
                 Card(
                     modifier = Modifier
@@ -255,6 +264,12 @@ internal fun BuyTradeBottomBar(
                     }
                 }
             }
+            if (showPoweredBySafeGold) {
+                BuyTradePoweredByRow(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                )
+            }
+            BuyTradeLivePriceBar(livePriceState = livePriceState)
 
             Row(
                 modifier = Modifier
@@ -288,14 +303,18 @@ internal fun BuyTradeBottomBar(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(
-                            text = stringResource(Res.string.trade_buy_pay_now),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Black,
-                            color = if (enabled && !isLoading) BuyWhite else BuySlate400,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
+                        if (isLoading) {
+                            TradeLoadingDots(dotColor = BuyPrimary)
+                        } else {
+                            Text(
+                                text = stringResource(Res.string.trade_buy_pay_now),
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Black,
+                                color = if (enabled) BuyWhite else BuySlate400,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -323,26 +342,27 @@ private fun BuyAmountSummaryButton(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
         ) {
-            Text(
-                text = "₹${formatMoney(amount)}",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = BuySlate950,
-            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(Res.string.trade_buy_view_breakdown),
-                    fontSize = 9.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = BuyPrimary,
                 )
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowUp,
+                    imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     tint = BuyPrimary,
                     modifier = Modifier.size(14.dp),
                 )
             }
+            Text(
+                modifier = Modifier.offset(y=(-2).dp),
+                text = "₹${formatMoney(amount)}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = BuySlate950,
+            )
         }
     }
 }
@@ -407,7 +427,7 @@ internal fun BuyTradeLivePriceBar(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "₹${formatMoney(livePrice.buy)}/gm",
+                    text = "₹${formatMoney(livePrice.buy)}/g",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = BuySlate950,
@@ -444,42 +464,94 @@ internal fun BuyLiveWaveIndicator(
     tint: Color,
     modifier: Modifier = Modifier,
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "buyLiveWave")
-    val alphaA by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "buyLiveWaveA",
-    )
-    val alphaB by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.35f,
-        animationSpec = infiniteRepeatable(animation = tween(600, easing = LinearEasing)),
-        label = "buyLiveWaveB",
-    )
+    Canvas(modifier = modifier) {
+        val center = center
+        val dotRadius = 2.2.dp.toPx()
+        val innerRadius = 5.2.dp.toPx()
+        val outerRadius = 8.0.dp.toPx()
+        val stroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
 
+        drawCircle(
+            color = tint,
+            radius = dotRadius,
+            center = center,
+        )
+
+        drawArc(
+            color = tint.copy(alpha = 0.72f),
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+            size = Size(innerRadius * 2, innerRadius * 2),
+            style = stroke,
+        )
+        drawArc(
+            color = tint.copy(alpha = 0.72f),
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - innerRadius, center.y - innerRadius),
+            size = Size(innerRadius * 2, innerRadius * 2),
+            style = stroke,
+        )
+        drawArc(
+            color = tint.copy(alpha = 0.42f),
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+            size = Size(outerRadius * 2, outerRadius * 2),
+            style = stroke,
+        )
+        drawArc(
+            color = tint.copy(alpha = 0.42f),
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(center.x - outerRadius, center.y - outerRadius),
+            size = Size(outerRadius * 2, outerRadius * 2),
+            style = stroke,
+        )
+    }
+}
+
+@Composable
+internal fun TradeLoadingDots(
+    dotColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val transition = rememberInfiniteTransition(label = "tradeLoadingDots")
+    val liftPx = with(LocalDensity.current) { 6.dp.toPx() }
     Row(
         modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 6.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
-        )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 10.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaB)),
-        )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 7.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(tint.copy(alpha = alphaA)),
-        )
+        repeat(3) { index ->
+            val offset by transition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 560,
+                        delayMillis = index * 140,
+                        easing = FastOutSlowInEasing,
+                    ),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "tradeLoadingDot$index",
+            )
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .graphicsLayer {
+                        translationY = -liftPx * offset
+                        alpha = 0.45f + (0.55f * offset)
+                    }
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(dotColor),
+            )
+        }
     }
 }

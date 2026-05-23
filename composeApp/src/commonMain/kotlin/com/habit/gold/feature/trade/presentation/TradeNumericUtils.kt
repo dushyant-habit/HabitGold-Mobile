@@ -32,11 +32,12 @@ internal fun sanitizeGramInput(raw: String, fractionDigits: Int): String {
 
     val beforeDot = filtered.substring(0, firstDotIndex).take(3)
     val afterDot = filtered.substring(firstDotIndex + 1).filter(Char::isDigit).take(fractionDigits)
-    return buildString {
+    val result = buildString {
         append(beforeDot)
         append('.')
         append(afterDot)
-    }.trimEnd('.')
+    }
+    return if (filtered.endsWith('.') && afterDot.isEmpty()) result else result.trimEnd('.')
 }
 
 internal fun formatGoldQuantity(

@@ -47,6 +47,7 @@ fun TradeRoute(
     dependencies: TradeRouteDependencies,
     destination: TradeDestination,
     onBackToHome: () -> Unit,
+    onTradeMutation: () -> Unit = {},
     onNavigate: (TradeDestination) -> Unit,
     onOpenHelp: () -> Unit,
     onNavigateToDelivery: () -> Unit = {},
@@ -80,6 +81,7 @@ fun TradeRoute(
             dependencies = dependencies,
             destination = destination,
             onBackToHome = onBackToHome,
+            onTradeMutation = onTradeMutation,
             onNavigate = onNavigate,
             onOpenHelp = onOpenHelp,
             modifier = modifier,
@@ -90,6 +92,7 @@ fun TradeRoute(
             destination = destination,
             onNavigate = onNavigate,
             onBackToHome = onBackToHome,
+            onTradeMutation = onTradeMutation,
             onOpenHelp = onOpenHelp,
             modifier = modifier,
         )

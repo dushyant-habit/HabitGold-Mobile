@@ -2,6 +2,8 @@ package com.habit.gold.feature.trade.presentation.buy
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -14,6 +16,7 @@ internal fun BuyTradeRouteController(
     dependencies: TradeRouteDependencies,
     destination: TradeDestination.Buy,
     onBackToHome: () -> Unit,
+    onTradeMutation: () -> Unit,
     onNavigate: (TradeDestination) -> Unit,
     onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
@@ -28,6 +31,7 @@ internal fun BuyTradeRouteController(
     }
     val livePriceState = dependencies.livePriceStore.state.collectAsStateWithLifecycle()
     val state = buyTradeViewModel.state.collectAsStateWithLifecycle()
+    val lastReportedMutationOrderId = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(buyTradeViewModel) {
         buyTradeViewModel.effects.collect { effect ->
@@ -37,6 +41,7 @@ internal fun BuyTradeRouteController(
                     buyTradeViewModel.onIntent(BuyTradeIntent.HandlePaymentResult(result))
                 }
                 is BuyTradeEffect.ShowMessage -> Unit
+                BuyTradeEffect.RefreshLivePrice -> dependencies.livePriceStore.refreshPricesAfterRateExpired()
             }
         }
     }
@@ -52,6 +57,17 @@ internal fun BuyTradeRouteController(
                 },
             ),
         )
+    }
+
+    LaunchedEffect(state.value.currentOrderId, state.value.step) {
+        val orderId = state.value.currentOrderId
+        val isTerminalStep = state.value.step == BuyTradeStep.Success ||
+            state.value.step == BuyTradeStep.Failure ||
+            state.value.step == BuyTradeStep.Pending
+        if (orderId != null && isTerminalStep && lastReportedMutationOrderId.value != orderId) {
+            lastReportedMutationOrderId.value = orderId
+            onTradeMutation()
+        }
     }
 
     PlatformBackHandler(

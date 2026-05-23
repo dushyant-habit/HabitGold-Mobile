@@ -33,8 +33,8 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
@@ -354,7 +354,7 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LocalShipping,
+                            imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = HomePrimary,
                             modifier = Modifier.size(20.dp),
@@ -417,7 +417,7 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 FooterBadge(Icons.Default.WorkspacePremium, stringResource(Res.string.home_screen_footer_badge_physical), Modifier.weight(1f))
@@ -652,28 +652,34 @@ private fun HomeSipMandateCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(999.dp),
-                    color = HomePrimary.copy(alpha = 0.08f),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.home_screen_auto_invest),
-                        color = HomePrimary,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
                     color = statusStyle.bg,
+                    border = BorderStroke(1.dp, statusStyle.fg.copy(alpha = 0.18f)),
                 ) {
                     Text(
                         text = statusStyle.label,
                         color = statusStyle.fg,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     )
                 }
+                promoText?.let {
+                    Surface(
+                        shape = RoundedCornerShape(999.dp),
+                        color = HomePrimary.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, HomePrimary.copy(alpha = 0.14f)),
+                    ) {
+                        Text(
+                            text = it,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = HomePrimary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } ?: Spacer(modifier = Modifier.width(1.dp))
             }
 
             Row(
@@ -721,20 +727,6 @@ private fun HomeSipMandateCard(
                             fontWeight = FontWeight.Bold,
                             color = Slate900,
                         )
-                    }
-
-                    promoText?.let {
-                        Surface(shape = RoundedCornerShape(999.dp), color = HomePrimary.copy(alpha = 0.1f)) {
-                            Text(
-                                text = it,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = HomePrimary,
-                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
                     }
                 }
             }

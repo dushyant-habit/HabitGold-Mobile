@@ -119,7 +119,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_to_be_pai
 import habitgoldmobile.composeapp.generated.resources.trade_buy_applied_coupon_format
 import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
 import habitgoldmobile.composeapp.generated.resources.trade_buy_breakdown_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_chip_max
 import habitgoldmobile.composeapp.generated.resources.trade_buy_change
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_discount_off
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_min_order_required
@@ -202,8 +201,8 @@ internal val BuyGreen25 = Color(0xFFF0FDF4)
 internal val BuyGreen500 = Color(0xFF22C55E)
 internal val BuySuccess700 = Color(0xFF15803D)
 
-internal const val BuyPollingWindowSeconds = 30
-internal const val BuyPollIntervalSeconds = 5
+internal val BuyPollingScheduleSeconds = listOf(1, 1, 1, 1, 1, 3, 3, 3, 3, 3)
+internal const val BuyPollingWindowSeconds = 20
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -222,20 +221,20 @@ fun BuyTradeScreen(
 ) {
     val seededRupeeAmount = remember(initialAmount, initialOneTimeUseGrams) {
         if (initialOneTimeUseGrams) {
-            "50"
+            "100"
         } else {
             initialAmount
                 ?.filter(Char::isDigit)
                 ?.take(6)
                 ?.takeIf { it.isNotBlank() }
-                ?: "50"
+                ?: "100"
         }
     }
     val seededGramAmount = remember(initialAmount, initialOneTimeUseGrams) {
         if (initialOneTimeUseGrams) {
-            sanitizeGramInput(initialAmount.orEmpty(), fractionDigits = 1).takeIf { it.isNotBlank() } ?: "0.5"
+            sanitizeGramInput(initialAmount.orEmpty(), fractionDigits = 1).takeIf { it.isNotBlank() } ?: "0.1"
         } else {
-            "0.5"
+            "0.1"
         }
     }
 
@@ -256,8 +255,9 @@ fun BuyTradeScreen(
     val numericGrams = amountGrams.toDoubleOrNull() ?: 0.0
     val livePriceUnavailableMessage = stringResource(Res.string.trade_buy_live_price_unavailable)
     val maxUpiLimitMessage = stringResource(Res.string.trade_buy_max_upi_limit_message)
+    val minAmountMessage = "Minimum buy amount is ₹10."
     val invalidInvoiceMessage = stringResource(Res.string.trade_invoice_viewer_invalid_url)
-    val showEntryTopBar = state.step == BuyTradeStep.Entry && !state.isLoading
+    val showEntryTopBar = state.step == BuyTradeStep.Entry
     val focusManager = LocalFocusManager.current
     val facts = listOf(
         stringResource(Res.string.trade_buy_fact_earn_extra_gold),
@@ -267,18 +267,45 @@ fun BuyTradeScreen(
     )
     var currentFactIndex by rememberSaveable { mutableStateOf(0) }
     val couponSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val calculation = remember(state.entryMode, numericRupees, numericGrams, goldPrice, gstRate) {
+    val baseCalculation = remember(state.entryMode, numericRupees, numericGrams, goldPrice, gstRate) {
         calculateBuyTrade(
             entryMode = state.entryMode,
             numericRupees = numericRupees,
             numericGrams = numericGrams,
             goldPrice = goldPrice,
             gstRate = gstRate,
+            appliedCoupon = null,
+        )
+    }
+    val displayCouponValidation = remember(
+        state.appliedCoupon,
+        state.appliedCouponValidatedAmount,
+        state.appliedCouponValidatedGrams,
+        baseCalculation.baseTotalPayable,
+        baseCalculation.goldQuantity,
+    ) {
+        val matchesAmount = state.appliedCouponValidatedAmount?.let {
+            kotlin.math.abs(it - baseCalculation.baseTotalPayable) <= 0.01
+        } ?: false
+        val matchesGrams = state.appliedCouponValidatedGrams?.let {
+            kotlin.math.abs(it - baseCalculation.goldQuantity) <= 0.0001
+        } ?: false
+        state.appliedCoupon?.takeIf { matchesAmount && matchesGrams }
+    }
+
+    val calculation = remember(state.entryMode, numericRupees, numericGrams, goldPrice, gstRate, displayCouponValidation) {
+        calculateBuyTrade(
+            entryMode = state.entryMode,
+            numericRupees = numericRupees,
+            numericGrams = numericGrams,
+            goldPrice = goldPrice,
+            gstRate = gstRate,
+            appliedCoupon = displayCouponValidation,
         )
     }
 
     val canSubmit = !state.isLoading &&
+        !livePriceState.isFetching &&
         livePrice != null &&
         buyRateId.isNotBlank() &&
         calculation.totalPayable in 10.0..OneTimeUpiLimit &&
@@ -286,13 +313,34 @@ fun BuyTradeScreen(
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(3500)
+            delay(5000)
             currentFactIndex = (currentFactIndex + 1) % facts.size
         }
     }
 
-    val displayedMessage = validationMessage ?: state.errorMessage
+    LaunchedEffect(state.appliedCouponCode, calculation.baseTotalPayable, calculation.goldQuantity, state.step) {
+        val appliedCouponCode = state.appliedCouponCode?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+        if (state.step != BuyTradeStep.Entry) return@LaunchedEffect
+        delay(350)
+        onIntent(
+            BuyTradeIntent.ApplyCoupon(
+                code = appliedCouponCode,
+                amount = calculation.baseTotalPayable,
+                grams = calculation.goldQuantity,
+                silent = true,
+            ),
+        )
+    }
+
+    val belowMinimumAmount = calculation.totalPayable in 0.01..<10.0
     val isUpiLimitExceeded = calculation.totalPayable > OneTimeUpiLimit
+    val displayedMessage = validationMessage
+        ?: state.errorMessage
+        ?: when {
+            isUpiLimitExceeded -> maxUpiLimitMessage
+            belowMinimumAmount -> minAmountMessage
+            else -> null
+        }
 
     LaunchedEffect(isFetchingInvoice, state.currentOrderId, state.order?.orderId, state.pollingSnapshot?.orderId) {
         if (!isFetchingInvoice) return@LaunchedEffect
@@ -338,7 +386,7 @@ fun BuyTradeScreen(
         BuyTradeStep.Success -> {
             BuyTradeSuccessScreen(
                 amount = "₹${formatMoney(state.order?.let(::calculateOrderTotalPaid) ?: calculation.totalPayable)}",
-                goldCredited = "${formatConversionGrams(state.order?.goldQuantityGrams ?: calculation.goldQuantity)} gm",
+                goldCredited = "${formatConversionGrams(state.order?.goldQuantityGrams ?: calculation.goldQuantity)} g",
                 invoiceErrorMessage = invoiceErrorMessage,
                 isInvoiceLoading = isFetchingInvoice,
                 onGoToDashboard = onGoToDashboard,
@@ -421,13 +469,14 @@ fun BuyTradeScreen(
             BuyTradeBottomBar(
                 livePriceState = livePriceState,
                 totalPayable = calculation.totalPayable,
+                showPoweredBySafeGold = false,
                 enabled = canSubmit && !isUpiLimitExceeded,
                 isLoading = state.isLoading,
                 errorMessage = displayedMessage,
                 onShowBreakdown = { showAmountBreakdown = true },
                 onPrimaryAction = {
                     focusManager.clearFocus(force = true)
-                    if (livePrice == null || buyRateId.isBlank()) {
+                    if (livePriceState.isFetching || livePrice == null || buyRateId.isBlank()) {
                         validationMessage = livePriceUnavailableMessage
                         return@BuyTradeBottomBar
                     }
@@ -438,10 +487,12 @@ fun BuyTradeScreen(
                     validationMessage = null
                     onIntent(
                         BuyTradeIntent.SubmitOneTimeOrder(
-                            amount = calculation.totalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
+                            amount = calculation.baseTotalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
                             grams = calculation.goldQuantity.takeIf { state.entryMode == BuyTradeEntryMode.Grams },
                             buyRateId = buyRateId,
-                            couponCode = state.appliedCoupon?.code,
+                            couponCode = state.appliedCouponCode,
+                            couponValidationAmount = calculation.baseTotalPayable,
+                            couponValidationGrams = calculation.goldQuantity,
                         ),
                     )
                 },
@@ -461,7 +512,6 @@ fun BuyTradeScreen(
                 .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(4.dp))
             BuyTradeInfoPill(
                 facts = facts,
                 currentFactIndex = currentFactIndex,
@@ -478,90 +528,86 @@ fun BuyTradeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = if (state.entryMode == BuyTradeEntryMode.Rupees) {
-                    stringResource(Res.string.trade_buy_enter_amount)
-                } else {
-                    stringResource(Res.string.trade_buy_select_grams)
-                },
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = BuySlate400,
-                letterSpacing = 2.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (state.entryMode == BuyTradeEntryMode.Rupees) {
-                BuyTradeRupeeInput(
-                    value = amountRupees,
-                    onDone = { focusManager.clearFocus() },
-                    onValueChange = {
-                        validationMessage = null
-                        amountRupees = it.filter(Char::isDigit).take(6)
-                    },
-                )
-            } else {
-                BuyTradeGramInput(
-                    value = amountGrams,
-                    maxSelectableGrams = maxSelectableGrams(goldPrice, gstRate),
-                    onDone = { focusManager.clearFocus() },
-                    onValueChange = {
-                        validationMessage = null
-                        amountGrams = sanitizeGramInput(it, fractionDigits = 1)
-                    },
-                    onStepDown = {
-                        validationMessage = null
-                        amountGrams = stepOneTimeGrams(amountGrams, -1, maxSelectableGrams(goldPrice, gstRate))
-                    },
-                    onStepUp = {
-                        validationMessage = null
-                        amountGrams = stepOneTimeGrams(amountGrams, 1, maxSelectableGrams(goldPrice, gstRate))
-                    },
-                )
-            }
-
-            if (isUpiLimitExceeded) {
-                Spacer(modifier = Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = stringResource(Res.string.trade_buy_max_upi_limit_message),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = BuyRed700,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            if (state.entryMode == BuyTradeEntryMode.Rupees) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(Res.string.trade_buy_youre_buying, formatConversionGrams(calculation.goldQuantity)),
-                    fontSize = 13.sp,
+                    text = if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                        stringResource(Res.string.trade_buy_enter_amount)
+                    } else {
+                        stringResource(Res.string.trade_buy_select_grams)
+                    },
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = BuyGoldTint,
-                    textAlign = TextAlign.Center,
+                    color = BuySlate400,
+                    letterSpacing = 2.sp,
                     modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Start,
                 )
-            } else {
+
                 Spacer(modifier = Modifier.height(8.dp))
-                BuyTradeGramSlider(
-                    value = amountGrams.toFloatOrNull()?.coerceIn(0.1f, maxSelectableGrams(goldPrice, gstRate).toFloat()) ?: 0.5f,
-                    maxValue = maxSelectableGrams(goldPrice, gstRate).toFloat(),
-                    onValueChange = {
-                        validationMessage = null
-                        amountGrams = ((it * 10).roundToInt() / 10f).toString()
-                    },
-                )
+
+                if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                    BuyTradeRupeeInput(
+                        value = amountRupees,
+                        onDone = { focusManager.clearFocus() },
+                        onValueChange = {
+                            validationMessage = null
+                            amountRupees = it.filter(Char::isDigit).take(6)
+                        },
+                    )
+                } else {
+                    BuyTradeGramInput(
+                        value = amountGrams,
+                        maxSelectableGrams = maxSelectableGrams(goldPrice, gstRate),
+                        onDone = { focusManager.clearFocus() },
+                        onValueChange = {
+                            validationMessage = null
+                            amountGrams = sanitizeGramInput(it, fractionDigits = 1)
+                        },
+                        onStepDown = {
+                            validationMessage = null
+                            amountGrams = stepOneTimeGrams(amountGrams, -1, maxSelectableGrams(goldPrice, gstRate))
+                        },
+                        onStepUp = {
+                            validationMessage = null
+                            amountGrams = stepOneTimeGrams(amountGrams, 1, maxSelectableGrams(goldPrice, gstRate))
+                        },
+                    )
+                }
+                    if (state.entryMode == BuyTradeEntryMode.Rupees) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(Res.string.trade_buy_youre_buying, formatConversionGrams(calculation.goldQuantity)),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = BuyGoldTint,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        BuyTradeGramSlider(
+                            value = amountGrams.toFloatOrNull()?.coerceIn(0.1f, maxSelectableGrams(goldPrice, gstRate).toFloat()) ?: 0.1f,
+                            maxValue = maxSelectableGrams(goldPrice, gstRate).toFloat(),
+                            onValueChange = {
+                                validationMessage = null
+                                amountGrams = ((it * 10).roundToInt() / 10f).toString()
+                            },
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             BuyTradeQuickAmounts(
                 entryMode = state.entryMode,
                 maxSelectableGrams = maxSelectableGrams(goldPrice, gstRate),
+                selectedValue = if (state.entryMode == BuyTradeEntryMode.Rupees) amountRupees else amountGrams,
                 onSelectRupees = {
                     validationMessage = null
                     amountRupees = it
@@ -572,14 +618,17 @@ fun BuyTradeScreen(
                 },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             BuyTradeCouponRow(
                 availableCoupons = state.availableCoupons.size,
                 couponDraft = couponDraft,
-                appliedCouponCode = state.appliedCoupon?.code,
+                appliedCouponCode = state.appliedCouponCode,
                 appliedBenefitText = if (state.appliedCoupon != null) {
-                    buyTradeAppliedCouponSummary(state.appliedCoupon)
+                    buyTradeAppliedCouponSummary(
+                        validation = state.appliedCoupon,
+                        fallbackAmount = calculation.baseTotalPayable,
+                    )
                 } else {
                     null
                 },
@@ -593,8 +642,9 @@ fun BuyTradeScreen(
                         onIntent(
                             BuyTradeIntent.ApplyCoupon(
                                 code = couponDraft,
-                                amount = calculation.totalPayable,
+                                amount = calculation.baseTotalPayable,
                                 grams = calculation.goldQuantity,
+                                silent = false,
                             ),
                         )
                     }
@@ -607,14 +657,14 @@ fun BuyTradeScreen(
                 onShowOffers = { showCouponSheet = true },
                 isApplyingEnabled = couponDraft.isNotBlank() &&
                     !state.isLoading &&
-                    state.appliedCoupon?.code != couponDraft,
+                    state.appliedCouponCode != couponDraft,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             BuyTradePoweredByRow()
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -628,9 +678,11 @@ fun BuyTradeScreen(
             BuyAmountBreakdownSheet(
                 calculation = calculation,
                 gstRate = gstRate,
+                appliedCouponCode = state.appliedCouponCode,
+                couponValidation = displayCouponValidation,
                 onPayNowClick = {
                     showAmountBreakdown = false
-                    if (livePrice == null || buyRateId.isBlank()) {
+                    if (livePriceState.isFetching || livePrice == null || buyRateId.isBlank()) {
                         validationMessage = livePriceUnavailableMessage
                         return@BuyAmountBreakdownSheet
                     }
@@ -640,10 +692,12 @@ fun BuyTradeScreen(
                     }
                     onIntent(
                         BuyTradeIntent.SubmitOneTimeOrder(
-                            amount = calculation.totalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
+                            amount = calculation.baseTotalPayable.takeIf { state.entryMode == BuyTradeEntryMode.Rupees },
                             grams = calculation.goldQuantity.takeIf { state.entryMode == BuyTradeEntryMode.Grams },
                             buyRateId = buyRateId,
-                            couponCode = state.appliedCoupon?.code,
+                            couponCode = state.appliedCouponCode,
+                            couponValidationAmount = calculation.baseTotalPayable,
+                            couponValidationGrams = calculation.goldQuantity,
                         ),
                     )
                 },
@@ -661,15 +715,16 @@ fun BuyTradeScreen(
         ) {
             BuyCouponSheet(
                 coupons = state.availableCoupons,
-                estimateAmount = calculation.totalPayable,
-                appliedCouponCode = state.appliedCoupon?.code,
+                estimateAmount = calculation.baseTotalPayable,
+                appliedCouponCode = state.appliedCouponCode,
                 onApplyCoupon = { code ->
                     couponDraft = code
                     onIntent(
                         BuyTradeIntent.ApplyCoupon(
                             code = code,
-                            amount = calculation.totalPayable,
+                            amount = calculation.baseTotalPayable,
                             grams = calculation.goldQuantity,
+                            silent = false,
                         ),
                     )
                     showCouponSheet = false
@@ -679,4 +734,3 @@ fun BuyTradeScreen(
     }
 
 }
-

@@ -128,7 +128,6 @@ import habitgoldmobile.composeapp.generated.resources.common_confirm
 import habitgoldmobile.composeapp.generated.resources.common_help
 import habitgoldmobile.composeapp.generated.resources.common_safegold
 import habitgoldmobile.composeapp.generated.resources.common_go_to_dashboard
-import habitgoldmobile.composeapp.generated.resources.common_selected
 import habitgoldmobile.composeapp.generated.resources.common_transaction_details
 import habitgoldmobile.composeapp.generated.resources.home_screen_powered_by
 import habitgoldmobile.composeapp.generated.resources.safegold_image
@@ -159,7 +158,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_failure_title
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fetching_balance
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fetching_price
 import habitgoldmobile.composeapp.generated.resources.trade_sell_gold_debited
-import habitgoldmobile.composeapp.generated.resources.trade_sell_gold_partner
 import habitgoldmobile.composeapp.generated.resources.trade_sell_live_price_label
 import habitgoldmobile.composeapp.generated.resources.trade_sell_locked_gold
 import habitgoldmobile.composeapp.generated.resources.trade_sell_locked_gold_description
@@ -187,7 +185,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_swipe_to_sell_g
 import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_gold_price
 import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_gold_quantity
 import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_order_id
-import habitgoldmobile.composeapp.generated.resources.trade_sell_tap_to_select
 import habitgoldmobile.composeapp.generated.resources.trade_sell_total_amount
 import habitgoldmobile.composeapp.generated.resources.trade_sell_to_upi
 import habitgoldmobile.composeapp.generated.resources.trade_sell_total_gold
@@ -220,6 +217,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
+private val SellSlateDarkest = Color(0xFF020617)
+
 @Composable
 fun SellTradeScreen(
     state: SellTradeState,
@@ -233,7 +232,6 @@ fun SellTradeScreen(
     modifier: Modifier = Modifier,
 ) {
     var amountInput by rememberSaveable { mutableStateOf("") }
-    var hasAutofilled by rememberSaveable { mutableStateOf(false) }
     var validationMessage by rememberSaveable { mutableStateOf<String?>(null) }
     val activeEntryMode = SellTradeEntryMode.Rupees
     var isFetchingInvoice by remember(state.step, state.createdOrder?.orderId, state.pollingSnapshot?.orderId) {
@@ -289,17 +287,6 @@ fun SellTradeScreen(
         }
     }
 
-    LaunchedEffect(sellableBalance, sellPrice, activeEntryMode) {
-        if (!hasAutofilled && sellableBalance > 0.0 && sellPrice > 0.0) {
-            val tenPercentGrams = sellableBalance * 0.10
-            amountInput = when (activeEntryMode) {
-                SellTradeEntryMode.Rupees -> roundToMoney(tenPercentGrams * sellPrice).toInt().toString()
-                SellTradeEntryMode.Grams -> formatGold(tenPercentGrams)
-            }
-            hasAutofilled = true
-        }
-    }
-
     val sellComputation = remember(activeEntryMode, amountInput, sellPrice, sellableBalance) {
         computeSellTrade(
             entryMode = activeEntryMode,
@@ -326,14 +313,15 @@ fun SellTradeScreen(
             totalBalance = totalBalance,
             sellableBalance = sellableBalance,
             lockedBalance = lockedBalance,
+            isInitialDataLoading = state.availability == null || livePriceState.price?.sell == null,
             onBackClick = onBackClick,
             onHelpClick = onHelpClick,
             onIntent = onIntent,
             onAmountChange = { next ->
                 validationMessage = null
                 amountInput = when (activeEntryMode) {
-                    SellTradeEntryMode.Rupees -> next.filter(Char::isDigit).take(6)
-                    SellTradeEntryMode.Grams -> sanitizeGramInput(next, fractionDigits = 4)
+                    SellTradeEntryMode.Rupees -> sanitizeSellAmountInput(next)
+                    SellTradeEntryMode.Grams -> sanitizeGramInput(next, fractionDigits = 2)
                 }
             },
             onContinue = {
@@ -417,6 +405,7 @@ private fun SellTradeEntryScreen(
     totalBalance: Double,
     sellableBalance: Double,
     lockedBalance: Double,
+    isInitialDataLoading: Boolean,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
     onIntent: (SellTradeIntent) -> Unit,
@@ -433,16 +422,6 @@ private fun SellTradeEntryScreen(
         stringResource(Res.string.trade_sell_fact_verified_upi),
         stringResource(Res.string.trade_sell_fact_live_price_refresh),
     )
-    val availableAmount = remember(sellableBalance, livePriceState.price?.sell) {
-        if (sellableBalance > 0.0 && (livePriceState.price?.sell ?: 0.0) > 0.0) {
-            sellableBalance * (livePriceState.price?.sell ?: 0.0)
-        } else null
-    }
-    val totalAmount = remember(totalBalance, livePriceState.price?.sell) {
-        if (totalBalance > 0.0 && (livePriceState.price?.sell ?: 0.0) > 0.0) {
-            totalBalance * (livePriceState.price?.sell ?: 0.0)
-        } else null
-    }
     val isSellDisabled = sellableBalance <= 0.0 && totalBalance > 0.0
 
     LaunchedEffect(Unit) {
@@ -501,6 +480,7 @@ private fun SellTradeEntryScreen(
                 },
                 enabled = !isSellDisabled && !state.isLoading && livePriceState.price?.sell != null,
                 isLoading = state.isLoading,
+                errorMessage = null,
                 onActionClick = onContinue,
             )
         },
@@ -524,39 +504,33 @@ private fun SellTradeEntryScreen(
                 currentFactIndex = currentFactIndex,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            SellTradeBalanceSummaryRow(
-                redeemableAmount = availableAmount,
-                totalAmount = totalAmount,
-                onInfoClick = { showBalanceSheet = true },
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            SellTradeInputSection(
-                entryMode = SellTradeEntryMode.Rupees,
-                value = amountInput,
-                sellableBalance = sellableBalance,
-                tradableGrams = sellComputation.tradableGrams,
-                payoutAmount = sellComputation.payoutAmount,
-                onValueChange = onAmountChange,
-            )
+            if (isInitialDataLoading) {
+                SellTradeEntryLoadingSkeleton()
+            } else {
+                SellTradeBalanceSummaryRow(
+                    sellableBalance = sellableBalance,
+                    totalBalance = totalBalance,
+                    lockedBalance = lockedBalance,
+                    sellPrice = livePriceState.price?.sell ?: 0.0,
+                    onInfoClick = { showBalanceSheet = true },
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                SellTradeInputSection(
+                    entryMode = SellTradeEntryMode.Rupees,
+                    value = amountInput,
+                    sellableBalance = sellableBalance,
+                    tradableGrams = sellComputation.tradableGrams,
+                    validationMessage = validationMessage,
+                    onValueChange = onAmountChange,
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
             SellTradeSafetyLayer()
-
-            validationMessage?.takeIf { it.isNotBlank() }?.let { message ->
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = message,
-                    color = Color(0xFFDC2626),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -632,69 +606,100 @@ private fun SellTradeInfoPill(
 
 @Composable
 private fun SellTradeBalanceSummaryRow(
-    redeemableAmount: Double?,
-    totalAmount: Double?,
+    sellableBalance: Double,
+    totalBalance: Double,
+    lockedBalance: Double,
+    sellPrice: Double,
     onInfoClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    val lockedAmount = if (sellPrice > 0.0) lockedBalance * sellPrice else 0.0
+    val totalSavingsAmount = if (sellPrice > 0.0) totalBalance * sellPrice else 0.0
+    val sellableAmount = if (sellPrice > 0.0) sellableBalance * sellPrice else 0.0
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
                 .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = 14.dp, vertical = 12.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(Res.string.trade_sell_redeemable_amount),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF64748B),
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(
-                    text = redeemableAmount?.let { "₹${formatMoney(it)}" } ?: "--",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF16A34A),
-                )
-            }
-
-            if (totalAmount != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = SellSlateDarkest,
+                            modifier = Modifier.size(12.dp),
+                        )
+                        Text(
+                            text = "Locked Amount",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SellSlateDarkest,
+                        )
+                    }
                     Text(
-                        text = stringResource(Res.string.trade_sell_total_amount),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF64748B),
+                        text = "₹${formatMoney(lockedAmount)}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SellSlateDarkest,
                     )
-                    Spacer(modifier = Modifier.width(2.dp))
+                }
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "₹${formatMoney(totalAmount)}",
+                        text = "Total Savings",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SellSlateDarkest,
+                    )
+                    Text(
+                        text = "₹${formatMoney(totalSavingsAmount)}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = HabitGoldPalette.plum,
                     )
                 }
             }
-        }
-
-        IconButton(
-            onClick = onInfoClick,
-            modifier = Modifier.size(24.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = stringResource(Res.string.trade_sell_balance_info),
-                tint = Color(0xFF94A3B8),
-                modifier = Modifier.size(20.dp),
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                color = Color(0xFFE2E8F0),
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "You can withdraw upto ₹${formatMoney(sellableAmount)}.",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF16A34A),
+                )
+                IconButton(
+                    onClick = onInfoClick,
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(Res.string.trade_sell_balance_info),
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -705,7 +710,7 @@ private fun SellTradeInputSection(
     value: String,
     sellableBalance: Double,
     tradableGrams: Double,
-    payoutAmount: Double,
+    validationMessage: String?,
     onValueChange: (String) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
@@ -719,11 +724,13 @@ private fun SellTradeInputSection(
         fontWeight = FontWeight.Bold,
         color = Color(0xFF94A3B8),
         letterSpacing = 2.sp,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 2.dp),
         textAlign = TextAlign.Start,
     )
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(2.dp))
 
     if (entryMode == SellTradeEntryMode.Rupees) {
         Box(
@@ -735,7 +742,7 @@ private fun SellTradeInputSection(
         ) {
             Text(
                 text = "₹",
-                fontSize = 48.sp,
+                fontSize = 38.sp,
                 color = Color(0xFF94A3B8),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -746,24 +753,24 @@ private fun SellTradeInputSection(
                 onValueChange = onValueChange,
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontSize = 48.sp,
+                    fontSize = 38.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFF020617),
                     textAlign = TextAlign.Center,
                 ),
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = KeyboardType.Decimal,
                     imeAction = ImeAction.Done,
                 ),
                 keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 cursorBrush = SolidColor(HabitGoldPalette.plum),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.Center) {
                         if (value.isEmpty()) {
                             Text(
                                 text = "0",
-                                fontSize = 48.sp,
+                                fontSize = 38.sp,
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFFCBD5E1),
                                 textAlign = TextAlign.Center,
@@ -782,11 +789,34 @@ private fun SellTradeInputSection(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = null,
+                tint = Color(0xFFCBD5E1),
+                modifier = Modifier.size(14.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = stringResource(Res.string.trade_sell_youre_selling, formatGold(tradableGrams)),
+                text = "Gold can be withdrawn after 48 hours security period.",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFFCBD5E1),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = validationMessage ?: stringResource(Res.string.trade_sell_youre_selling, formatGold(tradableGrams)),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFD2A700),
+                color = if (validationMessage != null) Color(0xFFDC2626) else Color(0xFFD2A700),
                 textAlign = TextAlign.Center,
             )
         }
@@ -843,7 +873,7 @@ private fun SellTradeInputSection(
                 )
 
                 Text(
-                    text = "gm",
+                    text = "g",
                     fontSize = 20.sp,
                     color = Color(0xFF64748B),
                     fontWeight = FontWeight.Bold,
@@ -883,12 +913,68 @@ private fun SellTradeInputSection(
                 color = Color(0xFF94A3B8),
             )
             Text(
-                text = "${formatGold(sellableBalance)} gm",
+                text = "${formatGold(sellableBalance)} g",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF94A3B8),
             )
         }
+    }
+}
+
+@Composable
+private fun SellTradeEntryLoadingSkeleton() {
+    val transition = rememberInfiniteTransition(label = "sell-entry-shimmer")
+    val shimmerProgress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 1200, easing = LinearEasing)),
+        label = "sell-entry-shimmer-progress",
+    )
+    val shimmerBrush = Brush.linearGradient(
+        colors = listOf(Color(0xFFE9EEF5), Color(0xFFF7F9FC), Color(0xFFE9EEF5)),
+        start = androidx.compose.ui.geometry.Offset(-240f + (480f * shimmerProgress), 0f),
+        end = androidx.compose.ui.geometry.Offset(0f + (480f * shimmerProgress), 200f),
+    )
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(88.dp)
+                .background(shimmerBrush, RoundedCornerShape(12.dp))
+                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.32f)
+                .height(14.dp)
+                .padding(start = 2.dp)
+                .background(shimmerBrush, RoundedCornerShape(999.dp)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(76.dp)
+                .background(shimmerBrush, RoundedCornerShape(12.dp)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.76f)
+                .height(14.dp)
+                .align(Alignment.CenterHorizontally)
+                .background(shimmerBrush, RoundedCornerShape(999.dp)),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.52f)
+                .height(16.dp)
+                .align(Alignment.CenterHorizontally)
+                .background(shimmerBrush, RoundedCornerShape(999.dp)),
+        )
     }
 }
 
@@ -920,34 +1006,7 @@ private fun SellTradeSafetyLayer() {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Default.WorkspacePremium,
-                contentDescription = null,
-                tint = HabitGoldPalette.plum,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = stringResource(Res.string.trade_sell_gold_partner),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF64748B),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Image(
-                painter = painterResource(Res.drawable.safegold_image),
-                contentDescription = stringResource(Res.string.common_safegold),
-                modifier = Modifier.height(10.dp).widthIn(min = 56.dp),
-                contentScale = ContentScale.Fit,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -999,7 +1058,11 @@ internal fun SellTradeVpaCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) Color(0xFFF8F2FF) else Color(0xFFF8FAFC),
@@ -1014,11 +1077,12 @@ internal fun SellTradeVpaCard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Box(
                     modifier = Modifier
@@ -1033,39 +1097,32 @@ internal fun SellTradeVpaCard(
                         modifier = Modifier.size(18.dp),
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = vpa.address,
-                            color = Color(0xFF020617),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        if (vpa.isDefault) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Surface(
-                                color = HabitGoldPalette.plum.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(4.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(Res.string.trade_sell_default),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = HabitGoldPalette.plum,
-                                )
-                            }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = vpa.address,
+                        color = Color(0xFF020617),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (vpa.isDefault) {
+                        Surface(
+                            color = HabitGoldPalette.plum.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(4.dp),
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.trade_sell_default),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = HabitGoldPalette.plum,
+                            )
                         }
                     }
-                    Text(
-                        text = if (isSelected) {
-                            stringResource(Res.string.common_selected)
-                        } else {
-                            stringResource(Res.string.trade_sell_tap_to_select)
-                        },
-                        fontSize = 12.sp,
-                        color = if (isSelected) HabitGoldPalette.plum else Color(0xFF64748B),
-                    )
                 }
             }
 
@@ -1176,6 +1233,21 @@ internal fun formatNextSellableLabel(raw: String): String {
         "${local.day.toString().padStart(2, '0')} ${monthAbbreviation(local.month.name)}, " +
             "$displayHour:${local.minute.toString().padStart(2, '0')} $meridiem"
     }.getOrElse { raw }
+}
+
+internal fun sanitizeSellAmountInput(raw: String): String {
+    val filtered = raw.filter { it.isDigit() || it == '.' }
+    val firstDotIndex = filtered.indexOf('.')
+    if (firstDotIndex == -1) return filtered.take(7)
+
+    val beforeDot = filtered.substring(0, firstDotIndex).take(7)
+    val afterDot = filtered.substring(firstDotIndex + 1).filter(Char::isDigit).take(2)
+    val result = buildString {
+        append(beforeDot)
+        append('.')
+        append(afterDot)
+    }
+    return if (filtered.endsWith('.') && afterDot.isEmpty()) result else result.trimEnd('.')
 }
 
 private fun monthAbbreviation(monthName: String): String {

@@ -99,6 +99,7 @@ fun RewardsRedeemRouteController(
                     val result = tradeDependencies.paymentLauncher.launch(effect.request)
                     buyTradeViewModel.onIntent(BuyTradeIntent.HandlePaymentResult(result))
                 }
+                BuyTradeEffect.RefreshLivePrice -> tradeDependencies.livePriceStore.refreshPricesAfterRateExpired()
                 is BuyTradeEffect.ShowMessage -> Unit
             }
         }

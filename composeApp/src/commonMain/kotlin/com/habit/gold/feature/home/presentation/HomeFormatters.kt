@@ -40,6 +40,21 @@ internal fun formatCreatedAt(raw: String): String {
     }.getOrElse { raw.take(10) }
 }
 
+internal fun formatCreatedAtWithTime(raw: String): String {
+    return runCatching {
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val hour24 = local.hour
+        val hour12 = when {
+            hour24 == 0 -> 12
+            hour24 > 12 -> hour24 - 12
+            else -> hour24
+        }
+        val meridiem = if (hour24 >= 12) "PM" else "AM"
+        "${local.day.toString().padStart(2, '0')} ${monthAbbreviation(local.month.name)} ${local.year} • " +
+            "${hour12}:${local.minute.toString().padStart(2, '0')} $meridiem"
+    }.getOrElse { raw }
+}
+
 internal fun String.homeInitials(): String {
     val parts = trim().split(Regex("\\s+")).filter { it.isNotBlank() }
     if (parts.isEmpty()) return "U"

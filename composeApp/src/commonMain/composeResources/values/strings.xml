@@ -165,7 +165,8 @@ Invest in Gold</string>
     <string name="trade_buy_tab_one_time">One Time</string>
     <string name="trade_buy_tab_sip">SIP</string>
     <string name="trade_buy_mode_rupees">In Rupees (₹)</string>
-    <string name="trade_buy_mode_grams">In Grams (gm)</string>
+    <string name="trade_buy_mode_grams">In Grams (g)</string>
+    <string name="trade_buy_popular_tag">Popular</string>
     <string name="trade_buy_enter_amount">ENTER AMOUNT</string>
     <string name="trade_buy_select_grams">SELECT GRAMS</string>
     <string name="trade_buy_live_price_label">Live Buy Price</string>
@@ -178,8 +179,8 @@ Invest in Gold</string>
     <string name="trade_buy_fact_insured_vaults">Securely stored in Insured vaults</string>
     <string name="trade_buy_fact_start_small">Start buying gold at just ₹10</string>
     <string name="trade_buy_max_upi_limit_message">Max UPI limit is ₹1,00,000 per transaction</string>
-    <string name="trade_buy_youre_buying">%1$sgm of gold.</string>
-    <string name="trade_buy_chip_max">Max</string>
+    <string name="trade_buy_min_amount_message">Minimum buy amount is ₹10.</string>
+    <string name="trade_buy_youre_buying">You get %1$sg of gold.</string>
     <string name="trade_buy_offers">Offers</string>
     <string name="trade_buy_available_coupons_count">%1$d coupons available</string>
     <string name="trade_buy_applied_coupon_format">Applied: %1$s</string>
@@ -238,7 +239,7 @@ Invest in Gold</string>
     <string name="trade_sell_summary_created_order">Created order</string>
     <string name="trade_sell_summary_polling_status">Polling status</string>
     <string name="trade_sell_mode_rupees">In Rupees (₹)</string>
-    <string name="trade_sell_mode_grams">In Grams (gm)</string>
+    <string name="trade_sell_mode_grams">In Grams (g)</string>
     <string name="trade_sell_enter_amount">ENTER AMOUNT</string>
     <string name="trade_sell_select_grams">SELECT GRAMS</string>
     <string name="trade_sell_you_receive">You receive</string>
@@ -255,7 +256,7 @@ Invest in Gold</string>
     <string name="trade_sell_badge_insured">100% Insured</string>
     <string name="trade_sell_badge_physical">100% Physical</string>
     <string name="trade_sell_badge_vault">Brink's Vault</string>
-    <string name="trade_sell_zero_gm">0 gm</string>
+    <string name="trade_sell_zero_gm">0 g</string>
     <string name="trade_sell_all_gold_locked">All your gold is under a holding period.</string>
     <string name="trade_sell_enter_valid_amount">Enter a valid amount.</string>
     <string name="trade_sell_fetching_price">Fetching latest sell price. Please wait.</string>
@@ -265,9 +266,12 @@ Invest in Gold</string>
     <string name="trade_sell_no_sellable_balance">No sellable balance available right now.</string>
     <string name="trade_sell_min_quantity">Minimum sell quantity is 0.0001g.</string>
     <string name="trade_sell_min_amount">Amount must be at least ₹10.</string>
+    <string name="trade_sell_holding_period_note">Your gold will be redeemable after a 48-hour holding period.</string>
+    <string name="trade_sell_withdrawable_gold">You can withdraw %1$sg of gold.</string>
+    <string name="trade_sell_your_gold_is">Your Gold Is:</string>
     <string name="trade_sell_draft_missing">Sell request details are missing. Please enter the amount again.</string>
     <string name="trade_sell_net_amount_credited">Net amount to be credited: ₹%1$s</string>
-    <string name="trade_sell_youre_selling">You&apos;re selling %1$sgm of gold.</string>
+    <string name="trade_sell_youre_selling">You&apos;re selling %1$sg of gold.</string>
     <string name="trade_sell_button_locked">Gold Under Holding Period</string>
     <string name="trade_sell_balance_information">Balance Information</string>
     <string name="trade_sell_total_gold">Total gold</string>
@@ -322,6 +326,9 @@ Invest in Gold</string>
     <string name="trade_route_help_title">Help Center</string>
     <string name="trade_route_help_message">Trade help and payment FAQs still need their final shared help experience.</string>
     <string name="trade_transaction_details_order_title">Transaction details</string>
+    <string name="trade_transaction_details_summary_heading">Summary</string>
+    <string name="trade_transaction_details_information_heading">Details</string>
+    <string name="trade_transaction_details_order_reference_heading">Reference ID</string>
     <string name="trade_transaction_details_order_id">Transaction ID</string>
     <string name="trade_transaction_details_type">Type</string>
     <string name="trade_transaction_details_status">Status</string>
@@ -398,8 +405,8 @@ Invest in Gold</string>
     <string name="home_screen_retry_cta">Retry</string>
     <string name="home_screen_update_now_cta">Update now</string>
     <string name="home_screen_force_update_fallback_title">App update available</string>
-    <string name="home_screen_footer_badge_physical">100%%&#10;Physical</string>
-    <string name="home_screen_footer_badge_insured">100%%&#10;Insured</string>
+    <string name="home_screen_footer_badge_physical">100%&#10;Physical</string>
+    <string name="home_screen_footer_badge_insured">100%&#10;Insured</string>
     <string name="home_screen_footer_badge_vault">Brink&apos;s&#10;Vault</string>
     <string name="home_screen_powered_by">POWERED BY</string>
 
@@ -417,7 +424,7 @@ Invest in Gold</string>
     <string name="home_screen_intro_title_gold">24K Pure Digital Gold</string>
     <string name="home_screen_intro_description_gold">Own 99.9%% pure, BIS-certified gold. The digital standard for physical value.</string>
     <string name="home_screen_intro_title_secure">Secure by Design</string>
-    <string name="home_screen_intro_description_secure">Stored in world-class Brink&apos;s vaults with periodic audits and 100%% insurance.</string>
+    <string name="home_screen_intro_description_secure">Stored in world-class Brink&apos;s vaults with periodic audits and 100% insurance.</string>
     <string name="home_screen_intro_title_liquidity">Liquidity on Tap</string>
     <string name="home_screen_intro_description_liquidity">Sell instantly at live market rates or redeem into exquisite physical coins.</string>
     <string name="home_screen_intro_title_growth">Steady Wealth Creation</string>
@@ -1015,4 +1022,3 @@ This usually takes a few seconds.</string>
     <string name="delivery_coupon_sheet_apply">Apply</string>
     <string name="delivery_coupon_sheet_save_description">Save ₹%1$s on delivery charges</string>
 </resources>
-
