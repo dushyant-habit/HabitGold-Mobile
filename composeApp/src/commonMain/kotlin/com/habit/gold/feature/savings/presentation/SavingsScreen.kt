@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Tune
@@ -92,7 +91,6 @@ import habitgoldmobile.composeapp.generated.resources.savings_manage_empty
 import habitgoldmobile.composeapp.generated.resources.savings_manage_failed_note
 import habitgoldmobile.composeapp.generated.resources.savings_manage_filter_by_status
 import habitgoldmobile.composeapp.generated.resources.savings_manage_frequency
-import habitgoldmobile.composeapp.generated.resources.savings_manage_loading_message
 import habitgoldmobile.composeapp.generated.resources.savings_manage_mandate_id
 import habitgoldmobile.composeapp.generated.resources.savings_manage_no_cancelled
 import habitgoldmobile.composeapp.generated.resources.savings_manage_no_failed

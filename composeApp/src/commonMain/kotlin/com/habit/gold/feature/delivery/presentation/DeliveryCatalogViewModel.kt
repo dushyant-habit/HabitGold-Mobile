@@ -11,7 +11,6 @@ import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStore
 import com.habit.gold.feature.delivery.domain.model.ConfirmDeliveryOrderDto
 import com.habit.gold.feature.delivery.domain.model.CreateDeliveryQuoteDto
 import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutPhase
-import com.habit.gold.feature.delivery.domain.model.DeliveryCheckoutQuote
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
@@ -28,8 +27,6 @@ import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import com.habit.gold.core.network.ApiResult
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_applied
-import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_invalid
-import habitgoldmobile.composeapp.generated.resources.delivery_catalog_coupon_only_valid
 import habitgoldmobile.composeapp.generated.resources.delivery_checkout_missing_order_id
 import habitgoldmobile.composeapp.generated.resources.delivery_checkout_payment_cancelled
 import habitgoldmobile.composeapp.generated.resources.delivery_checkout_payment_failed
@@ -755,7 +752,6 @@ class DeliveryCatalogViewModel(
         const val MAX_PRODUCT_UNIT_ESTIMATE_INR = 95000.0
         const val MAX_ORDER_STATUS_POLL_ATTEMPTS = 15
         const val ORDER_STATUS_POLL_INTERVAL_MS = 2000L
-
 
         private fun generateIdempotencyKey(): String {
             val chars = ('a'..'f') + ('0'..'9')

@@ -2,15 +2,10 @@ package com.habit.gold.feature.trade.presentation.buy
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -18,7 +13,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -28,73 +22,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -102,87 +58,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.habit.gold.feature.trade.domain.TradeLivePriceState
-import com.habit.gold.feature.trade.domain.usecase.GetTradeInvoiceUseCase
-import com.habit.gold.core.network.ApiResult
-import com.habit.gold.feature.trade.presentation.formatCountdown
 import com.habit.gold.feature.trade.presentation.formatGoldQuantity
 import com.habit.gold.feature.trade.presentation.formatMoney
-import com.habit.gold.feature.trade.presentation.formatPercent
 import com.habit.gold.feature.trade.presentation.roundToGoldScale
 import com.habit.gold.feature.trade.presentation.roundToMoney
-import com.habit.gold.feature.trade.presentation.sanitizeGramInput
 import habitgoldmobile.composeapp.generated.resources.Res
-import habitgoldmobile.composeapp.generated.resources.buy_gold_screen_buy_gold
-import habitgoldmobile.composeapp.generated.resources.common_go_to_dashboard
-import habitgoldmobile.composeapp.generated.resources.common_help
+import habitgoldmobile.composeapp.generated.resources.common_gold_unit_short
 import habitgoldmobile.composeapp.generated.resources.common_safegold
-import habitgoldmobile.composeapp.generated.resources.common_transaction_details
 import habitgoldmobile.composeapp.generated.resources.safegold_image
 import habitgoldmobile.composeapp.generated.resources.home_screen_powered_by
-import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_to_be_paid
-import habitgoldmobile.composeapp.generated.resources.trade_buy_applied_coupon_format
-import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
-import habitgoldmobile.composeapp.generated.resources.trade_buy_breakdown_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_change
-import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_discount_off
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_min_order_required
-import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_empty
-import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_subtitle
-import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
-import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_coupon_code
-import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_earn_extra_gold
-import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_insured_vaults
-import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_pure_gold
-import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_pure_gold_short
-import habitgoldmobile.composeapp.generated.resources.trade_buy_fact_start_small
-import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_value
-import habitgoldmobile.composeapp.generated.resources.trade_buy_gst
-import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_label
-import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_unavailable
-import habitgoldmobile.composeapp.generated.resources.trade_buy_latest_order_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_max_upi_limit_message
 import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_grams
 import habitgoldmobile.composeapp.generated.resources.trade_buy_mode_rupees
-import habitgoldmobile.composeapp.generated.resources.trade_buy_offers
-import habitgoldmobile.composeapp.generated.resources.trade_buy_pay_now
 import habitgoldmobile.composeapp.generated.resources.trade_buy_popular_tag
-import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_body
-import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_plus_gst
-import habitgoldmobile.composeapp.generated.resources.trade_buy_quantity
-import habitgoldmobile.composeapp.generated.resources.trade_buy_remove
-import habitgoldmobile.composeapp.generated.resources.trade_buy_retry
-import habitgoldmobile.composeapp.generated.resources.trade_buy_select_grams
-import habitgoldmobile.composeapp.generated.resources.trade_buy_success_body
-import habitgoldmobile.composeapp.generated.resources.trade_buy_success_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_status_completed
-import habitgoldmobile.composeapp.generated.resources.trade_buy_available_coupons_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_total_payable
-import habitgoldmobile.composeapp.generated.resources.trade_buy_updating_price
-import habitgoldmobile.composeapp.generated.resources.trade_buy_updates_in
-import habitgoldmobile.composeapp.generated.resources.trade_buy_verifying_body
-import habitgoldmobile.composeapp.generated.resources.trade_buy_verifying_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_view_breakdown
-import habitgoldmobile.composeapp.generated.resources.trade_buy_youre_buying
-import habitgoldmobile.composeapp.generated.resources.trade_buy_amount_paid
-import habitgoldmobile.composeapp.generated.resources.trade_buy_error_code
-import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_body
-import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_code_fallback
-import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_credited
-import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_order_id_label
-import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_purchase_body
-import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_purchase_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_secure_100_percent
-import habitgoldmobile.composeapp.generated.resources.trade_buy_secure_bhim_registered
-import habitgoldmobile.composeapp.generated.resources.trade_invoice_viewer_invalid_url
-import habitgoldmobile.composeapp.generated.resources.trade_transaction_details_view_invoice
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 import kotlin.math.abs
 
@@ -513,8 +403,18 @@ internal fun BuyTradeGramSlider(
             .padding(top = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("0.1 g", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
-        Text("${formatGramsPlain(parseOneTimeGrams(maxValue.toString(), maxValue.toDouble()))} g", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = BuySlate400)
+        Text(
+            "0.1 ${stringResource(Res.string.common_gold_unit_short)}",
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = BuySlate400,
+        )
+        Text(
+            "${formatGramsPlain(parseOneTimeGrams(maxValue.toString(), maxValue.toDouble()))} ${stringResource(Res.string.common_gold_unit_short)}",
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = BuySlate400,
+        )
     }
 }
 

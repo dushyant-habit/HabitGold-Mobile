@@ -69,7 +69,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_failure_title
 import habitgoldmobile.composeapp.generated.resources.trade_buy_gst
 import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_credited
 import habitgoldmobile.composeapp.generated.resources.trade_buy_gold_value
-import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_body
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pending_title
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pay_now
 import habitgoldmobile.composeapp.generated.resources.trade_buy_processing_order_id_label

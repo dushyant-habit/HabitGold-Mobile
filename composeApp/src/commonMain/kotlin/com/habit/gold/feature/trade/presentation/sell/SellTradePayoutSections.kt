@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -24,9 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -39,8 +36,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -62,14 +57,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -86,12 +77,7 @@ import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_cancel
 import habitgoldmobile.composeapp.generated.resources.common_confirm
 import habitgoldmobile.composeapp.generated.resources.common_got_it
-import habitgoldmobile.composeapp.generated.resources.common_safegold
-import habitgoldmobile.composeapp.generated.resources.home_screen_powered_by
-import habitgoldmobile.composeapp.generated.resources.safegold_image
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_message
-import habitgoldmobile.composeapp.generated.resources.trade_sell_action_continue
-import habitgoldmobile.composeapp.generated.resources.trade_sell_balance_info
 import habitgoldmobile.composeapp.generated.resources.trade_sell_balance_information
 import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_amount
 import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_order_body
@@ -99,7 +85,6 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_order_t
 import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_quantity
 import habitgoldmobile.composeapp.generated.resources.trade_sell_confirm_upi
 import habitgoldmobile.composeapp.generated.resources.trade_sell_fetching_price
-import habitgoldmobile.composeapp.generated.resources.trade_sell_gold_partner
 import habitgoldmobile.composeapp.generated.resources.trade_sell_live_price_label
 import habitgoldmobile.composeapp.generated.resources.trade_sell_locked_gold_description
 import habitgoldmobile.composeapp.generated.resources.trade_sell_locked_gold_title
@@ -111,14 +96,12 @@ import habitgoldmobile.composeapp.generated.resources.trade_sell_redeemable_gold
 import habitgoldmobile.composeapp.generated.resources.trade_sell_select_payout_upi
 import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_gold_price
 import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_gold_quantity
-import habitgoldmobile.composeapp.generated.resources.trade_sell_summary_order_id
 import habitgoldmobile.composeapp.generated.resources.trade_sell_swipe_to_sell_gold
 import habitgoldmobile.composeapp.generated.resources.trade_sell_total_gold_balance_title
 import habitgoldmobile.composeapp.generated.resources.trade_sell_total_gold_description
 import habitgoldmobile.composeapp.generated.resources.trade_sell_updates_in
 import habitgoldmobile.composeapp.generated.resources.trade_sell_upi_payout
 import habitgoldmobile.composeapp.generated.resources.trade_sell_you_receive
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 

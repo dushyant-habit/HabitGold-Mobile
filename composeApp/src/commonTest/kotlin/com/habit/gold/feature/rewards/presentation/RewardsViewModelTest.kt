@@ -1,11 +1,8 @@
 package com.habit.gold.feature.rewards.presentation
 
 import com.habit.gold.core.network.ApiResult
-import com.habit.gold.core.network.NetworkError
-import com.habit.gold.core.network.NetworkErrorKind
 import com.habit.gold.feature.rewards.domain.RewardsRepository
 import com.habit.gold.feature.rewards.domain.model.ReferDetails
-import com.habit.gold.feature.rewards.domain.model.ReferDetailsReferralCode
 import com.habit.gold.feature.rewards.domain.model.RewardHistoryEntry
 import com.habit.gold.feature.rewards.domain.model.RewardMilestone
 import com.habit.gold.feature.rewards.domain.model.RewardsFeatureFlags
@@ -26,7 +23,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)

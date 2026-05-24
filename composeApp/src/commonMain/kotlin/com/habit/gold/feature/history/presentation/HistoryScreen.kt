@@ -13,6 +13,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +32,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -76,7 +76,6 @@ import habitgoldmobile.composeapp.generated.resources.history_screen_empty_refun
 import habitgoldmobile.composeapp.generated.resources.history_screen_empty_sell_default
 import habitgoldmobile.composeapp.generated.resources.history_screen_empty_success
 import habitgoldmobile.composeapp.generated.resources.history_screen_empty_trade_default
-import habitgoldmobile.composeapp.generated.resources.history_screen_load_failed
 import habitgoldmobile.composeapp.generated.resources.history_screen_recent_transactions
 import habitgoldmobile.composeapp.generated.resources.history_screen_status
 import habitgoldmobile.composeapp.generated.resources.history_screen_status_failed
@@ -99,7 +98,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val HistoryBackground = Color(0xFFF8FAFC)
+private val HistoryBackground = Color.White
 private val HistoryToolbarBorder = Color(0x0D000000)
 private val HistoryMutedText = Color(0xFF6B7280)
 private val HistorySectionBorder = Color(0xFFE2E8F0)
@@ -261,14 +260,16 @@ fun HistoryScreen(
             isRefreshing = state.isRefreshing,
             onRefresh = { onIntent(HistoryIntent.Refresh) },
             state = pullToRefreshState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White),
         ) {
             when {
                 state.isLoading && state.transactions.isEmpty() -> {
                     HistoryLoadingContent(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp),
+                            .padding(horizontal = 16.dp),
                     )
                 }
 
@@ -299,9 +300,8 @@ fun HistoryScreen(
                 else -> {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         if (state.visibleTransactions.isEmpty()) {
@@ -346,17 +346,16 @@ fun HistoryScreen(
 
                             if (state.isPaginating) {
                                 item {
-                                    Box(
+                                    Column(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center,
+                                            .padding(vertical = 4.dp),
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = HistoryPrimary,
-                                            strokeWidth = 2.dp,
-                                        )
+                                        repeat(2) {
+                                            HistoryTransactionRowPlaceholder()
+                                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                                        }
                                     }
                                 }
                             }

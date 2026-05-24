@@ -22,7 +22,6 @@ import com.habit.gold.feature.trade.domain.model.TradeBuyPrice
 import com.habit.gold.feature.trade.domain.model.TradeLivePrice
 import com.habit.gold.feature.trade.domain.model.TradeBuyOrderRequest
 import com.habit.gold.feature.trade.domain.model.TradeCouponOrderType
-import com.habit.gold.feature.trade.domain.model.TradeCouponType
 import com.habit.gold.feature.trade.domain.model.TradeCouponValidation
 import com.habit.gold.feature.trade.domain.model.TradeCouponValidationRequest
 import com.habit.gold.feature.trade.domain.model.TradeInvoice

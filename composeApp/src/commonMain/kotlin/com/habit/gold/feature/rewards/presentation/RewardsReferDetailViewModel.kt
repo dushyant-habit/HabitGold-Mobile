@@ -84,12 +84,8 @@ internal fun referralInviteLink(referralCode: String): String {
 
 internal fun referralInviteMessage(referralCode: String): String {
     return """
-        Your future self won’t remember the random ₹200 Swiggy order.
-        But they will remember the gold you stacked consistently. ✨
-
-        Started using HabitGold,
-        an app that helps you save in real gold daily, starting from just ₹10.
-
+        Start saving in Real Gold with just ₹100. Get 0.5% Gold Rewards on Every Purchase.
+        
         Invest in a Habit. Invest in Gold.
 
         Join using my referral link 👇

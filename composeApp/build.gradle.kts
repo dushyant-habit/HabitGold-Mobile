@@ -119,7 +119,6 @@ kotlin {
             implementation("com.google.firebase:firebase-crashlytics")
             implementation("com.google.firebase:firebase-perf")
             implementation("com.microsoft.clarity:clarity-compose:3.8.2")
-            implementation("com.google.zxing:core:3.5.4")
         }
         commonMain.dependencies {
             implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -142,6 +141,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinxJson)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+            implementation("io.github.g0dkar:qrcode-kotlin:4.5.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

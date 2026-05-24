@@ -1,7 +1,6 @@
 package com.habit.gold.feature.trade.presentation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.feature.trade.domain.TradePaymentLauncher
@@ -20,8 +19,6 @@ import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import com.habit.gold.feature.trade.presentation.buy.BuyTradeRouteController
 import com.habit.gold.feature.trade.presentation.sell.SellTradeRouteController
 import habitgoldmobile.composeapp.generated.resources.Res
-import habitgoldmobile.composeapp.generated.resources.trade_route_get_coin_message
-import habitgoldmobile.composeapp.generated.resources.trade_route_get_coin_title
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_message
 import habitgoldmobile.composeapp.generated.resources.trade_route_vpa_title
 import org.jetbrains.compose.resources.stringResource

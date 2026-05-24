@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.IntentSender
 import android.os.SystemClock
 import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentTransaction
 import com.habit.gold.BuildConfig

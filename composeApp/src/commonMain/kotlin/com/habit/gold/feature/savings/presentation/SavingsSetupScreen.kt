@@ -8,7 +8,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
@@ -19,46 +18,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -76,17 +56,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.habit.gold.core.designsystem.AppPrimaryButton
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.feature.home.presentation.ChildCardBorder
 import com.habit.gold.feature.home.presentation.ChildMutedText
@@ -100,54 +74,24 @@ import habitgoldmobile.composeapp.generated.resources.common_retry
 import habitgoldmobile.composeapp.generated.resources.start_daily_savings_icon
 import habitgoldmobile.composeapp.generated.resources.start_monthly_savings_icon
 import habitgoldmobile.composeapp.generated.resources.start_weekly_savings_icon
-import habitgoldmobile.composeapp.generated.resources.savings_setup_amount_label
 import habitgoldmobile.composeapp.generated.resources.savings_setup_day_label
 import habitgoldmobile.composeapp.generated.resources.savings_setup_failure_body
 import habitgoldmobile.composeapp.generated.resources.savings_setup_failure_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_daily_cta
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_daily_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_monthly_cta
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_monthly_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_weekly_cta
-import habitgoldmobile.composeapp.generated.resources.savings_setup_frequency_weekly_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_gold_savings
 import habitgoldmobile.composeapp.generated.resources.savings_setup_go_home
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_breakdown_body
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_breakdown_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_estimated_earnings
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_frequency
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_illustrative_note
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_investment_amount
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_maturity_value
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_monthly_equivalent
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_preview_intro
-import habitgoldmobile.composeapp.generated.resources.savings_setup_compounding_total_invested
+import habitgoldmobile.composeapp.generated.resources.savings_hero_image_content_description
 import habitgoldmobile.composeapp.generated.resources.savings_setup_monthly_date_label
-import habitgoldmobile.composeapp.generated.resources.savings_setup_next_payment_label
 import habitgoldmobile.composeapp.generated.resources.savings_setup_pending_body
 import habitgoldmobile.composeapp.generated.resources.savings_setup_pending_title
 import habitgoldmobile.composeapp.generated.resources.savings_setup_polling_body
 import habitgoldmobile.composeapp.generated.resources.savings_setup_polling_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_resume_cta
-import habitgoldmobile.composeapp.generated.resources.savings_setup_secure_note
-import habitgoldmobile.composeapp.generated.resources.savings_setup_submit_upgrade
 import habitgoldmobile.composeapp.generated.resources.savings_setup_success_body
 import habitgoldmobile.composeapp.generated.resources.savings_setup_success_title
-import habitgoldmobile.composeapp.generated.resources.savings_setup_upgrade_current_amount
-import habitgoldmobile.composeapp.generated.resources.savings_setup_upgrade_title
-import habitgoldmobile.composeapp.generated.resources.trade_buy_apply
-import habitgoldmobile.composeapp.generated.resources.trade_buy_change
-import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_coupon_code
-import habitgoldmobile.composeapp.generated.resources.trade_buy_offers
-import habitgoldmobile.composeapp.generated.resources.trade_buy_remove
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalFocusManager
 import com.habit.gold.feature.trade.presentation.buy.BuySlate400
-import com.habit.gold.feature.trade.presentation.buy.BuyTradeEntryMode
 import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
-import habitgoldmobile.composeapp.generated.resources.trade_buy_select_grams
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -495,7 +439,10 @@ private fun SavingsHeroImage(
     }
     Image(
         painter = painterResource(image),
-        contentDescription = "${frequency.displayName()} savings",
+        contentDescription = stringResource(
+            Res.string.savings_hero_image_content_description,
+            frequency.displayName(),
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),

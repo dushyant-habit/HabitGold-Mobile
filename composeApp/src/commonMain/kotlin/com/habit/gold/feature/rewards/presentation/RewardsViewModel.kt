@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.habit.gold.core.network.ApiResult
 import com.habit.gold.feature.home.presentation.formatInr
-import com.habit.gold.feature.rewards.domain.model.RewardMilestone
 import com.habit.gold.feature.rewards.domain.model.RewardsMilestonesSummary
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsUserFeaturesUseCase

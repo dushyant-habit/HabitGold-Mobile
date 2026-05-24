@@ -6,7 +6,6 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.value
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.Foundation.NSError
