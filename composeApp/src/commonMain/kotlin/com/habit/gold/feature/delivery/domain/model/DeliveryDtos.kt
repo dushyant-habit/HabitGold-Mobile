@@ -1,7 +1,6 @@
 package com.habit.gold.feature.delivery.domain.model
 
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.JsonObject
@@ -194,7 +193,6 @@ fun DeliveryAddressDto.toDomain(): SavedAddress {
         verificationStatus = verificationStatus
     )
 }
-
 
 fun normalizeIndianMobileForApi(raw: String): String {
     val digits = raw.filter { it.isDigit() }

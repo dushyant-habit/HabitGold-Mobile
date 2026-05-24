@@ -9,7 +9,6 @@ import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchResult
 import com.habit.gold.feature.delivery.domain.model.PhysicalCoin
 import com.habit.gold.feature.trade.domain.model.TradeAvailableCoupon
 import com.habit.gold.feature.trade.domain.model.TradeCouponType
-import kotlin.math.roundToInt
 
 data class DeliveryCatalogState(
     val isLoadingProducts: Boolean = false,

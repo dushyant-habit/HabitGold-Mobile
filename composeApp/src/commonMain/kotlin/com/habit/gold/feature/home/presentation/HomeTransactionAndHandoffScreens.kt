@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -37,7 +35,6 @@ import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_alerts_title
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_message
 import habitgoldmobile.composeapp.generated.resources.home_route_handoff_profile_title
-import habitgoldmobile.composeapp.generated.resources.home_route_handoff_view_history
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_amount
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_date
 import habitgoldmobile.composeapp.generated.resources.home_screen_transaction_details_heading

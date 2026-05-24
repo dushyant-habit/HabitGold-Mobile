@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -304,7 +303,7 @@ private fun DeliveryOrderCard(
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.ic_delivery_gold_icon),
-                        contentDescription = "Delivery",
+                        contentDescription = stringResource(Res.string.delivery_tracking_delivery_icon),
                         tint = Color.Unspecified,
                         modifier = Modifier.size(48.dp),
                     )
@@ -458,7 +457,7 @@ private fun DeliveryTrackingDetails(order: DeliveryOrderDto) {
                     value = order.paymentStatus ?: "Pending",
                 )
                 TrackingDetailItem(
-                    label = "Updated",
+                    label = stringResource(Res.string.delivery_tracking_updated),
                     value = formatTrackingTimestamp(order.updatedAt),
                 )
             }
@@ -494,7 +493,7 @@ private fun DeliveryTrackingDetails(order: DeliveryOrderDto) {
             if (!trackingLink.isNullOrBlank()) {
                 AssistChip(
                     onClick = { uriHandler.openUri(trackingLink.toExternalTrackingUrl()) },
-                    label = { Text("Tracking link available") },
+                    label = { Text(stringResource(Res.string.delivery_tracking_link_available)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
@@ -593,6 +592,7 @@ private data class TrackingMilestone(
     val isComplete: Boolean,
 )
 
+@Composable
 private fun buildTrackingMilestones(order: DeliveryOrderDto): List<TrackingMilestone> {
     val status = (order.metadata?.latestDispatchStatus?.message ?: order.status)
         .orEmpty().uppercase()
@@ -602,28 +602,41 @@ private fun buildTrackingMilestones(order: DeliveryOrderDto): List<TrackingMiles
 
     return listOf(
         TrackingMilestone(
-            title = "Order confirmed",
+            title = stringResource(Res.string.delivery_tracking_milestone_order_confirmed),
             subtitle = formatTrackingTimestamp(order.confirmedAt ?: order.createdAt),
             isComplete = true,
         ),
         TrackingMilestone(
-            title = "Packed for dispatch",
-            subtitle = if (dispatchComplete) "Shipment prepared by the vault team" else "Awaiting packaging at fulfillment center",
+            title = stringResource(Res.string.delivery_tracking_milestone_packed),
+            subtitle = if (dispatchComplete) {
+                stringResource(Res.string.delivery_tracking_milestone_packed_complete)
+            } else {
+                stringResource(Res.string.delivery_tracking_milestone_packed_pending)
+            },
             isComplete = dispatchComplete,
         ),
         TrackingMilestone(
-            title = "In transit",
-            subtitle = if (transitComplete) "Courier is moving your package" else "Package will start moving once picked up",
+            title = stringResource(Res.string.delivery_tracking_milestone_transit),
+            subtitle = if (transitComplete) {
+                stringResource(Res.string.delivery_tracking_milestone_transit_complete)
+            } else {
+                stringResource(Res.string.delivery_tracking_milestone_transit_pending)
+            },
             isComplete = transitComplete,
         ),
         TrackingMilestone(
-            title = "Delivered",
-            subtitle = if (deliveredComplete) "Package handed over successfully" else "Final doorstep delivery pending",
+            title = stringResource(Res.string.delivery_tracking_milestone_delivered),
+            subtitle = if (deliveredComplete) {
+                stringResource(Res.string.delivery_tracking_milestone_delivered_complete)
+            } else {
+                stringResource(Res.string.delivery_tracking_milestone_delivered_pending)
+            },
             isComplete = deliveredComplete,
         ),
     )
 }
 
+@Composable
 private fun buildAddressText(order: DeliveryOrderDto): String {
     return listOfNotNull(
         order.recipientName,
@@ -632,11 +645,13 @@ private fun buildAddressText(order: DeliveryOrderDto): String {
         listOfNotNull(order.city, order.state, order.pincode)
             .joinToString(", ").takeIf { it.isNotBlank() },
         order.phoneNumber,
-    ).joinToString("\n").ifBlank { "Address details will appear once available." }
+    ).joinToString("\n").ifBlank { stringResource(Res.string.delivery_tracking_address_unavailable) }
 }
 
+@Composable
 private fun formatTrackingTimestamp(raw: String?): String {
-    val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return "Awaiting update"
+    val value = raw?.trim()?.takeIf { it.isNotEmpty() }
+        ?: return stringResource(Res.string.delivery_tracking_awaiting_update)
     return try {
         val instant = Instant.parse(value)
         val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())

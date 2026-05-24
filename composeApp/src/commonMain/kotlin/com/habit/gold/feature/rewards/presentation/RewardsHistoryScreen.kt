@@ -46,7 +46,6 @@ import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_retry
 import habitgoldmobile.composeapp.generated.resources.rewards_flow_toolbar_rewards_history
 import habitgoldmobile.composeapp.generated.resources.rewards_history_screen_empty
-import habitgoldmobile.composeapp.generated.resources.rewards_history_screen_error
 import habitgoldmobile.composeapp.generated.resources.rewards_history_screen_helper
 import org.jetbrains.compose.resources.stringResource
 

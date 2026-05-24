@@ -1,11 +1,6 @@
 package com.habit.gold.feature.rewards.presentation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,7 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CurrencyRupee
@@ -58,7 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -82,6 +76,8 @@ import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_no_hidde
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_refer_and_earn_rewards_when_friends_join
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_refer_now
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_referral_cashback
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_redeemable
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_redeemed
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_start_your_gold_journey
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_total_rewards_earned
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_unlock_booster
@@ -402,7 +398,7 @@ private fun ExtraGoldRewardCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    imageVector = Icons.Default.KeyboardDoubleArrowRight,
+                    imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )
@@ -634,7 +630,7 @@ private fun TopRewardsCard(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                         ) {
                             RewardStatColumn(
-                                title = "REDEEMABLE",
+                                title = stringResource(Res.string.refer_earn_screen_redeemable),
                                 value = redeemable,
                                 valueColor = White,
                                 modifier = Modifier.weight(1f),
@@ -646,7 +642,7 @@ private fun TopRewardsCard(
                                     .background(White.copy(alpha = 0.2f)),
                             )
                             RewardStatColumn(
-                                title = "REDEEMED",
+                                title = stringResource(Res.string.refer_earn_screen_redeemed),
                                 value = redeemed,
                                 valueColor = White.copy(alpha = 0.7f),
                                 modifier = Modifier.weight(1f),

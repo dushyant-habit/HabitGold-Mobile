@@ -28,9 +28,6 @@ import com.habit.gold.feature.delivery.domain.usecase.VerifyAddressOtpUseCase
 import com.habit.gold.feature.delivery.presentation.DeliveryCatalogViewModel
 import com.habit.gold.feature.delivery.presentation.DeliveryRouteDependencies
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingViewModel
-import com.habit.gold.feature.trade.domain.usecase.GetSellAvailabilityUseCase
-import com.habit.gold.feature.trade.domain.usecase.GetTradeAvailableCouponsUseCase
-import com.habit.gold.feature.trade.domain.usecase.ValidateTradeCouponUseCase
 import org.koin.dsl.module
 
 val deliveryModule = module {

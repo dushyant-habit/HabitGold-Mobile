@@ -1,8 +1,6 @@
 package com.habit.gold.feature.trade.presentation
 
-import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 internal fun roundToMoney(value: Double): Double = ((value * 100).roundToInt() / 100.0)
 

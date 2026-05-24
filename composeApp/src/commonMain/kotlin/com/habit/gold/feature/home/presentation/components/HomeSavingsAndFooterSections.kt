@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,8 +34,9 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.HeadsetMic
 import androidx.compose.material.icons.filled.Savings
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
@@ -57,7 +59,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,7 +73,6 @@ import habitgoldmobile.composeapp.generated.resources.common_need_help_with_some
 import habitgoldmobile.composeapp.generated.resources.common_safegold
 import habitgoldmobile.composeapp.generated.resources.common_support_is_available_for_payments_shipping_and_orders
 import habitgoldmobile.composeapp.generated.resources.common_your_gold_is_100percent_secured
-import habitgoldmobile.composeapp.generated.resources.home_screen_auto_invest
 import habitgoldmobile.composeapp.generated.resources.home_screen_active
 import habitgoldmobile.composeapp.generated.resources.home_screen_bank_confirmation_pending
 import habitgoldmobile.composeapp.generated.resources.home_screen_current_savings_cycle
@@ -106,7 +106,6 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_track_all_savi
 import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_daily_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_monthly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_weekly_savings
-import habitgoldmobile.composeapp.generated.resources.home_screen_view_all
 import habitgoldmobile.composeapp.generated.resources.home_screen_your_savings
 import habitgoldmobile.composeapp.generated.resources.safegold_image
 import org.jetbrains.compose.resources.painterResource
@@ -244,14 +243,12 @@ private fun Modifier.homeAnimatedSavingsBorder(): Modifier {
 @Composable
 internal fun HomeSipMandatesSection(
     mandates: List<HomeSipMandate>,
-    onViewAllClick: () -> Unit,
 ) {
     val activeMandates = remember(mandates) { mandates.filter(::isHomeVisibleSipMandate) }
     val previewMandates = remember(activeMandates) { activeMandates.take(5) }
     if (previewMandates.isEmpty()) return
 
     val pagerState = rememberPagerState(pageCount = { previewMandates.size })
-    val shouldShowViewAll = activeMandates.size > 5
 
     Column(
         modifier = Modifier
@@ -276,16 +273,6 @@ internal fun HomeSipMandatesSection(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Slate500,
-                )
-            }
-
-            if (shouldShowViewAll) {
-                Text(
-                    text = stringResource(Res.string.home_screen_view_all),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = HomePrimary,
-                    modifier = Modifier.clickable(onClick = onViewAllClick),
                 )
             }
         }
@@ -354,10 +341,10 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Info,
+                            imageVector = Icons.Default.HeadsetMic,
                             contentDescription = null,
                             tint = HomePrimary,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                     Spacer(modifier = Modifier.width(12.dp))
@@ -392,32 +379,54 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
                 .background(FooterBackground)
-                .padding(horizontal = 18.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(horizontal = 4.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.Start,
         ) {
-            Text(
-                text = stringResource(Res.string.common_your_gold_is_100percent_secured),
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 42.sp,
-                lineHeight = 42.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = FooterHeading,
-                textAlign = TextAlign.Center,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Your Gold is",
+                    fontSize = 42.sp,
+                    lineHeight = 42.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = FooterHeading,
+                    textAlign = TextAlign.Start,
+                    maxLines = 1,
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = "100% Secured",
+                        fontSize = 42.sp,
+                        lineHeight = 42.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = FooterHeading,
+                        textAlign = TextAlign.Start,
+                        maxLines = 1,
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = null,
+                        tint = Color(0xFFF2C94C),
+                        modifier = Modifier.size(42.dp),
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             HorizontalDivider(
                 color = FooterDivider,
                 thickness = 1.dp,
-                modifier = Modifier.padding(horizontal = 32.dp),
+                modifier = Modifier.fillMaxWidth(0.8f),
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 FooterBadge(Icons.Default.WorkspacePremium, stringResource(Res.string.home_screen_footer_badge_physical), Modifier.weight(1f))
@@ -789,7 +798,7 @@ private fun FooterBadge(
 ) {
     Column(
         modifier = modifier
-            .height(108.dp)
+            .height(98.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(HomeWhite)
             .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(12.dp))

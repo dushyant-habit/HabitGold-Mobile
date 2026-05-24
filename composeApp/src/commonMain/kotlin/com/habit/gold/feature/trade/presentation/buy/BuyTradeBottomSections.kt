@@ -33,12 +33,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -74,14 +72,12 @@ import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_locked
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_empty
 import habitgoldmobile.composeapp.generated.resources.trade_buy_coupon_sheet_subtitle
 import habitgoldmobile.composeapp.generated.resources.trade_buy_live_price_label
-import habitgoldmobile.composeapp.generated.resources.trade_buy_offers
 import habitgoldmobile.composeapp.generated.resources.trade_buy_pay_now
 import habitgoldmobile.composeapp.generated.resources.trade_buy_plus_gst
 import habitgoldmobile.composeapp.generated.resources.trade_buy_updating_price
 import habitgoldmobile.composeapp.generated.resources.trade_buy_updates_in
 import habitgoldmobile.composeapp.generated.resources.trade_buy_view_breakdown
 import org.jetbrains.compose.resources.stringResource
-import kotlin.math.roundToInt
 
 @Composable
 internal fun BuyCouponSheet(

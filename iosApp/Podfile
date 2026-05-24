@@ -20,7 +20,26 @@ end
 post_install do |installer|
   fuse_path = "./Pods/HyperSDK/Fuse.rb"
   clean_assets = false
+  minimum_ios_target = Gem::Version.new("12.0")
   if File.exist?(fuse_path)
     system("ruby", fuse_path.to_s, clean_assets.to_s)
+  end
+
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      current_target = config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"]
+      next if current_target.nil?
+
+      current_version = Gem::Version.new(current_target)
+      if current_version < minimum_ios_target
+        config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = minimum_ios_target.to_s
+      end
+    end
+
+    target.shell_script_build_phases.each do |phase|
+      next unless phase.name == "[CP-User] Validate Mandatory Files"
+
+      phase.always_out_of_date = "1"
+    end
   end
 end
