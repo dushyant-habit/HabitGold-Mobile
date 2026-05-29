@@ -56,6 +56,7 @@ fun ProfileRoute(
     onBackToHome: () -> Unit,
     onNavigate: (ProfileDestination) -> Unit,
     onOpenAutopay: () -> Unit,
+    onOpenReferEarn: () -> Unit,
     onBiometricStateChanged: (Boolean) -> Unit = {},
     onOpenDelivery: (DeliveryDestination) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -160,6 +161,7 @@ fun ProfileRoute(
                 onOpenVpaList = { onNavigate(ProfileDestination.VpaList) },
                 onOpenTrackOrder = { onNavigate(ProfileDestination.TrackOrder) },
                 onOpenSavedAddresses = { onNavigate(ProfileDestination.SavedAddresses) },
+                onOpenReferEarn = onOpenReferEarn,
                 onOpenHelpCenter = {
                     onNavigate(ProfileDestination.HelpCenter(returnDestination = ProfileDestination.Hub))
                 },

@@ -48,6 +48,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -107,9 +108,98 @@ import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_daily_
 import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_monthly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_upgrade_weekly_savings
 import habitgoldmobile.composeapp.generated.resources.home_screen_your_savings
+import habitgoldmobile.composeapp.generated.resources.image_12_tonnes_pager2
+import habitgoldmobile.composeapp.generated.resources.image_1gm_buy_pager3
+import habitgoldmobile.composeapp.generated.resources.image_refer_earn_pager1
 import habitgoldmobile.composeapp.generated.resources.safegold_image
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+
+@Composable
+internal fun HomePromoImagePager() {
+    val promoImages = remember {
+        listOf(
+            Res.drawable.image_refer_earn_pager1,
+            Res.drawable.image_12_tonnes_pager2,
+            Res.drawable.image_1gm_buy_pager3,
+        )
+    }
+    val pagerState = rememberPagerState(pageCount = { promoImages.size })
+
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(4500)
+            if (!pagerState.isScrollInProgress && pagerState.pageCount > 0) {
+                pagerState.animateScrollToPage((pagerState.currentPage + 1) % pagerState.pageCount)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            pageSpacing = 12.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(144.dp),
+        ) { page ->
+            HomePromoImageCard(
+                image = promoImages[page],
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        if (promoImages.size > 1) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(promoImages.size) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (pagerState.currentPage == index) 8.dp else 6.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (pagerState.currentPage == index) HomePrimary else Slate200,
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomePromoImageCard(
+    image: DrawableResource,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = HomeWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Slate200.copy(alpha = 0.85f)),
+    ) {
+        Image(
+            painter = painterResource(image),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(144.dp),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+        )
+    }
+}
 
 @Composable
 internal fun GoldSavingsPlansCard(
@@ -385,7 +475,7 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = "Your Gold is",
-                    fontSize = 42.sp,
+                    fontSize = 38.sp,
                     lineHeight = 42.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = FooterHeading,
@@ -398,7 +488,7 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
                 ) {
                     Text(
                         text = "100% Secured",
-                        fontSize = 42.sp,
+                        fontSize = 38.sp,
                         lineHeight = 42.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = FooterHeading,

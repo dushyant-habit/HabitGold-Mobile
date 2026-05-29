@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Fingerprint
@@ -63,6 +64,8 @@ import habitgoldmobile.composeapp.generated.resources.profile_delivery_section
 import habitgoldmobile.composeapp.generated.resources.profile_delivery_track_order
 import habitgoldmobile.composeapp.generated.resources.profile_delivery_track_order_subtitle
 import habitgoldmobile.composeapp.generated.resources.profile_help_subtitle
+import habitgoldmobile.composeapp.generated.resources.profile_hub_refer_earn
+import habitgoldmobile.composeapp.generated.resources.profile_hub_refer_earn_subtitle
 import habitgoldmobile.composeapp.generated.resources.profile_hub_account_details
 import habitgoldmobile.composeapp.generated.resources.profile_hub_account_details_subtitle
 import habitgoldmobile.composeapp.generated.resources.profile_hub_biometric
@@ -80,6 +83,7 @@ import habitgoldmobile.composeapp.generated.resources.profile_logout_confirm_bod
 import habitgoldmobile.composeapp.generated.resources.profile_logout_confirm_cta
 import habitgoldmobile.composeapp.generated.resources.profile_logout_confirm_title
 import habitgoldmobile.composeapp.generated.resources.profile_phone_fallback
+import habitgoldmobile.composeapp.generated.resources.profile_rewards_section
 import habitgoldmobile.composeapp.generated.resources.profile_support_section
 import habitgoldmobile.composeapp.generated.resources.profile_version_label
 import org.jetbrains.compose.resources.stringResource
@@ -113,6 +117,7 @@ internal fun ProfileScreen(
     onOpenVpaList: () -> Unit,
     onOpenTrackOrder: () -> Unit,
     onOpenSavedAddresses: () -> Unit,
+    onOpenReferEarn: () -> Unit,
     onOpenHelpCenter: () -> Unit,
     onOpenContactUs: () -> Unit,
     onConfirmLogout: () -> Unit,
@@ -304,6 +309,20 @@ internal fun ProfileScreen(
                             title = stringResource(Res.string.profile_delivery_saved_addresses),
                             subtitle = stringResource(Res.string.profile_delivery_saved_addresses_subtitle),
                             onClick = onOpenSavedAddresses,
+                        )
+                    },
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ProfileSection(
+                    title = stringResource(Res.string.profile_rewards_section),
+                    content = {
+                        ProfileMenuItem(
+                            icon = Icons.Default.CardGiftcard,
+                            title = stringResource(Res.string.profile_hub_refer_earn),
+                            subtitle = stringResource(Res.string.profile_hub_refer_earn_subtitle),
+                            onClick = onOpenReferEarn,
                         )
                     },
                 )

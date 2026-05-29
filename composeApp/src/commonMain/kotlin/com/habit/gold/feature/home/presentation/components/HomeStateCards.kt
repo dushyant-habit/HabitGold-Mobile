@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Visibility
@@ -68,7 +69,6 @@ import com.habit.gold.feature.home.presentation.formatGoldBalance
 import com.habit.gold.feature.home.presentation.formatInr
 import com.habit.gold.feature.home.presentation.formatProfitLabel
 import habitgoldmobile.composeapp.generated.resources.Res
-import habitgoldmobile.composeapp.generated.resources.buy_gold_screen_buy_gold
 import habitgoldmobile.composeapp.generated.resources.common_current_value
 import habitgoldmobile.composeapp.generated.resources.common_gold_unit_short
 import habitgoldmobile.composeapp.generated.resources.common_invested_value
@@ -78,6 +78,7 @@ import habitgoldmobile.composeapp.generated.resources.common_view_details
 import habitgoldmobile.composeapp.generated.resources.home_screen_force_update_fallback_title
 import habitgoldmobile.composeapp.generated.resources.home_screen_loading_summary
 import habitgoldmobile.composeapp.generated.resources.home_screen_retry_cta
+import habitgoldmobile.composeapp.generated.resources.home_screen_save_once
 import habitgoldmobile.composeapp.generated.resources.home_screen_start_your_gold_journey
 import habitgoldmobile.composeapp.generated.resources.home_screen_total_gold_balance
 import habitgoldmobile.composeapp.generated.resources.home_screen_update_now_cta
@@ -562,6 +563,26 @@ internal fun HomeBalanceCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                Button(
+                    onClick = onSellGoldClick,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(46.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = HomeWhite,
+                    ),
+                    border = BorderStroke(1.dp, HomeWhite),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    ) {
+                    Text(
+                        text = stringResource(Res.string.sell_gold_screen_sell_gold).uppercase(),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        fontSize = 13.sp,
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -581,36 +602,16 @@ internal fun HomeBalanceCard(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
                             tint = HomePrimary,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(18.dp),
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = stringResource(Res.string.buy_gold_screen_buy_gold).uppercase(),
+                            text = stringResource(Res.string.home_screen_save_once).uppercase(),
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             fontSize = 13.sp,
                             color = HomePrimary,
                         )
                     }
-                }
-
-                Button(
-                    onClick = onSellGoldClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(46.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = HomeWhite,
-                    ),
-                    border = BorderStroke(1.dp, HomeWhite),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(0.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.sell_gold_screen_sell_gold).uppercase(),
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        fontSize = 13.sp,
-                    )
                 }
             }
         }

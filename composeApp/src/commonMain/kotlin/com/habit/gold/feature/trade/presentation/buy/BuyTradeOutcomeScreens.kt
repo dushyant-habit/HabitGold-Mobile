@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
@@ -37,9 +38,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,6 +59,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.habit.gold.feature.trade.domain.model.TradeBuyOrder
 import com.habit.gold.feature.trade.domain.model.TradePollingSnapshot
+import com.habit.gold.feature.trade.presentation.formatCountdownWithUnit
 import com.habit.gold.feature.trade.presentation.formatMoney
 import com.habit.gold.feature.trade.presentation.formatPercent
 import com.habit.gold.feature.trade.presentation.roundToMoney
@@ -113,6 +118,16 @@ internal fun BuyTradeProcessingScreen(
             remainingSeconds -= 1
         }
     }
+    val progress by animateFloatAsState(
+        targetValue = if (BuyPollingWindowSeconds > 0) {
+            remainingSeconds / BuyPollingWindowSeconds.toFloat()
+        } else {
+            0f
+        },
+        animationSpec = tween(durationMillis = 350),
+        label = "buy-polling-progress",
+    )
+    val clampedProgress = progress.coerceIn(0f, 1f)
 
     Column(
         modifier = modifier
@@ -131,28 +146,39 @@ internal fun BuyTradeProcessingScreen(
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "${remainingSeconds}s",
-                fontSize = 28.sp,
+                text = formatCountdownWithUnit(remainingSeconds),
+                fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = BuyPrimary,
             )
-            Surface(
+            BoxWithConstraints(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(10.dp),
-                shape = RoundedCornerShape(999.dp),
-                color = BuyPrimary.copy(alpha = 0.12f),
+                    .fillMaxWidth(0.72f)
+                    .height(12.dp),
             ) {
+                val animatedWidth by animateDpAsState(
+                    targetValue = maxWidth * clampedProgress,
+                    animationSpec = tween(durationMillis = 350),
+                    label = "buy-polling-width",
+                )
                 Box(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .fillMaxHeight()
-                        .fillMaxWidth(if (BuyPollingWindowSeconds > 0) remainingSeconds / BuyPollingWindowSeconds.toFloat() else 0f)
                         .clip(RoundedCornerShape(999.dp))
-                        .background(BuyPrimary),
-                )
+                        .background(BuyPrimary.copy(alpha = 0.12f)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(animatedWidth)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(BuyPrimary),
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.height(40.dp))
@@ -165,7 +191,7 @@ internal fun BuyTradeProcessingScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = stringResource(Res.string.trade_buy_processing_purchase_body),
+            text = stringResource(Res.string.trade_buy_processing_purchase_body, BuyPollingWindowSeconds),
             fontSize = 15.sp,
             lineHeight = 22.sp,
             color = BuySlate500,

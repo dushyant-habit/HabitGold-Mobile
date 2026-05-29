@@ -246,6 +246,7 @@ internal fun RewardsBoosterCard(
     onBuyNowClick: () -> Unit,
     onInviteClick: () -> Unit,
     onStartSipClick: () -> Unit,
+    onBoosterInfoClick: () -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val daysLeft = ui.daysLeft
@@ -298,7 +299,9 @@ internal fun RewardsBoosterCard(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = Slate500,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable(onClick = onBoosterInfoClick),
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -616,24 +619,11 @@ internal fun RewardsEarningsCalculator(
                 }
             }
 
-            Slider(
+            RewardsCalculatorSlider(
                 value = annualSpend,
                 onValueChange = { annualSpend = it.coerceAtMost(maxPurchaseAmount) },
                 valueRange = REFER_EARN_CALCULATOR_MIN_PURCHASE..maxPurchaseAmount,
                 enabled = maxPurchaseAmount > REFER_EARN_CALCULATOR_MIN_PURCHASE,
-                colors = SliderDefaults.colors(
-                    thumbColor = White,
-                    activeTrackColor = Purple700,
-                    inactiveTrackColor = Slate100,
-                ),
-                thumb = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(Purple700, CircleShape)
-                            .border(3.dp, White, CircleShape),
-                    )
-                },
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -668,26 +658,68 @@ internal fun RewardsEarningsCalculator(
                 }
             }
 
-            Slider(
+            RewardsCalculatorSlider(
                 value = friendsReferred,
                 onValueChange = { friendsReferred = it.roundToInt().toFloat() },
                 valueRange = 1f..REFER_EARN_CALCULATOR_MAX_FRIENDS,
-                colors = SliderDefaults.colors(
-                    thumbColor = White,
-                    activeTrackColor = Purple700,
-                    inactiveTrackColor = Slate100,
-                ),
-                thumb = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(White, CircleShape)
-                            .border(3.dp, Purple700, CircleShape),
-                    )
-                },
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RewardsCalculatorSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
+    enabled: Boolean = true,
+) {
+    Slider(
+        value = value.coerceIn(valueRange.start, valueRange.endInclusive),
+        onValueChange = onValueChange,
+        valueRange = valueRange,
+        enabled = enabled,
+        colors = SliderDefaults.colors(
+            thumbColor = Purple700,
+            activeTrackColor = Purple700,
+            inactiveTrackColor = Slate100,
+            disabledThumbColor = Purple700.copy(alpha = 0.45f),
+            disabledActiveTrackColor = Purple700.copy(alpha = 0.35f),
+            disabledInactiveTrackColor = Slate100,
+        ),
+        thumb = {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(Purple700, CircleShape)
+                    .border(2.dp, White, CircleShape),
+            )
+        },
+        track = { sliderState ->
+            val fraction = if (sliderState.valueRange.endInclusive > sliderState.valueRange.start) {
+                (sliderState.value - sliderState.valueRange.start) /
+                    (sliderState.valueRange.endInclusive - sliderState.valueRange.start)
+            } else {
+                0f
+            }.coerceIn(0f, 1f)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Slate100),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction)
+                        .height(6.dp)
+                        .background(if (enabled) Purple700 else Purple700.copy(alpha = 0.35f)),
+                )
+            }
+        },
+    )
 }
 
 @Composable

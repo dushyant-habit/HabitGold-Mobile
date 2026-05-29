@@ -60,6 +60,7 @@ import com.habit.gold.feature.alerts.presentation.AlertsRouteDependencies
 import com.habit.gold.feature.history.presentation.HistoryRoute
 import com.habit.gold.feature.history.presentation.HistoryRouteDependencies
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
+import com.habit.gold.feature.home.presentation.HomeDestination
 import com.habit.gold.feature.home.domain.usecase.LoadHomeSummaryUseCase
 import com.habit.gold.feature.home.presentation.HomeRouteDependencies
 import com.habit.gold.feature.home.presentation.HomeRoute
@@ -78,6 +79,7 @@ import com.habit.gold.feature.rewards.domain.usecase.GetRewardsHistoryUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsMilestonesUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetRewardsUserFeaturesUseCase
 import com.habit.gold.feature.rewards.domain.usecase.GetReferDetailsUseCase
+import com.habit.gold.feature.rewards.presentation.RewardsEntryPoint
 import com.habit.gold.feature.rewards.presentation.RewardsRoute
 import com.habit.gold.feature.rewards.presentation.RewardsRouteDependencies
 import com.habit.gold.feature.savings.domain.usecase.CancelSavingsMandateUseCase
@@ -147,6 +149,8 @@ fun AppMainShellScreen(
     modifier: Modifier = Modifier,
 ) {
     var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
+    var rewardsEntryPoint by rememberSaveable { mutableStateOf(RewardsEntryPoint.Home) }
+    var lastHomeDestination by remember { mutableStateOf<HomeDestination>(HomeDestination.Dashboard) }
     var activeOverlayDestination by remember { mutableStateOf<MainShellOverlayDestination?>(null) }
     val biometricAuthenticator = rememberProfileBiometricAuthenticator()
     val biometricSecurityStore = remember(appKoin) { ProfileSecurityStore(appKoin.get<SecureStorage>()) }
@@ -166,6 +170,10 @@ fun AppMainShellScreen(
     var shouldRearmBiometricOnForeground by rememberSaveable { mutableStateOf(false) }
     var showBiometricUnlockOverlay by remember { mutableStateOf(false) }
     val biometricPromptInFlightState by rememberUpdatedState(biometricPromptInFlight)
+    fun openRewards(entryPoint: RewardsEntryPoint) {
+        rewardsEntryPoint = entryPoint
+        onSelectTab(MainTab.Rewards)
+    }
     PlatformBackHandler(
         enabled = activeOverlayDestination == null && selectedTab != MainTab.Home,
         onBack = { onSelectTab(MainTab.Home) },
@@ -281,6 +289,9 @@ fun AppMainShellScreen(
     LaunchedEffect(selectedTab) {
         if (selectedTab != MainTab.Home) {
             shouldShowBottomBar = true
+        }
+        if (selectedTab != MainTab.Rewards) {
+            rewardsEntryPoint = RewardsEntryPoint.Home
         }
     }
 
@@ -413,13 +424,18 @@ fun AppMainShellScreen(
                         savingsDependencies = savingsDependencies,
                         tradeDependencies = tradeDependencies,
                         session = session,
+                        initialDestination = lastHomeDestination,
                         onSelectTab = onSelectTab,
+                        onOpenReferEarn = { openRewards(RewardsEntryPoint.ReferDetail) },
                         onOpenTransactionDetails = { transactionId ->
                             activeOverlayDestination =
                                 MainShellOverlayDestination.TransactionDetails(transactionId)
                         },
                         onBottomBarVisibilityChange = { visible ->
                             shouldShowBottomBar = visible
+                        },
+                        onDestinationChange = { nextDestination ->
+                            lastHomeDestination = nextDestination
                         },
                         onBiometricStateChanged = { enabled ->
                             biometricScope.launch {
@@ -435,6 +451,10 @@ fun AppMainShellScreen(
                         dependencies = rewardsDependencies,
                         onBottomBarVisibilityChange = { visible ->
                             shouldShowBottomBar = visible
+                        },
+                        entryPoint = rewardsEntryPoint,
+                        onExitRequested = {
+                            onSelectTab(MainTab.Home)
                         },
                         modifier = Modifier.fillMaxSize(),
                     )

@@ -8,7 +8,7 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.view.WindowCompat
+import androidx.activity.SystemBarStyle
 import androidx.fragment.app.FragmentActivity
 import com.habit.gold.core.di.startKoinIfNeeded
 import com.habit.gold.core.platform.PlatformBridgeStore
@@ -35,10 +35,13 @@ class MainActivity : FragmentActivity(), EmbeddedJuspayCheckoutHost {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_HabitGold)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(
+                scrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT,
+            ),
+        )
         super.onCreate(savedInstanceState)
-        window.statusBarColor = Color.TRANSPARENT
-        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
         initializePlatformStorage(applicationContext)
         startKoinIfNeeded()
         embeddedJuspayCoordinator = EmbeddedJuspayCheckoutCoordinator(this)

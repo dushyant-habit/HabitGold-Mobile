@@ -23,6 +23,10 @@ internal fun formatCountdown(remainingSeconds: Int): String {
     return minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0')
 }
 
+internal fun formatCountdownWithUnit(remainingSeconds: Int): String {
+    return "${formatCountdown(remainingSeconds)} sec"
+}
+
 internal fun sanitizeGramInput(raw: String, fractionDigits: Int): String {
     val filtered = raw.filter { it.isDigit() || it == '.' }
     val firstDotIndex = filtered.indexOf('.')

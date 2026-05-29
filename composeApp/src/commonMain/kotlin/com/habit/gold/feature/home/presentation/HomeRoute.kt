@@ -44,17 +44,20 @@ data class HomeRouteDependencies(
 )
 
 @Composable
-fun HomeRoute(
+internal fun HomeRoute(
     dependencies: HomeRouteDependencies,
     alertsDependencies: AlertsRouteDependencies,
     profileDependencies: ProfileRouteDependencies,
     savingsDependencies: SavingsRouteDependencies,
     tradeDependencies: TradeRouteDependencies,
     session: AuthSession,
+    initialDestination: HomeDestination = HomeDestination.Dashboard,
     onSelectTab: (MainTab) -> Unit,
+    onOpenReferEarn: () -> Unit,
     onOpenTransactionDetails: (String) -> Unit,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
     onDashboardVisibilityChange: (Boolean) -> Unit = {},
+    onDestinationChange: (HomeDestination) -> Unit = {},
     onBiometricStateChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -65,7 +68,7 @@ fun HomeRoute(
         )
     }
     val uiState = homeViewModel.state.collectAsStateWithLifecycle()
-    var destination by remember { mutableStateOf<HomeDestination>(HomeDestination.Dashboard) }
+    var destination by remember { mutableStateOf<HomeDestination>(initialDestination) }
     var hasPendingMutationRefresh by remember { mutableStateOf(false) }
 
     fun returnToDestination(next: HomeDestination) {
@@ -81,6 +84,7 @@ fun HomeRoute(
     }
 
     LaunchedEffect(destination) {
+        onDestinationChange(destination)
         onBottomBarVisibilityChange(destination is HomeDestination.Dashboard)
         onDashboardVisibilityChange(destination is HomeDestination.Dashboard)
         if (destination is HomeDestination.Dashboard) {
@@ -192,6 +196,7 @@ fun HomeRoute(
                     ),
                 )
             },
+            onOpenReferEarn = onOpenReferEarn,
             onBiometricStateChanged = onBiometricStateChanged,
             onOpenDelivery = { deliveryDestination ->
                 destination = HomeDestination.Delivery(

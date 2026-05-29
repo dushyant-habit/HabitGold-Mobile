@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -17,9 +20,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.habit.gold.core.designsystem.HabitGoldPullToRefreshIndicator
 import com.habit.gold.core.session.AuthSession
 import com.habit.gold.feature.home.domain.model.HomeSipMandate
 import com.habit.gold.feature.home.domain.usecase.GetHomePriceHistoryUseCase
@@ -40,6 +45,7 @@ import com.habit.gold.feature.home.presentation.components.RecentActivitySection
 
 private val HomeBackground = Color(0xFFF8F8FB)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     session: AuthSession,
@@ -62,6 +68,7 @@ fun HomeScreen(
     val summary = uiState.summary
     val dashboard = summary?.dashboard
     val listState = rememberLazyListState()
+    val pullToRefreshState = rememberPullToRefreshState()
     var isBalanceExpanded by rememberSaveable { mutableStateOf(false) }
     var activeSheet by remember { mutableStateOf<HomeBottomSheetState?>(null) }
 
@@ -89,127 +96,148 @@ fun HomeScreen(
                 onOpenGoldPrice = { activeSheet = HomeBottomSheetState.GoldPrice },
             )
 
-            LazyColumn(
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
+                state = pullToRefreshState,
                 modifier = Modifier.fillMaxSize(),
-                state = listState,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                indicator = {
+                    HabitGoldPullToRefreshIndicator(
+                        isRefreshing = uiState.isRefreshing,
+                        state = pullToRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                },
             ) {
-                summary?.forceUpdate?.let { update ->
-                    item("force-update") {
-                        HomeForceUpdateCard(update = update)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    summary?.forceUpdate?.let { update ->
+                        item("force-update") {
+                            HomeForceUpdateCard(update = update)
+                        }
                     }
-                }
 
-                when {
-                    uiState.isLoading && summary == null -> {
-                        item("loading") {
-                            Box(modifier = Modifier.padding(top = 16.dp)) {
-                                HomeLoadingCard()
+                    when {
+                        uiState.isLoading && summary == null -> {
+                            item("loading") {
+                                Box(modifier = Modifier.padding(top = 16.dp)) {
+                                    HomeLoadingCard()
+                                }
                             }
                         }
-                    }
 
-                    summary == null && !uiState.errorMessage.isNullOrBlank() -> {
-                        item("error") {
-                            HomeErrorCard(
-                                errorMessage = uiState.errorMessage,
-                                onRetry = onRefresh,
-                            )
-                        }
-                    }
-
-                    dashboard != null && dashboard.totalGoldBalanceGrams <= 0.0 -> {
-                        item("zero-balance") {
-                            HomeZeroBalanceSection(
-                                onStartJourneyClick = onOpenBuyGold,
-                            )
-                        }
-                        item("trust-highlights") {
-                            HomeTrustHighlightsSection(
-                                onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
-                            )
-                        }
-                        item("gold-savings") {
-                            GoldSavingsPlansCard(
-                                mandates = summary.sipMandates,
-                                onOpenSavingsScreen = onOpenSavingsSetup,
-                            )
-                        }
-                        item("recent-activity") {
-                            RecentActivitySection(
-                                items = summary.recentTransactions,
-                                onOpenTransaction = onOpenTransaction,
-                                onViewAllClick = onOpenAllTransactions,
-                            )
-                        }
-                        item("why-habitgold") {
-                            HomeWhyHabitGoldSection(
-                                onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
-                            )
-                        }
-                        item("home-support-footer") {
-                            HomeSupportFooter(
-                                onSupportClick = onOpenSupport,
-                            )
-                        }
-                    }
-
-                    dashboard != null -> {
-                        item("balance-card") {
-                            Box(modifier = Modifier.padding(top = 16.dp)) {
-                                HomeBalanceCard(
-                                    dashboard = dashboard,
-                                    dashboardError = uiState.errorMessage,
-                                    isBalanceVisible = uiState.isBalanceVisible,
-                                    isBalanceExpanded = isBalanceExpanded,
-                                    onToggleBalanceVisible = onToggleBalanceVisibility,
-                                    onToggleBalanceExpanded = { isBalanceExpanded = !isBalanceExpanded },
-                                    onViewDetailsClick = onOpenGoldValueDetails,
-                                    onBuyGoldClick = onOpenBuyGold,
-                                    onSellGoldClick = onOpenSellGold,
+                        summary == null && !uiState.errorMessage.isNullOrBlank() -> {
+                            item("error") {
+                                HomeErrorCard(
+                                    errorMessage = uiState.errorMessage,
+                                    onRetry = onRefresh,
                                 )
                             }
                         }
-                        item("trust-highlights") {
-                            HomeTrustHighlightsSection(
-                                onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
-                            )
-                        }
-                        item("gold-savings") {
-                            GoldSavingsPlansCard(
-                                mandates = summary.sipMandates,
-                                onOpenSavingsScreen = onOpenSavingsSetup,
-                            )
-                        }
-                        if (summary.sipMandates.isNotEmpty()) {
-                            item("sip-mandates") {
-                                HomeSipMandatesSection(
+
+                        dashboard != null && dashboard.totalGoldBalanceGrams <= 0.0 -> {
+                            item("zero-balance") {
+                                HomeZeroBalanceSection(
+                                    onStartJourneyClick = onOpenBuyGold,
+                                )
+                            }
+                            item("trust-highlights") {
+                                HomeTrustHighlightsSection(
+                                    onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
+                                )
+                            }
+                            item("gold-savings") {
+                                GoldSavingsPlansCard(
                                     mandates = summary.sipMandates,
+                                    onOpenSavingsScreen = onOpenSavingsSetup,
+                                )
+                            }
+                            if (summary.sipMandates.isNotEmpty()) {
+                                item("sip-mandates") {
+                                    HomeSipMandatesSection(
+                                        mandates = summary.sipMandates,
+                                    )
+                                }
+                            }
+                            item("recent-activity") {
+                                RecentActivitySection(
+                                    items = summary.recentTransactions,
+                                    onOpenTransaction = onOpenTransaction,
+                                    onViewAllClick = onOpenAllTransactions,
+                                )
+                            }
+                            item("why-habitgold") {
+                                HomeWhyHabitGoldSection(
+                                    onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
+                                )
+                            }
+                            item("home-support-footer") {
+                                HomeSupportFooter(
+                                    onSupportClick = onOpenSupport,
                                 )
                             }
                         }
-                        item("recent-activity") {
-                            RecentActivitySection(
-                                items = summary.recentTransactions,
-                                onOpenTransaction = onOpenTransaction,
-                                onViewAllClick = onOpenAllTransactions,
-                            )
-                        }
-                        item("why-habitgold") {
-                            HomeWhyHabitGoldSection(
-                                onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
-                            )
-                        }
-                        item("home-support-footer") {
-                            HomeSupportFooter(
-                                onSupportClick = onOpenSupport,
-                            )
+
+                        dashboard != null -> {
+                            item("balance-card") {
+                                Box(modifier = Modifier.padding(top = 16.dp)) {
+                                    HomeBalanceCard(
+                                        dashboard = dashboard,
+                                        dashboardError = uiState.errorMessage,
+                                        isBalanceVisible = uiState.isBalanceVisible,
+                                        isBalanceExpanded = isBalanceExpanded,
+                                        onToggleBalanceVisible = onToggleBalanceVisibility,
+                                        onToggleBalanceExpanded = { isBalanceExpanded = !isBalanceExpanded },
+                                        onViewDetailsClick = onOpenGoldValueDetails,
+                                        onBuyGoldClick = onOpenBuyGold,
+                                        onSellGoldClick = onOpenSellGold,
+                                    )
+                                }
+                            }
+                            item("trust-highlights") {
+                                HomeTrustHighlightsSection(
+                                    onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
+                                )
+                            }
+                            item("gold-savings") {
+                                GoldSavingsPlansCard(
+                                    mandates = summary.sipMandates,
+                                    onOpenSavingsScreen = onOpenSavingsSetup,
+                                )
+                            }
+                            if (summary.sipMandates.isNotEmpty()) {
+                                item("sip-mandates") {
+                                    HomeSipMandatesSection(
+                                        mandates = summary.sipMandates,
+                                    )
+                                }
+                            }
+                            item("recent-activity") {
+                                RecentActivitySection(
+                                    items = summary.recentTransactions,
+                                    onOpenTransaction = onOpenTransaction,
+                                    onViewAllClick = onOpenAllTransactions,
+                                )
+                            }
+                            item("why-habitgold") {
+                                HomeWhyHabitGoldSection(
+                                    onOpenIntroSheet = { activeSheet = HomeBottomSheetState.IntroPager(it) },
+                                )
+                            }
+                            item("home-support-footer") {
+                                HomeSupportFooter(
+                                    onSupportClick = onOpenSupport,
+                                )
+                            }
                         }
                     }
-                }
 
-                item("home-bottom-spacer") {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    item("home-bottom-spacer") {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
         }

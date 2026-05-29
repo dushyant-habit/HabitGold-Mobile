@@ -33,6 +33,18 @@ final class HabitGoldRootViewController: UIViewController, UIGestureRecognizerDe
         juspayCoordinator.prepareIfNeeded()
     }
 
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        .portrait
+    }
+
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        .portrait
+    }
+
+    override var shouldAutorotate: Bool {
+        false
+    }
+
     deinit {
         juspayCoordinator.invalidate()
     }
