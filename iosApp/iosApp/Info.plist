@@ -8,12 +8,6 @@
 	<string>$(APP_ENV)</string>
 	<key>APP_NAME</key>
 	<string>$(APP_NAME)</string>
-	<key>CFBundleDisplayName</key>
-	<string>$(APP_NAME)</string>
-	<key>CLARITY_PROJECT_ID</key>
-	<string>$(CLARITY_PROJECT_ID)</string>
-	<key>ENABLE_CLARITY</key>
-	<string>$(ENABLE_CLARITY)</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleURLTypes</key>
@@ -27,6 +21,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>CLARITY_PROJECT_ID</key>
+	<string>$(CLARITY_PROJECT_ID)</string>
+	<key>ENABLE_CLARITY</key>
+	<string>$(ENABLE_CLARITY)</string>
 	<key>ENABLE_NETWORK_LOGS</key>
 	<string>$(ENABLE_NETWORK_LOGS)</string>
 	<key>JUSPAY_CLIENT_ID</key>
@@ -41,8 +39,8 @@
 	<string>$(JUSPAY_ROUTING_ID)</string>
 	<key>JUSPAY_SDK_VERSION</key>
 	<string>$(JUSPAY_SDK_VERSION)</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>HabitGold uses Face ID to securely unlock your account when biometric protection is enabled.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>credpay</string>
@@ -77,7 +75,15 @@
 		<string>scapia</string>
 		<string>salaryse</string>
 	</array>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<key>UILaunchScreen</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>

@@ -10,6 +10,13 @@ import UserNotifications
 final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     func application(
         _ application: UIApplication,
+        supportedInterfaceOrientationsFor window: UIWindow?
+    ) -> UIInterfaceOrientationMask {
+        .portrait
+    }
+
+    func application(
+        _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         IosRuntimeBootstrap.configureFirebaseIfAvailable()
@@ -88,7 +95,6 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
     ) {
         let apnsToken = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         Messaging.messaging().apnsToken = deviceToken
-        Crashlytics.crashlytics().setCustomValue(apnsToken, forKey: "apns_device_token")
         Messaging.messaging().token { token, error in
             if let error {
                 Crashlytics.crashlytics().record(error: error)
@@ -100,10 +106,9 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
                 return
             }
             IosPlatformRuntimeBridge.shared.registerCurrentFcmToken(token: token)
-            Crashlytics.crashlytics().setCustomValue(token, forKey: "fcm_device_token")
-            NSLog("FCM token fetched successfully after APNs registration.")
+            NSLog("FCM token fetched successfully after APNs registration: %@", token)
         }
-        NSLog("APNs token registered successfully.")
+        NSLog("APNs token registered successfully: %@", apnsToken)
     }
 
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
@@ -112,8 +117,7 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
             return
         }
         IosPlatformRuntimeBridge.shared.registerCurrentFcmToken(token: fcmToken)
-        Crashlytics.crashlytics().setCustomValue(fcmToken, forKey: "fcm_device_token")
-        NSLog("Firebase Messaging registration token received successfully.")
+        NSLog("Firebase Messaging registration token received successfully: %@", fcmToken)
     }
 
     func application(

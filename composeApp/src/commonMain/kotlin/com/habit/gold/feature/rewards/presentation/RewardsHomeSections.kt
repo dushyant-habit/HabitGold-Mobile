@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -34,11 +37,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.HabitGoldPullToRefreshIndicator
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_retry
 import habitgoldmobile.composeapp.generated.resources.rewards_home_error
 import org.jetbrains.compose.resources.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RewardsHomeContent(
     state: RewardsHomeState,
@@ -57,6 +62,7 @@ fun RewardsHomeContent(
             modifier = modifier,
         )
         else -> {
+            val pullToRefreshState = rememberPullToRefreshState()
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -70,24 +76,44 @@ fun RewardsHomeContent(
                 ) {
                     RewardsHomeTopBar(onRewardsHistoryClick = onHistoryClick)
                 }
-                Column(
+                Box(
                     modifier = Modifier
                         .weight(1f)
-                        .verticalScroll(rememberScrollState()),
+                        .fillMaxWidth(),
                 ) {
-                    RewardsHomeJourneySections(
-                        state = state,
-                        onReferDetailClick = onReferDetailClick,
-                        onBuyGoldJourneyClick = onBuyGoldJourneyClick,
-                        onRedeemSwipe = onRedeemSwipe,
-                    )
-                    RewardsMilestoneSection(
-                        state = state,
-                        onReferDetailClick = onReferDetailClick,
-                        onBuyGoldJourneyClick = onBuyGoldJourneyClick,
-                    )
+                    PullToRefreshBox(
+                        isRefreshing = state.isRefreshing,
+                        onRefresh = onRefresh,
+                        state = pullToRefreshState,
+                        modifier = Modifier.fillMaxSize(),
+                        indicator = {
+                            HabitGoldPullToRefreshIndicator(
+                                isRefreshing = state.isRefreshing,
+                                state = pullToRefreshState,
+                                modifier = Modifier.align(Alignment.TopCenter),
+                            )
+                        },
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            RewardsHomeJourneySections(
+                                state = state,
+                                onReferDetailClick = onReferDetailClick,
+                                onBuyGoldJourneyClick = onBuyGoldJourneyClick,
+                                onRedeemSwipe = onRedeemSwipe,
+                            )
+                            RewardsMilestoneSection(
+                                state = state,
+                                onReferDetailClick = onReferDetailClick,
+                                onBuyGoldJourneyClick = onBuyGoldJourneyClick,
+                            )
 
-                    Spacer(modifier = Modifier.height(80.dp))
+                            Spacer(modifier = Modifier.height(80.dp))
+                        }
+                    }
                 }
             }
         }

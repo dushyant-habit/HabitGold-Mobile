@@ -393,6 +393,7 @@ private fun ExtraGoldRewardCard(
                 Text(
                     text = stringResource(Res.string.refer_earn_screen_unlock_extra_gold),
                     fontWeight = FontWeight.Black,
+                    color = Gold500,
                     fontSize = 15.sp,
                     letterSpacing = 0.2.sp,
                 )
@@ -400,6 +401,7 @@ private fun ExtraGoldRewardCard(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
+                    tint = Gold500,
                     modifier = Modifier.size(18.dp),
                 )
             }

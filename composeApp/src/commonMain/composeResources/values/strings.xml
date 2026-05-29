@@ -206,11 +206,11 @@ Invest in Gold</string>
     <string name="trade_buy_gst">GST</string>
     <string name="trade_buy_quantity">Quantity</string>
     <string name="trade_buy_total_payable">Total payable</string>
-    <string name="trade_buy_pay_now">Save Now</string>
+    <string name="trade_buy_pay_now">Buy Now</string>
     <string name="trade_buy_live_price_unavailable">Live price unavailable. Please wait a moment and try again.</string>
     <string name="trade_buy_latest_order_title">Latest trade status</string>
     <string name="trade_buy_processing_purchase_title">Processing Your Purchase</string>
-    <string name="trade_buy_processing_purchase_body">We are verifying your payment with the bank. This usually takes around 30 seconds.</string>
+    <string name="trade_buy_processing_purchase_body">We are verifying your payment with the bank. This usually takes around %1$d seconds.</string>
     <string name="trade_buy_processing_order_id_label">Order ID: </string>
     <string name="trade_buy_verifying_title">Verifying Payment</string>
     <string name="trade_buy_verifying_body">We are confirming your transaction status. Please do not close the app or go back.</string>
@@ -395,6 +395,7 @@ Invest in Gold</string>
     <string name="home_screen_active">Active</string>
     <string name="home_screen_paused">Paused</string>
     <string name="home_screen_buy_gold">Buy Gold</string>
+    <string name="home_screen_save_once">Save Once</string>
     <string name="home_screen_sell_gold">Sell Gold</string>
     <string name="home_screen_coin_delivery">Coin Delivery</string>
     <string name="home_screen_transaction_generic">Transaction</string>
@@ -582,6 +583,7 @@ Invest in Gold</string>
     <string name="profile_account_section">ACCOUNT</string>
     <string name="profile_phone_fallback">Phone number unavailable</string>
     <string name="profile_delivery_section">DELIVERY</string>
+    <string name="profile_rewards_section">REWARDS</string>
     <string name="profile_support_section">SUPPORT</string>
     <string name="profile_hub_account_details">Account Details</string>
     <string name="profile_hub_account_details_subtitle">Update email and profile details</string>
@@ -609,6 +611,8 @@ Invest in Gold</string>
     <string name="profile_delivery_saved_addresses_subtitle">Manage delivery locations</string>
     <string name="profile_hub_help_center">Help Center</string>
     <string name="profile_help_subtitle">FAQs and support tickets</string>
+    <string name="profile_hub_refer_earn">Refer &amp; Earn</string>
+    <string name="profile_hub_refer_earn_subtitle">Invite friends and unlock extra gold rewards</string>
     <string name="profile_hub_contact_us">Contact Us</string>
     <string name="profile_contact_subtitle">Reach out to our team</string>
     <string name="profile_contact_quick_support">Quick support</string>
@@ -824,6 +828,8 @@ Invest in Gold</string>
     <string name="refer_earn_screen_extra_cashback_after_you_finish_all_milestones">Extra cashback after you finish all milestones.</string>
     <string name="refer_earn_screen_booster_active">BOOSTER ACTIVE</string>
     <string name="refer_earn_screen_booster_inactive">BOOSTER INACTIVE</string>
+    <string name="refer_earn_screen_booster_active_toast">You are earning %1$s cashback on every gold purchase while your booster is active.</string>
+    <string name="refer_earn_screen_booster_inactive_toast">Finish all milestones to activate your booster cashback on every gold purchase.</string>
     <string name="refer_earn_screen_rewards">REWARDS</string>
     <string name="refer_earn_screen_days_left">DAYS LEFT</string>
     <string name="refer_earn_screen_extend_your_booster">EXTEND YOUR BOOSTER</string>

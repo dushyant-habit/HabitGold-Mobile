@@ -45,10 +45,17 @@ private sealed interface RewardsDestination {
     data class SavingsFlow(val destination: SavingsDestination) : RewardsDestination
 }
 
+enum class RewardsEntryPoint {
+    Home,
+    ReferDetail,
+}
+
 @Composable
 fun RewardsRoute(
     dependencies: RewardsRouteDependencies,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
+    entryPoint: RewardsEntryPoint = RewardsEntryPoint.Home,
+    onExitRequested: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val rewardsViewModel = viewModel {
@@ -71,8 +78,21 @@ fun RewardsRoute(
     val rewardsState by rewardsViewModel.state.collectAsStateWithLifecycle()
     val historyState by historyViewModel.state.collectAsStateWithLifecycle()
     val referDetailState by referDetailViewModel.state.collectAsStateWithLifecycle()
-    var destination by remember { mutableStateOf<RewardsDestination>(RewardsDestination.Home) }
+    var destination by remember(entryPoint) {
+        mutableStateOf<RewardsDestination>(
+            when (entryPoint) {
+                RewardsEntryPoint.Home -> RewardsDestination.Home
+                RewardsEntryPoint.ReferDetail -> RewardsDestination.ReferDetail
+            },
+        )
+    }
     var nestedReturnDestination by remember { mutableStateOf<RewardsDestination>(RewardsDestination.Home) }
+    val rootDestination = remember(entryPoint) {
+        when (entryPoint) {
+            RewardsEntryPoint.Home -> RewardsDestination.Home
+            RewardsEntryPoint.ReferDetail -> RewardsDestination.ReferDetail
+        }
+    }
 
     LaunchedEffect(Unit) {
         rewardsViewModel.onIntent(RewardsHomeIntent.Visible)
@@ -89,8 +109,11 @@ fun RewardsRoute(
         onBack = {
             val activeDestination = destination
             destination = when (activeDestination) {
-                RewardsDestination.History -> RewardsDestination.Home
-                RewardsDestination.ReferDetail -> RewardsDestination.Home
+                RewardsDestination.History -> rootDestination
+                RewardsDestination.ReferDetail -> {
+                    onExitRequested?.invoke()
+                    rootDestination
+                }
                 RewardsDestination.Redeem -> RewardsDestination.Home
                 is RewardsDestination.HelpCenter -> activeDestination.returnDestination
                 is RewardsDestination.ContactUs -> activeDestination.returnDestination
@@ -110,7 +133,7 @@ fun RewardsRoute(
             onBuyGoldJourneyClick = {
                 nestedReturnDestination = RewardsDestination.Home
                 destination = RewardsDestination.TradeFlow(
-                    TradeDestination.Buy(amount = "0.5", oneTimeUseGrams = true),
+                    TradeDestination.Buy(amount = "100", oneTimeUseGrams = false),
                 )
             },
             onRedeemSwipe = {
@@ -123,14 +146,20 @@ fun RewardsRoute(
         RewardsDestination.History -> RewardsHistoryScreen(
             state = historyState,
             onRefresh = historyViewModel::refresh,
-            onBackClick = { destination = RewardsDestination.Home },
+            onBackClick = { destination = rootDestination },
             modifier = modifier,
         )
 
         RewardsDestination.ReferDetail -> RewardsReferDetailScreen(
             state = referDetailState,
             onRefresh = referDetailViewModel::refresh,
-            onBackClick = { destination = RewardsDestination.Home },
+            onBackClick = {
+                if (entryPoint == RewardsEntryPoint.ReferDetail) {
+                    onExitRequested?.invoke()
+                } else {
+                    destination = RewardsDestination.Home
+                }
+            },
             onHistoryClick = { destination = RewardsDestination.History },
             onBuyNowClick = {
                 nestedReturnDestination = RewardsDestination.ReferDetail

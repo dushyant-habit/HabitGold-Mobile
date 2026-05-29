@@ -16,10 +16,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -27,26 +27,29 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.HabitGoldPullToRefreshIndicator
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_retry
+import habitgoldmobile.composeapp.generated.resources.ic_buy_gold_icon
 import habitgoldmobile.composeapp.generated.resources.rewards_flow_toolbar_rewards_history
 import habitgoldmobile.composeapp.generated.resources.rewards_history_screen_empty
 import habitgoldmobile.composeapp.generated.resources.rewards_history_screen_helper
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +60,8 @@ fun RewardsHistoryScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val pullToRefreshState = rememberPullToRefreshState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -83,6 +88,14 @@ fun RewardsHistoryScreen(
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = onRefresh,
+                state = pullToRefreshState,
+                indicator = {
+                    HabitGoldPullToRefreshIndicator(
+                        isRefreshing = state.isRefreshing,
+                        state = pullToRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
+                },
             ) {
                 when {
                     state.isLoading -> {
@@ -127,17 +140,6 @@ fun RewardsHistoryScreen(
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            if (state.isRefreshing) {
-                                item {
-                                    LinearProgressIndicator(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 8.dp),
-                                        color = Purple700,
-                                        trackColor = Slate200,
-                                    )
-                                }
-                            }
                             item {
                                 Text(
                                     text = stringResource(Res.string.rewards_history_screen_helper),
@@ -180,7 +182,7 @@ fun RewardsHistoryScreen(
 private fun RewardHistoryListRow(
     row: RewardHistoryRowUi,
 ) {
-    val (icon, iconTint, iconBg) = rewardHistoryVisuals(row)
+    val visuals = rewardHistoryVisuals(row)
     val amountColor = if (row.isCredit) Emerald600 else Red600
 
     Card(
@@ -197,19 +199,26 @@ private fun RewardHistoryListRow(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(iconBg),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = icon,
+            when {
+                visuals.drawable != null -> Image(
+                    painter = painterResource(visuals.drawable),
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(48.dp),
                 )
+                visuals.imageVector != null -> Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(visuals.background),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = visuals.imageVector,
+                        contentDescription = null,
+                        tint = visuals.tint,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             }
 
             Column(
@@ -269,13 +278,39 @@ private fun RewardHistoryListRow(
     }
 }
 
-private fun rewardHistoryVisuals(row: RewardHistoryRowUi): Triple<ImageVector, Color, Color> {
+private data class RewardHistoryVisuals(
+    val imageVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    val drawable: DrawableResource? = null,
+    val tint: Color,
+    val background: Color,
+)
+
+private fun rewardHistoryVisuals(row: RewardHistoryRowUi): RewardHistoryVisuals {
+    val isGoldPurchaseReward = row.sourceChip == "CASHBACK" || row.title.contains("Gold purchase", ignoreCase = true)
+    if (isGoldPurchaseReward) {
+        return RewardHistoryVisuals(
+            drawable = Res.drawable.ic_buy_gold_icon,
+            tint = Teal600,
+            background = Emerald50,
+        )
+    }
     if (!row.isCredit) {
-        return Triple(Icons.AutoMirrored.Filled.TrendingDown, Red600, Red50)
+        return RewardHistoryVisuals(
+            imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+            tint = Red600,
+            background = Red50,
+        )
     }
     return when (row.sourceChip) {
-        "MILESTONE" -> Triple(Icons.Default.Stars, Purple700, Purple100)
-        "CASHBACK" -> Triple(Icons.Default.ShoppingBag, Teal600, Emerald50)
-        else -> Triple(Icons.Default.CardGiftcard, Purple700, Purple100)
+        "MILESTONE" -> RewardHistoryVisuals(
+            imageVector = Icons.Default.Stars,
+            tint = Purple700,
+            background = Purple100,
+        )
+        else -> RewardHistoryVisuals(
+            imageVector = Icons.Default.CardGiftcard,
+            tint = Purple700,
+            background = Purple100,
+        )
     }
 }

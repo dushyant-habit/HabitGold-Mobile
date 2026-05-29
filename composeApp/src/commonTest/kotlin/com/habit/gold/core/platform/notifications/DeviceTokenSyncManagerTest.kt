@@ -122,7 +122,7 @@ class DeviceTokenSyncManagerTest {
     private fun testAppConfig() = AppConfig(
         appName = "HabitGold",
         bundleId = "com.habit.gold",
-        appVersion = "1.0.19",
+        appVersion = "1.0.20",
         appPlatform = "ios",
         environment = AppEnvironment.Staging,
         baseUrl = "https://staging.habitgold.com/v1/",

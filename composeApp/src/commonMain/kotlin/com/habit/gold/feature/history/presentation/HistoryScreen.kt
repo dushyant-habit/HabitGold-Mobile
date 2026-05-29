@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.HabitGoldPullToRefreshIndicator
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_remove_filter
@@ -263,6 +264,13 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White),
+            indicator = {
+                HabitGoldPullToRefreshIndicator(
+                    isRefreshing = state.isRefreshing,
+                    state = pullToRefreshState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            },
         ) {
             when {
                 state.isLoading && state.transactions.isEmpty() -> {
@@ -323,7 +331,7 @@ fun HistoryScreen(
                                 }
                             }
                         } else {
-                            item {
+                            /*item {
                                 Text(
                                     text = stringResource(Res.string.history_screen_recent_transactions),
                                     fontSize = 12.sp,
@@ -331,7 +339,7 @@ fun HistoryScreen(
                                     color = HistoryMutedText,
                                     modifier = Modifier.padding(bottom = 8.dp),
                                 )
-                            }
+                            }*/
 
                             items(
                                 items = state.visibleTransactions,

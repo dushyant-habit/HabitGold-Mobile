@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_code_copied
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_booster_active_toast
+import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_booster_inactive_toast
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_history
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_my_qr
 import habitgoldmobile.composeapp.generated.resources.refer_earn_screen_share_invite
@@ -66,6 +68,14 @@ fun RewardsReferDetailScreen(
     var showQrDialog by rememberSaveable { mutableStateOf(false) }
     val inviteMessage = remember(state.ui.referralCode) { referralInviteMessage(state.ui.referralCode) }
     val copiedMessage = stringResource(Res.string.refer_earn_screen_code_copied)
+    val boosterInfoMessage = if (state.ui.boosterIsActive) {
+        stringResource(
+            Res.string.refer_earn_screen_booster_active_toast,
+            state.ui.cashbackPercentLabel,
+        )
+    } else {
+        stringResource(Res.string.refer_earn_screen_booster_inactive_toast)
+    }
     val shareInvite: () -> Unit = {
         shareLauncher.launch(inviteMessage)
     }
@@ -195,6 +205,9 @@ fun RewardsReferDetailScreen(
                         onBuyNowClick = onBuyNowClick,
                         onInviteClick = shareInvite,
                         onStartSipClick = onStartSipClick,
+                        onBoosterInfoClick = {
+                            scope.launch { snackbarHostState.showSnackbar(boosterInfoMessage) }
+                        },
                     )
                 }
                 item {
