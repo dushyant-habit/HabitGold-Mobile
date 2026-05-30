@@ -1,6 +1,7 @@
 package com.habit.gold.core.di
 
 import com.habit.gold.PlatformInfo
+import com.habit.gold.app.AuthenticatedSessionResetManager
 import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.network.AuthTokenProvider
 import com.habit.gold.core.network.SessionExpiryHandler
@@ -40,6 +41,7 @@ fun coreModule(
     single { PlatformBridgeStore(get()) }
     single { SessionStore(get(), get(), get()) }
     single { DeviceTokenSyncManager(get(), get(), get(), get()) }
+    single { AuthenticatedSessionResetManager(get(), get(), get(), get(), get()) }
     single<AuthTokenProvider> {
         object : AuthTokenProvider {
             override fun getAccessToken(): String? = get<SessionStore>().state.value.accessToken
@@ -49,7 +51,7 @@ fun coreModule(
     single<SessionExpiryHandler> {
         object : SessionExpiryHandler {
             override suspend fun onSessionExpired() {
-                get<SessionStore>().clear()
+                get<AuthenticatedSessionResetManager>().reset()
             }
         }
     }

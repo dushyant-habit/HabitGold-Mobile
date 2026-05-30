@@ -11,6 +11,8 @@ data class DeliveryAddressState(
     val isLoadingAddresses: Boolean = false,
     val savedAddresses: List<SavedAddress> = emptyList(),
     val addressBeingEdited: SavedAddress? = null,
+    val defaultRecipientName: String = "",
+    val defaultRecipientPhone: String = "",
     
     // ── Pincode verification state (address form) ──────────────────────
     val postalLookupCity: String? = null,

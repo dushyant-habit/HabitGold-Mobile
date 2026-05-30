@@ -16,10 +16,11 @@ data class AlertsRouteDependencies(
 @Composable
 fun AlertsRoute(
     dependencies: AlertsRouteDependencies,
+    sessionResetKey: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel = viewModel {
+    val viewModel = viewModel(key = "alerts:$sessionResetKey") {
         AlertsViewModel(
             getAlertsUseCase = dependencies.getAlertsUseCase,
             markAllAlertsReadUseCase = dependencies.markAllAlertsReadUseCase,

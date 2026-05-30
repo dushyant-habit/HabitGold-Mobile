@@ -208,12 +208,17 @@ internal fun mapTradeTransaction(transaction: TradeTransactionPreview): HistoryT
         HistoryTransactionType.Sell, HistoryTransactionType.Delivery -> "-"
         else -> ""
     }
+    val amountPrefix = when (type) {
+        HistoryTransactionType.Buy -> "+"
+        HistoryTransactionType.Sell, HistoryTransactionType.Delivery -> "-"
+        else -> ""
+    }
 
     return HistoryTransactionItem(
         id = transaction.id,
         type = type,
         dateLabel = formatHistoryDateTime(transaction.createdAt),
-        amountLabel = "₹${normalizeMoneyDisplay(transaction.amount)}",
+        amountLabel = "$amountPrefix₹${normalizeMoneyDisplay(transaction.amount)}",
         weightLabel = "$weightPrefix${normalizeGoldDisplay(transaction.goldQuantity)} g",
         rawStatus = transaction.status,
         isSip = isSipTransaction,

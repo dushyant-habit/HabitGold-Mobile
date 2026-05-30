@@ -42,6 +42,7 @@ data class TradeRouteDependencies(
 @Composable
 fun TradeRoute(
     dependencies: TradeRouteDependencies,
+    sessionResetKey: String,
     destination: TradeDestination,
     onBackToHome: () -> Unit,
     onTradeMutation: () -> Unit = {},
@@ -76,6 +77,7 @@ fun TradeRoute(
         )
         is TradeDestination.Buy -> BuyTradeRouteController(
             dependencies = dependencies,
+            sessionResetKey = sessionResetKey,
             destination = destination,
             onBackToHome = onBackToHome,
             onTradeMutation = onTradeMutation,
@@ -86,6 +88,7 @@ fun TradeRoute(
         TradeDestination.Sell,
         is TradeDestination.SellPayout -> SellTradeRouteController(
             dependencies = dependencies,
+            sessionResetKey = sessionResetKey,
             destination = destination,
             onNavigate = onNavigate,
             onBackToHome = onBackToHome,

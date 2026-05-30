@@ -53,6 +53,7 @@ fun ProfileRoute(
     dependencies: ProfileRouteDependencies,
     destination: ProfileDestination,
     session: AuthSession,
+    sessionResetKey: String,
     onBackToHome: () -> Unit,
     onNavigate: (ProfileDestination) -> Unit,
     onOpenAutopay: () -> Unit,
@@ -63,7 +64,7 @@ fun ProfileRoute(
 ) {
     when (destination) {
         ProfileDestination.Hub -> {
-            val viewModel = viewModel {
+            val viewModel = viewModel(key = "profile:$sessionResetKey") {
                 ProfileViewModel(
                     initialSummary = session.toProfileSeedSummary(),
                     getProfileSummaryUseCase = dependencies.getProfileSummaryUseCase,
@@ -159,8 +160,8 @@ fun ProfileRoute(
                 },
                 onOpenAutopay = onOpenAutopay,
                 onOpenVpaList = { onNavigate(ProfileDestination.VpaList) },
-                onOpenTrackOrder = { onNavigate(ProfileDestination.TrackOrder) },
-                onOpenSavedAddresses = { onNavigate(ProfileDestination.SavedAddresses) },
+                onOpenTrackOrder = { onOpenDelivery(DeliveryDestination.Tracking) },
+                onOpenSavedAddresses = { onOpenDelivery(DeliveryDestination.AddressList) },
                 onOpenReferEarn = onOpenReferEarn,
                 onOpenHelpCenter = {
                     onNavigate(ProfileDestination.HelpCenter(returnDestination = ProfileDestination.Hub))

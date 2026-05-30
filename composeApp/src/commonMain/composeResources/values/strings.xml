@@ -143,7 +143,7 @@ Invest in Gold</string>
     <string name="auth_completing_sign_in_message">We&apos;re syncing your HabitGold session before handing you off to the main app.</string>
 
     <!-- Home: Shared Actions -->
-    <string name="buy_gold_screen_buy_gold">Buy Gold</string>
+    <string name="buy_gold_screen_buy_gold">Save One Time</string>
     <string name="sell_gold_screen_sell_gold">Sell Gold</string>
 
     <!-- Trade: Withdrawal Mode -->
@@ -409,6 +409,9 @@ Invest in Gold</string>
     <string name="home_screen_footer_badge_physical">100%&#10;Physical</string>
     <string name="home_screen_footer_badge_insured">100%&#10;Insured</string>
     <string name="home_screen_footer_badge_vault">Brink&apos;s&#10;Vault</string>
+    <string name="home_screen_footer_badge_physical_toast">Every purchase is backed by real 24K physical gold stored on your behalf.</string>
+    <string name="home_screen_footer_badge_insured_toast">Your stored gold is protected with 100% insurance against risks like theft or loss.</string>
+    <string name="home_screen_footer_badge_vault_toast">Your gold is stored in high-security Brink&apos;s vaults through our trusted partners.</string>
     <string name="home_screen_powered_by">POWERED BY</string>
 
     <!-- Home: Trust Highlights -->
@@ -544,7 +547,7 @@ Invest in Gold</string>
     <string name="savings_setup_secure_note">Your auto-invest mandate is secured through BHIM UPI autopay. You stay in control and can pause or cancel it later from Manage Autopay.</string>
     <string name="savings_setup_compounding_preview_intro">Your ₹%1$d %2$s will grow to</string>
     <string name="savings_setup_compounding_breakdown_title">Compounding breakdown</string>
-    <string name="savings_setup_compounding_breakdown_body">Estimated growth at ~12%% annual return on your ₹%1$d %2$s investment.</string>
+    <string name="savings_setup_compounding_breakdown_body">Estimated growth at ~12% annual return on your ₹%1$d %2$s investment.</string>
     <string name="savings_setup_compounding_total_invested">Total Invested (%1$dY)</string>
     <string name="savings_setup_compounding_estimated_earnings">Estimated Earnings</string>
     <string name="savings_setup_compounding_maturity_value">Maturity Value</string>

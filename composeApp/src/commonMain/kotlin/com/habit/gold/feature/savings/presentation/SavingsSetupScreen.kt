@@ -1,12 +1,5 @@
 package com.habit.gold.feature.savings.presentation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +27,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -88,7 +80,6 @@ import habitgoldmobile.composeapp.generated.resources.savings_setup_success_body
 import habitgoldmobile.composeapp.generated.resources.savings_setup_success_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalFocusManager
 import com.habit.gold.feature.trade.presentation.buy.BuySlate400
 import habitgoldmobile.composeapp.generated.resources.trade_buy_enter_amount
@@ -179,27 +170,7 @@ internal fun SavingsSetupScreen(
         calculateCompoundingSummary(monthlyInvestment)
     }
     val estimateAmount = remember(state.amountValue) { state.amountValue?.toDouble() ?: 0.0 }
-    val liveBuyPrice = livePriceState.price?.buy ?: 0.0
-    val projectionMessages = remember(state.amountValue, state.frequency, liveBuyPrice) {
-        projectionMessages(
-            amount = state.amountValue ?: 0,
-            goldPrice = liveBuyPrice,
-            frequency = state.frequency,
-        )
-    }
-    var projectionIndex by remember(projectionMessages) { mutableStateOf(0) }
-    val projectionText = projectionMessages.getOrNull(projectionIndex)
     val calendarMonth = remember { currentSavingsMonth() }
-
-    LaunchedEffect(projectionMessages) {
-        projectionIndex = 0
-        if (projectionMessages.size > 1) {
-            while (true) {
-                delay(2200)
-                projectionIndex = (projectionIndex + 1) % projectionMessages.size
-            }
-        }
-    }
 
     Scaffold(
         containerColor = Color.White,
@@ -226,7 +197,7 @@ internal fun SavingsSetupScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Help,
                             contentDescription = stringResource(Res.string.common_help),
-                            tint = HabitGoldPalette.plum,
+                            tint = BuySlate400,
                         )
                     }
                 },
@@ -287,12 +258,6 @@ internal fun SavingsSetupScreen(
                         enabled = state.canEditAmount,
                         onDone = { focusManager.clearFocus(force = true) },
                     )
-                    projectionText?.let { text ->
-                        SavingsProjectionRow(
-                            text = text,
-                            animationKey = projectionIndex,
-                        )
-                    }
                     if (!state.inlineErrorMessage.isNullOrBlank()) {
                         Text(
                             text = state.inlineErrorMessage,
@@ -323,7 +288,7 @@ internal fun SavingsSetupScreen(
                     onDone = { focusManager.clearFocus(force = true) },
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+//                Spacer(modifier = Modifier.height(8.dp))
 
                 compoundingSummary?.let { summary ->
                     SavingsCompoundingPreviewCard(
@@ -448,45 +413,6 @@ private fun SavingsHeroImage(
             .height(140.dp),
         contentScale = ContentScale.Crop,
     )
-}
-
-@Composable
-private fun SavingsProjectionRow(
-    text: String,
-    animationKey: Int,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-            contentDescription = null,
-            tint = HabitGoldPalette.plum,
-            modifier = Modifier.size(18.dp),
-        )
-        AnimatedContent(
-            targetState = animationKey,
-            transitionSpec = {
-                if (targetState > initialState) {
-                    (slideInVertically { height -> height } + fadeIn()) togetherWith
-                        (slideOutVertically { height -> -height } + fadeOut())
-                } else {
-                    (slideInVertically { height -> -height } + fadeIn()) togetherWith
-                        (slideOutVertically { height -> height } + fadeOut())
-                }.using(SizeTransform(clip = false))
-            },
-            label = "SavingsProjectionAnimation",
-        ) {
-            Text(
-                text = text,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = ChildMutedText,
-                lineHeight = 18.sp,
-            )
-        }
-    }
 }
 
 @Composable

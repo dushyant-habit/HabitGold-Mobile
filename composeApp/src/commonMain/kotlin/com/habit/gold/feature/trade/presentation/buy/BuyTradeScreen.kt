@@ -345,7 +345,7 @@ fun BuyTradeScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Help,
                             contentDescription = stringResource(Res.string.common_help),
-                            tint = BuyPrimary,
+                            tint = BuySlate400,
                             modifier = Modifier.size(24.dp),
                         )
                     }
