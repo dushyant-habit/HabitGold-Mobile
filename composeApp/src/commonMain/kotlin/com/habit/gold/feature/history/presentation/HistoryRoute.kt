@@ -14,10 +14,11 @@ data class HistoryRouteDependencies(
 @Composable
 fun HistoryRoute(
     dependencies: HistoryRouteDependencies,
+    sessionResetKey: String,
     onOpenTransactionDetails: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val historyViewModel = viewModel {
+    val historyViewModel = viewModel(key = "history:$sessionResetKey") {
         HistoryViewModel(
             getTradeTransactionsUseCase = dependencies.getTradeTransactionsUseCase,
         )

@@ -18,7 +18,6 @@ import com.habit.gold.core.localization.rememberAppStrings
 import com.habit.gold.core.navigation.AppRoute
 import com.habit.gold.core.platform.analytics.setPlatformScreenName
 import com.habit.gold.core.platform.PlatformBridgeStore
-import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.SessionStore
 import com.habit.gold.feature.auth.presentation.AuthFlowScreen
 import com.habit.gold.feature.auth.presentation.AuthFlowViewModel
@@ -44,7 +43,7 @@ fun AppRoot() {
                     AppRootViewModel(
                         sessionStore = sessionStore,
                         startupCoordinator = AppStartupCoordinator(),
-                        deviceTokenSyncManager = appKoin.get<DeviceTokenSyncManager>(),
+                        sessionResetManager = appKoin.get<AuthenticatedSessionResetManager>(),
                     )
                 }
                 LaunchedEffect(appRootViewModel) {

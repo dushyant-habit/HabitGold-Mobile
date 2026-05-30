@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.designsystem.theme.*
 import com.habit.gold.feature.delivery.domain.model.DeliveryOrderDto
 import com.habit.gold.feature.delivery.presentation.DeliveryTrackingIntent
@@ -62,6 +63,11 @@ fun DeliveryTrackingScreen(
     onBackClick: () -> Unit,
 ) {
     var expandedOrderId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    PlatformBackHandler(
+        enabled = true,
+        onBack = onBackClick,
+    )
 
     Scaffold(
         topBar = {

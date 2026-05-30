@@ -53,23 +53,24 @@ enum class RewardsEntryPoint {
 @Composable
 fun RewardsRoute(
     dependencies: RewardsRouteDependencies,
+    sessionResetKey: String,
     onBottomBarVisibilityChange: (Boolean) -> Unit,
     entryPoint: RewardsEntryPoint = RewardsEntryPoint.Home,
     onExitRequested: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val rewardsViewModel = viewModel {
+    val rewardsViewModel = viewModel(key = "rewards-home:$sessionResetKey") {
         RewardsViewModel(
             getRewardsMilestonesUseCase = dependencies.getRewardsMilestonesUseCase,
             getRewardsUserFeaturesUseCase = dependencies.getRewardsUserFeaturesUseCase,
         )
     }
-    val historyViewModel = viewModel {
+    val historyViewModel = viewModel(key = "rewards-history:$sessionResetKey") {
         RewardsHistoryViewModel(
             getRewardsHistoryUseCase = dependencies.getRewardsHistoryUseCase,
         )
     }
-    val referDetailViewModel = viewModel {
+    val referDetailViewModel = viewModel(key = "rewards-refer:$sessionResetKey") {
         RewardsReferDetailViewModel(
             getReferDetailsUseCase = dependencies.getReferDetailsUseCase,
         )
@@ -180,6 +181,7 @@ fun RewardsRoute(
         )
 
         RewardsDestination.Redeem -> RewardsRedeemRouteController(
+            sessionResetKey = sessionResetKey,
             rewardsState = rewardsState,
             tradeDependencies = dependencies.tradeDependencies,
             onBackClick = { destination = nestedReturnDestination },
@@ -211,6 +213,7 @@ fun RewardsRoute(
         is RewardsDestination.TradeFlow -> {
             TradeRoute(
                 dependencies = dependencies.tradeDependencies,
+                sessionResetKey = sessionResetKey,
                 destination = currentDestination.destination,
                 onBackToHome = { destination = nestedReturnDestination },
                 onNavigate = { nextTradeDestination ->
@@ -228,6 +231,7 @@ fun RewardsRoute(
         is RewardsDestination.SavingsFlow -> {
             SavingsRoute(
                 dependencies = dependencies.savingsDependencies,
+                sessionResetKey = sessionResetKey,
                 destination = currentDestination.destination,
                 onBackToHome = { destination = nestedReturnDestination },
                 onOpenHelp = {

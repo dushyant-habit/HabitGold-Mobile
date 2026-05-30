@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.SavedAddress
 import com.habit.gold.feature.delivery.domain.model.isPincodeServiceable
@@ -83,6 +84,12 @@ fun DeliveryAddressScreen(
 ) {
     var showDeleteConfirm by remember { mutableStateOf<SavedAddress?>(null) }
     val selectedAddress = state.savedAddresses.find { it.id == selectedAddressId }
+    val showSelectionControl = showCheckoutButton
+
+    PlatformBackHandler(
+        enabled = true,
+        onBack = onBackClick,
+    )
 
     Scaffold(
         topBar = {
@@ -204,6 +211,7 @@ fun DeliveryAddressScreen(
                         DeliveryAddressCard(
                             address = address,
                             isSelected = address.id == selectedAddressId,
+                            showSelectionControl = showSelectionControl,
                             onSelect = { onSelectAddress(address.id) },
                             onEdit = {
                                 onIntent(DeliveryAddressIntent.LoadAddressForEdit(address.id))

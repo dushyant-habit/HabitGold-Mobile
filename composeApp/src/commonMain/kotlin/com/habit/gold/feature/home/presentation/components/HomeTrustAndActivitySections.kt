@@ -433,7 +433,11 @@ private fun recentActivityConfigFor(item: HomeRecentTransactionPreview): RecentA
             isPending -> Slate900
             else -> Color(0xFF16A34A)
         },
-        amountPrefix = if (isFailure) "" else "+",
+        amountPrefix = when {
+            isFailure -> ""
+            isSell || isDelivery -> "-"
+            else -> "+"
+        },
     )
 }
 

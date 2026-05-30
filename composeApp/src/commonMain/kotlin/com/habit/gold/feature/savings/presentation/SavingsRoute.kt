@@ -35,6 +35,7 @@ data class SavingsRouteDependencies(
 @Composable
 fun SavingsRoute(
     dependencies: SavingsRouteDependencies,
+    sessionResetKey: String,
     destination: SavingsDestination,
     onBackToHome: () -> Unit,
     onSavingsMutation: () -> Unit = {},
@@ -43,7 +44,7 @@ fun SavingsRoute(
 ) {
     when (destination) {
         SavingsDestination.Manage -> {
-            val viewModel = viewModel {
+            val viewModel = viewModel(key = "savings-manage:$sessionResetKey") {
                 SavingsViewModel(
                     getSavingsMandatesUseCase = dependencies.getSavingsMandatesUseCase,
                     pauseSavingsMandateUseCase = dependencies.pauseSavingsMandateUseCase,
@@ -80,7 +81,7 @@ fun SavingsRoute(
         }
 
         is SavingsDestination.Setup -> {
-            val viewModel = viewModel {
+            val viewModel = viewModel(key = "savings-setup:$sessionResetKey") {
                 SavingsSetupViewModel(
                     createSavingsMandateSessionUseCase = dependencies.createSavingsMandateSessionUseCase,
                     updateSavingsMandateSessionUseCase = dependencies.updateSavingsMandateSessionUseCase,

@@ -398,7 +398,12 @@ internal fun HomeSipMandatesSection(
 }
 
 @Composable
-internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
+internal fun HomeSupportFooter(
+    onSupportClick: () -> Unit,
+    onPhysicalInfoClick: () -> Unit,
+    onInsuredInfoClick: () -> Unit,
+    onVaultInfoClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -519,9 +524,24 @@ internal fun HomeSupportFooter(onSupportClick: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                FooterBadge(Icons.Default.WorkspacePremium, stringResource(Res.string.home_screen_footer_badge_physical), Modifier.weight(1f))
-                FooterBadge(Icons.Default.Verified, stringResource(Res.string.home_screen_footer_badge_insured), Modifier.weight(1f))
-                FooterBadge(Icons.Default.AccountBalance, stringResource(Res.string.home_screen_footer_badge_vault), Modifier.weight(1f))
+                FooterBadge(
+                    icon = Icons.Default.WorkspacePremium,
+                    label = stringResource(Res.string.home_screen_footer_badge_physical),
+                    modifier = Modifier.weight(1f),
+                    onClick = onPhysicalInfoClick,
+                )
+                FooterBadge(
+                    icon = Icons.Default.Verified,
+                    label = stringResource(Res.string.home_screen_footer_badge_insured),
+                    modifier = Modifier.weight(1f),
+                    onClick = onInsuredInfoClick,
+                )
+                FooterBadge(
+                    icon = Icons.Default.AccountBalance,
+                    label = stringResource(Res.string.home_screen_footer_badge_vault),
+                    modifier = Modifier.weight(1f),
+                    onClick = onVaultInfoClick,
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -885,6 +905,7 @@ private fun FooterBadge(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -892,6 +913,7 @@ private fun FooterBadge(
             .clip(RoundedCornerShape(12.dp))
             .background(HomeWhite)
             .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
             .padding(vertical = 12.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
