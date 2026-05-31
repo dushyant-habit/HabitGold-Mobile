@@ -162,8 +162,8 @@ android {
         applicationId = androidAppId
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 22
-        versionName = "1.0.22"
+        versionCode = 23
+        versionName = "1.0.23"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "APP_NAME", "\"$appName\"")
         buildConfigField("String", "APP_ENV", "\"prod\"")

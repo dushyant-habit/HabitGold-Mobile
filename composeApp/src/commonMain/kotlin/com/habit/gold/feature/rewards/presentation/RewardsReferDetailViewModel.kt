@@ -79,7 +79,7 @@ internal fun mapReferDetailUi(dto: ReferDetails): RewardsReferDetailUi {
 
 internal fun referralInviteLink(referralCode: String): String {
     val normalizedCode = referralCode.trim().uppercase()
-    return "https://habitgold.com/?referralCode=$normalizedCode"
+    return "https://play.google.com/store/apps/details?id=com.habit.gold&referrer=referralCode%3D$normalizedCode"
 }
 
 internal fun referralInviteMessage(referralCode: String): String {

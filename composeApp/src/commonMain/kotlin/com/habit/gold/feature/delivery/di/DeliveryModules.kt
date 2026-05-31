@@ -1,5 +1,6 @@
 package com.habit.gold.feature.delivery.di
 
+import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.storage.createPlatformPreferencesStorage
 import com.habit.gold.feature.delivery.data.AddressRepositoryImpl
 import com.habit.gold.feature.delivery.data.DeliveryCheckoutTelemetry
@@ -36,7 +37,9 @@ val deliveryModule = module {
     single<AddressRepository> { AddressRepositoryImpl(get()) }
     single<PostalPincodeRepository> { PostalPincodeRepositoryImpl(get()) }
     single<PendingDeliveryCheckoutStore> { KeyValuePendingDeliveryCheckoutStore(createPlatformPreferencesStorage()) }
-    single<DeliveryCheckoutTelemetry> { PrintDeliveryCheckoutTelemetry() }
+    single<DeliveryCheckoutTelemetry> {
+        PrintDeliveryCheckoutTelemetry(enabled = get<AppConfig>().enableNetworkLogs)
+    }
 
     // --- Use cases ---
     single { GetDeliveryProductsUseCase(get()) }

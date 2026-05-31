@@ -49,7 +49,7 @@ import habitgoldmobile.composeapp.generated.resources.delivery_catalog_est_dispa
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_free_delivery
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_not_enough_gold
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_buy_more_prompt
-import habitgoldmobile.composeapp.generated.resources.delivery_catalog_redeemable_gold
+import habitgoldmobile.composeapp.generated.resources.delivery_catalog_total_gold_available
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
@@ -229,7 +229,7 @@ internal fun DeliveryShortfallDialog(
                         value = "${formatCatalogGrams(data.requiredGrams)} g",
                     )
                     ShortfallMetricRow(
-                        label = stringResource(Res.string.delivery_catalog_redeemable_gold),
+                        label = stringResource(Res.string.delivery_catalog_total_gold_available),
                         value = "${formatCatalogGrams(data.availableGrams)} g",
                     )
                     HorizontalDivider(color = AppColors.Slate200, thickness = 1.dp)

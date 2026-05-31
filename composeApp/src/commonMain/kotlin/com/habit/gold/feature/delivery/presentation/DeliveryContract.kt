@@ -15,7 +15,6 @@ data class DeliveryCatalogState(
     val isRefreshingBalance: Boolean = false,
     val isCheckingOut: Boolean = false,
     val totalGoldBalanceGrams: Double = 0.0,
-    val redeemableGoldGrams: Double = 0.0,
     val liveBuyPricePerGram: Double = 0.0,
     val coins: List<PhysicalCoin> = emptyList(),
     val cartItems: Map<String, Int> = emptyMap(),
