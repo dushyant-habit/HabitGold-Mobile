@@ -26,6 +26,8 @@ import com.habit.gold.core.platform.extractReferralCodeFromUrl
 import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 import org.json.JSONObject
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : FragmentActivity(), EmbeddedJuspayCheckoutHost {
     private lateinit var embeddedJuspayCoordinator: EmbeddedJuspayCheckoutCoordinator
@@ -130,10 +132,7 @@ class MainActivity : FragmentActivity(), EmbeddedJuspayCheckoutHost {
                     when (responseCode) {
                         InstallReferrerClient.InstallReferrerResponse.OK -> {
                             val referrer = runCatching { client.installReferrer.installReferrer }.getOrNull()
-                            val referralCode = referrer
-                                ?.substringAfter("code=", "")
-                                ?.substringBefore('&')
-                                ?.takeIf { it.isNotBlank() }
+                            val referralCode = parseReferralCodeFromInstallReferrer(referrer)
                             lifecycleScope.launch {
                                 val globalStore = GlobalContext.get().get<PlatformBridgeStore>()
                                 val existingReferral = globalStore.readPendingReferralCode()
@@ -158,5 +157,23 @@ class MainActivity : FragmentActivity(), EmbeddedJuspayCheckoutHost {
                 override fun onInstallReferrerServiceDisconnected() = Unit
             })
         }
+    }
+
+    private fun parseReferralCodeFromInstallReferrer(referrer: String?): String? {
+        if (referrer.isNullOrBlank()) return null
+
+        val candidates = buildList {
+            add(referrer)
+            runCatching { URLDecoder.decode(referrer, StandardCharsets.UTF_8.name()) }
+                .getOrNull()
+                ?.takeIf { it != referrer }
+                ?.let(::add)
+        }
+
+        candidates.forEach { candidate ->
+            extractReferralCodeFromUrl("https://habitgold.com/?$candidate")?.let { return it }
+        }
+
+        return null
     }
 }

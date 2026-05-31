@@ -272,7 +272,7 @@ internal fun HistoryTransactionItem.shouldShowInDefaultHistory(): Boolean {
 
 internal fun formatHistoryDateTime(raw: String): String {
     return runCatching {
-        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.currentSystemDefault())
         val hour24 = local.hour
         val hour12 = when {
             hour24 == 0 -> 12

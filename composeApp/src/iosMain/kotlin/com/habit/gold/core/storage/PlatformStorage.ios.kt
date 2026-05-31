@@ -25,6 +25,7 @@ import platform.CoreFoundation.CFDataCreate
 import platform.Foundation.NSData
 import platform.Foundation.NSMutableDictionary
 import platform.Foundation.NSCopyingProtocol
+import platform.Foundation.NSBundle
 import platform.Foundation.NSLog
 import platform.Foundation.NSUserDefaults
 import platform.Security.SecItemAdd
@@ -50,6 +51,10 @@ private const val SECURE_SUITE_NAME = "com.habit.gold.secure"
 private const val APP_SUITE_NAME = "com.habit.gold.app"
 private const val KEY_REGISTRY_STORAGE_KEY = "secure.storage.keys"
 private typealias CFStringPointer = CPointer<__CFString>
+private val shouldLogKeychainDiagnostics: Boolean
+    get() = ((NSBundle.mainBundle.objectForInfoDictionaryKey("APP_ENV") as? String) ?: "prod")
+        .trim()
+        .lowercase() != "prod"
 
 actual fun createPlatformSecureStorage(): SecureStorage {
     return AppleKeychainStorage(
@@ -73,7 +78,7 @@ private class AppleKeychainStorage(
             is KeychainReadResult.Success -> result.value ?: legacyValue
             KeychainReadResult.Missing -> legacyValue
             is KeychainReadResult.Failure -> {
-                if (legacyValue == null) {
+                if (legacyValue == null && shouldLogKeychainDiagnostics) {
                     NSLog("Keychain read failed for key=$key status=${result.status}")
                 }
                 legacyValue
@@ -85,7 +90,9 @@ private class AppleKeychainStorage(
         legacySecureDefaults.setObject(value, forKey = key)
         when (val status = upsertKeychainValue(key, value.toNSData())) {
             errSecSuccess -> persistKnownKeys(knownKeys() + key)
-            else -> NSLog("Keychain write failed for key=$key status=$status")
+            else -> if (shouldLogKeychainDiagnostics) {
+                NSLog("Keychain write failed for key=$key status=$status")
+            }
         }
     }
 

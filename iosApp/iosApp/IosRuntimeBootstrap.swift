@@ -4,6 +4,10 @@ import FirebaseCrashlytics
 import FirebasePerformance
 
 enum IosRuntimeBootstrap {
+    static func shouldLogVerboseRuntimeMessages() -> Bool {
+        currentAppEnv() != "prod"
+    }
+
     static func configureFirebaseIfAvailable() {
         guard FirebaseApp.app() == nil else { return }
         let appEnv = currentAppEnv()
@@ -14,7 +18,9 @@ enum IosRuntimeBootstrap {
             Crashlytics.crashlytics().setCustomValue(appEnv, forKey: "app_env")
             Crashlytics.crashlytics().setCustomValue("GoogleService-Info", forKey: "firebase_plist")
             Crashlytics.crashlytics().log("Firebase configured using bundled GoogleService-Info.plist for APP_ENV=\(appEnv)")
-            NSLog("Firebase configured successfully using bundled GoogleService-Info.plist for APP_ENV=\(appEnv).")
+            if shouldLogVerboseRuntimeMessages() {
+                NSLog("Firebase configured successfully using bundled GoogleService-Info.plist for APP_ENV=\(appEnv).")
+            }
             return
         }
         let resourceName = firebasePlistResourceName(for: appEnv)
@@ -32,7 +38,9 @@ enum IosRuntimeBootstrap {
         Crashlytics.crashlytics().setCustomValue(appEnv, forKey: "app_env")
         Crashlytics.crashlytics().setCustomValue(resourceName, forKey: "firebase_plist")
         Crashlytics.crashlytics().log("Firebase configured for APP_ENV=\(appEnv)")
-        NSLog("Firebase configured successfully for APP_ENV=\(appEnv).")
+        if shouldLogVerboseRuntimeMessages() {
+            NSLog("Firebase configured successfully for APP_ENV=\(appEnv).")
+        }
     }
 
     static func currentAppEnv() -> String {

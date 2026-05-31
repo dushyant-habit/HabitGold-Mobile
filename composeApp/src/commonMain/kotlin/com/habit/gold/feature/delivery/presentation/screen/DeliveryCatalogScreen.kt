@@ -40,7 +40,7 @@ import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.common_back
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_choose_coin
 import habitgoldmobile.composeapp.generated.resources.delivery_catalog_no_products
-import habitgoldmobile.composeapp.generated.resources.delivery_catalog_redeemable_gold
+import habitgoldmobile.composeapp.generated.resources.delivery_catalog_total_gold_available
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,14 +143,14 @@ fun DeliveryCatalogScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     Text(
-                                        text = stringResource(Res.string.delivery_catalog_redeemable_gold),
+                                        text = stringResource(Res.string.delivery_catalog_total_gold_available),
                                         fontSize = 12.sp,
                                         lineHeight = 18.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = AppColors.Amber800,
                                     )
                                     Text(
-                                        text = "${formatCatalogGrams(state.redeemableGoldGrams)} g",
+                                        text = "${formatCatalogGrams(state.totalGoldBalanceGrams)} g",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = AppColors.Amber900,
@@ -164,7 +164,7 @@ fun DeliveryCatalogScreen(
                                 product = coin,
                                 cartQuantity = state.cartItems[coin.id] ?: 0,
                                 onProceedClick = {
-                                    val availableGrams = state.redeemableGoldGrams
+                                    val availableGrams = state.totalGoldBalanceGrams
                                     val requiredGrams = coin.weightGm
                                     val shortfallGrams =
                                         (requiredGrams - availableGrams).coerceAtLeast(0.0)
