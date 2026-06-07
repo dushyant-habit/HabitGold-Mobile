@@ -1,5 +1,6 @@
 package com.habit.gold.feature.profile.data.repository
 
+import com.habit.gold.app.AuthenticatedSessionResetManager
 import com.habit.gold.core.config.AppConfig
 import com.habit.gold.core.config.AppEnvironment
 import com.habit.gold.core.network.ApiResult
@@ -10,11 +11,17 @@ import com.habit.gold.core.network.applyHabitGoldHttpClientConfig
 import com.habit.gold.core.platform.PlatformBridgeStore
 import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.session.SessionStore
+import com.habit.gold.core.storage.AppPreferencesStorage
+import com.habit.gold.core.storage.InMemoryAppPreferencesStorage
 import com.habit.gold.core.storage.KeyValueStorage
 import com.habit.gold.core.storage.InMemorySecureStorage
 import com.habit.gold.core.storage.InMemorySessionMetadataStorage
 import com.habit.gold.core.storage.InMemoryUserProfileStorage
 import com.habit.gold.core.storage.SecureAuthTokenStorage
+import com.habit.gold.feature.alerts.data.local.AlertsStorage
+import com.habit.gold.feature.alerts.data.local.StoredAlert
+import com.habit.gold.feature.delivery.data.PendingDeliveryCheckout
+import com.habit.gold.feature.delivery.data.PendingDeliveryCheckoutStore
 import com.habit.gold.feature.profile.data.remote.ProfileRemoteDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -27,6 +34,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -198,19 +207,25 @@ class ProfileRepositoryImplTest {
         return ProfileRepositoryImpl(
             remoteDataSource = ProfileRemoteDataSource(client),
             sessionStore = sessionStore,
-            deviceTokenSyncManager = DeviceTokenSyncManager(
-                httpClient = client,
-                appConfig = AppConfig(
-                    appName = "HabitGold",
-                    bundleId = "com.habit.gold",
-                    appVersion = "1.0-debug",
-                    appPlatform = "android",
-                    environment = AppEnvironment.Staging,
-                    baseUrl = "https://api.habitgold.com/v1/",
-                    enableNetworkLogs = false,
+            sessionResetManager = AuthenticatedSessionResetManager(
+                deviceTokenSyncManager = DeviceTokenSyncManager(
+                    httpClient = client,
+                    appConfig = AppConfig(
+                        appName = "HabitGold",
+                        bundleId = "com.habit.gold",
+                        appVersion = "1.0-debug",
+                        appPlatform = "android",
+                        environment = AppEnvironment.Staging,
+                        baseUrl = "https://api.habitgold.com/v1/",
+                        enableNetworkLogs = false,
+                    ),
+                    sessionStore = sessionStore,
+                    platformBridgeStore = PlatformBridgeStore(InMemoryTestKeyValueStorage()),
                 ),
                 sessionStore = sessionStore,
-                platformBridgeStore = PlatformBridgeStore(InMemoryTestKeyValueStorage()),
+                appPreferencesStorage = InMemoryAppPreferencesStorage(),
+                alertsStorage = InMemoryAlertsStorage(),
+                pendingDeliveryCheckoutStore = InMemoryPendingDeliveryCheckoutStore(),
             ),
         )
     }
@@ -248,5 +263,33 @@ private class InMemoryTestKeyValueStorage : KeyValueStorage {
 
     override suspend fun clear() {
         values.clear()
+    }
+}
+
+private class InMemoryAlertsStorage : AlertsStorage {
+    private var alerts: List<StoredAlert> = emptyList()
+
+    override suspend fun readAlerts(): List<StoredAlert> = alerts
+
+    override suspend fun writeAlerts(alerts: List<StoredAlert>) {
+        this.alerts = alerts
+    }
+
+    override suspend fun clearAlerts() {
+        alerts = emptyList()
+    }
+}
+
+private class InMemoryPendingDeliveryCheckoutStore : PendingDeliveryCheckoutStore {
+    private val state = MutableStateFlow<PendingDeliveryCheckout?>(null)
+
+    override val pendingCheckout: Flow<PendingDeliveryCheckout?> = state
+
+    override suspend fun save(pendingCheckout: PendingDeliveryCheckout) {
+        state.value = pendingCheckout
+    }
+
+    override suspend fun clear() {
+        state.value = null
     }
 }
