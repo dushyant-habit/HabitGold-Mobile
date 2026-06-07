@@ -109,23 +109,25 @@ data class HabitGoldGradientSet(
 )
 
 data class HabitGoldTypographyScale(
-    val display: TextStyle = tokenTextStyle(36.sp, 42.sp, FontWeight.ExtraBold, -0.8.sp),
-    val headline: TextStyle = tokenTextStyle(28.sp, 34.sp, FontWeight.ExtraBold),
-    val title: TextStyle = tokenTextStyle(20.sp, 26.sp, FontWeight.Bold),
-    val body: TextStyle = tokenTextStyle(16.sp, 24.sp, FontWeight.Normal),
-    val bodyStrong: TextStyle = tokenTextStyle(16.sp, 24.sp, FontWeight.SemiBold),
-    val label: TextStyle = tokenTextStyle(13.sp, 18.sp, FontWeight.Bold, 0.6.sp),
-    val caption: TextStyle = tokenTextStyle(12.sp, 18.sp, FontWeight.Normal),
+    val fontFamily: FontFamily = FontFamily.SansSerif,
+    val display: TextStyle = tokenTextStyle(fontFamily, 36.sp, 42.sp, FontWeight.ExtraBold, -0.8.sp),
+    val headline: TextStyle = tokenTextStyle(fontFamily, 28.sp, 34.sp, FontWeight.ExtraBold),
+    val title: TextStyle = tokenTextStyle(fontFamily, 20.sp, 26.sp, FontWeight.Bold),
+    val body: TextStyle = tokenTextStyle(fontFamily, 16.sp, 24.sp, FontWeight.Normal),
+    val bodyStrong: TextStyle = tokenTextStyle(fontFamily, 16.sp, 24.sp, FontWeight.SemiBold),
+    val label: TextStyle = tokenTextStyle(fontFamily, 13.sp, 18.sp, FontWeight.Bold, 0.6.sp),
+    val caption: TextStyle = tokenTextStyle(fontFamily, 12.sp, 18.sp, FontWeight.Normal),
 )
 
 private fun tokenTextStyle(
+    fontFamily: FontFamily,
     fontSize: TextUnit,
     lineHeight: TextUnit,
     fontWeight: FontWeight,
     letterSpacing: TextUnit = 0.sp,
 ): TextStyle {
     return TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = fontFamily,
         fontSize = fontSize,
         lineHeight = lineHeight,
         fontWeight = fontWeight,
