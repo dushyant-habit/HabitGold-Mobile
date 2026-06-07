@@ -21,8 +21,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +40,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.icons.HabitGoldPhosphorIcons
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.feature.auth.domain.AuthenticatedUser
 import com.habit.gold.feature.home.presentation.formatLiveRate
@@ -183,7 +182,7 @@ internal fun HomeTopBar(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Default.Notifications,
+                    imageVector = HabitGoldPhosphorIcons.Regular.Bell,
                     contentDescription = stringResource(Res.string.common_alerts),
                     tint = Color.Black.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp),

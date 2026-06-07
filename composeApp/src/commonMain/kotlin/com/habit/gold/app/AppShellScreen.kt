@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -47,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.habit.gold.core.designsystem.HabitGoldPalette
+import com.habit.gold.core.designsystem.icons.HabitGoldPhosphorIcons
 import com.habit.gold.core.localization.appStrings
 import com.habit.gold.core.navigation.MainTab
 import com.habit.gold.core.presentation.PlatformBackHandler
@@ -546,9 +543,9 @@ private fun MainBottomNavigationBar(
 ) {
     val strings = appStrings
     val items = listOf(
-        MainTabUi(tab = MainTab.Home, icon = Icons.Default.Home),
-        MainTabUi(tab = MainTab.Rewards, icon = Icons.Default.CardGiftcard),
-        MainTabUi(tab = MainTab.History, icon = Icons.Default.History),
+        MainTabUi(tab = MainTab.Home, icon = HabitGoldPhosphorIcons.Regular.House),
+        MainTabUi(tab = MainTab.Rewards, icon = HabitGoldPhosphorIcons.Regular.Gift),
+        MainTabUi(tab = MainTab.History, icon = HabitGoldPhosphorIcons.Regular.ClockCounterClockwise),
     )
 
     NavigationBar(

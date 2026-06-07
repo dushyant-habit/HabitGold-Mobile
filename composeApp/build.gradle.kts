@@ -126,7 +126,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.foundation)
-            implementation(compose.materialIconsExtended)
             implementation(compose.material3)
             implementation(libs.compose.runtime)
             implementation(libs.compose.ui)
