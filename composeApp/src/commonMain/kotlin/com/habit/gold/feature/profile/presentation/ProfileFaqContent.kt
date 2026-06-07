@@ -1,14 +1,6 @@
 package com.habit.gold.feature.profile.presentation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HeadsetMic
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Sell
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Star
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import habitgoldmobile.composeapp.generated.resources.Res

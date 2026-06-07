@@ -21,11 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocalOffer
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Verified
-import androidx.compose.material.icons.filled.WorkspacePremium
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon

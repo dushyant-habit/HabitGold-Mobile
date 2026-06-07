@@ -11,22 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Autorenew
-import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.HeadsetMic
-import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Payment
-import androidx.compose.material.icons.filled.PersonOutline
-import androidx.compose.material.icons.outlined.HomeWork
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold

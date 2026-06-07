@@ -13,14 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.outlined.CurrencyRupee
-import androidx.compose.material.icons.outlined.WorkspacePremium
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card

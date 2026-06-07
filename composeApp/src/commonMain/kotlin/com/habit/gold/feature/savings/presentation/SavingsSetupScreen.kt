@@ -28,12 +28,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.automirrored.filled.Help
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.HabitGoldPalette
+import com.habit.gold.core.designsystem.icons.HabitGoldPhosphorIcons
 import com.habit.gold.feature.home.presentation.ChildCardBorder
 import com.habit.gold.feature.home.presentation.ChildMutedText
 import com.habit.gold.feature.home.presentation.ChildPrimaryText
@@ -224,7 +220,7 @@ internal fun SavingsSetupScreen(
                 actions = {
                     IconButton(onClick = onHelpClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Help,
+                            imageVector = HabitGoldPhosphorIcons.Regular.Question,
                             contentDescription = stringResource(Res.string.common_help),
                             tint = HabitGoldPalette.plum,
                         )

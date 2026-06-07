@@ -14,9 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Help
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.habit.gold.core.designsystem.icons.HabitGoldPhosphorIcons
 import com.habit.gold.feature.trade.domain.TradeLivePriceState
 import com.habit.gold.feature.trade.domain.usecase.GetTradeInvoiceUseCase
 import com.habit.gold.core.network.ApiResult
@@ -343,7 +342,7 @@ fun BuyTradeScreen(
                         modifier = Modifier.align(Alignment.CenterEnd),
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Help,
+                            imageVector = HabitGoldPhosphorIcons.Regular.Question,
                             contentDescription = stringResource(Res.string.common_help),
                             tint = BuyPrimary,
                             modifier = Modifier.size(24.dp),

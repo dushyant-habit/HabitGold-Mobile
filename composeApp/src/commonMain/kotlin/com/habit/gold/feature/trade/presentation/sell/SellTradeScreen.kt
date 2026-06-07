@@ -36,16 +36,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Help
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Verified
+import com.habit.gold.core.designsystem.icons.HabitGoldIcons as Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalFocusManager
 import com.habit.gold.core.network.ApiResult
 import com.habit.gold.core.designsystem.HabitGoldPalette
+import com.habit.gold.core.designsystem.icons.HabitGoldPhosphorIcons
 import com.habit.gold.feature.trade.domain.TradeLivePriceState
 import com.habit.gold.feature.trade.domain.model.TradeUserVpa
 import com.habit.gold.feature.trade.domain.usecase.GetTradeInvoiceUseCase
@@ -372,7 +364,7 @@ private fun SellTradeEntryScreen(
                     modifier = Modifier.align(Alignment.CenterEnd),
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Help,
+                        imageVector = HabitGoldPhosphorIcons.Regular.Question,
                         contentDescription = stringResource(Res.string.common_help),
                         tint = HabitGoldPalette.plum,
                         modifier = Modifier.size(24.dp),
