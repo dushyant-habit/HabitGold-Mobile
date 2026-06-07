@@ -344,7 +344,7 @@ fun BuyTradeScreen(
                         Icon(
                             imageVector = HabitGoldPhosphorIcons.Regular.Question,
                             contentDescription = stringResource(Res.string.common_help),
-                            tint = BuyPrimary,
+                            tint = BuySlate400,
                             modifier = Modifier.size(24.dp),
                         )
                     }

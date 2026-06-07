@@ -263,7 +263,7 @@ internal fun HomeZeroBalanceSection(onStartJourneyClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(start = 16.dp, top = 12.dp, end = 16.dp)
             .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onStartJourneyClick)
             .background(HomePrimary)

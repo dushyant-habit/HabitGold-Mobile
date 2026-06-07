@@ -208,12 +208,17 @@ internal fun mapTradeTransaction(transaction: TradeTransactionPreview): HistoryT
         HistoryTransactionType.Sell, HistoryTransactionType.Delivery -> "-"
         else -> ""
     }
+    val amountPrefix = when (type) {
+        HistoryTransactionType.Buy -> "+"
+        HistoryTransactionType.Sell, HistoryTransactionType.Delivery -> "-"
+        else -> ""
+    }
 
     return HistoryTransactionItem(
         id = transaction.id,
         type = type,
         dateLabel = formatHistoryDateTime(transaction.createdAt),
-        amountLabel = "₹${normalizeMoneyDisplay(transaction.amount)}",
+        amountLabel = "$amountPrefix₹${normalizeMoneyDisplay(transaction.amount)}",
         weightLabel = "$weightPrefix${normalizeGoldDisplay(transaction.goldQuantity)} g",
         rawStatus = transaction.status,
         isSip = isSipTransaction,
@@ -267,7 +272,7 @@ internal fun HistoryTransactionItem.shouldShowInDefaultHistory(): Boolean {
 
 internal fun formatHistoryDateTime(raw: String): String {
     return runCatching {
-        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.currentSystemDefault())
         val hour24 = local.hour
         val hour12 = when {
             hour24 == 0 -> 12

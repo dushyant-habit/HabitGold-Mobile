@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.designsystem.theme.AppColors
 import com.habit.gold.feature.delivery.domain.model.DeliveryPaymentLaunchRequest
 import com.habit.gold.feature.delivery.presentation.screen.AddEditAddressScreen
@@ -33,6 +34,7 @@ sealed interface DeliveryDestination {
 @Composable
 fun DeliveryRoute(
     dependencies: DeliveryRouteDependencies,
+    sessionResetKey: String,
     catalogViewModel: DeliveryCatalogViewModel,
     trackingViewModel: DeliveryTrackingViewModel,
     initialDestination: DeliveryDestination = DeliveryDestination.Catalog,
@@ -41,7 +43,7 @@ fun DeliveryRoute(
     onGoToDashboard: (() -> Unit)? = null,
 ) {
 
-    val addressViewModel = viewModel {
+    val addressViewModel = viewModel(key = "delivery-address:$sessionResetKey") {
         DeliveryAddressViewModel(
             listUserAddressesUseCase = dependencies.listUserAddressesUseCase,
             createUserAddressUseCase = dependencies.createUserAddressUseCase,
@@ -61,8 +63,36 @@ fun DeliveryRoute(
     val trackingState by trackingViewModel.state.collectAsState()
 
     val paymentLauncher = rememberPlatformDeliveryPaymentLauncher()
-    var destination by remember { mutableStateOf<DeliveryDestination>(initialDestination) }
+    var destination by remember(sessionResetKey, initialDestination) { mutableStateOf<DeliveryDestination>(initialDestination) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    fun handleBack() {
+        when (val currentDestination = destination) {
+            is DeliveryDestination.Catalog -> onBackToHome()
+            is DeliveryDestination.Cart -> destination = DeliveryDestination.Catalog
+            is DeliveryDestination.AddressList -> {
+                if (initialDestination is DeliveryDestination.AddressList) {
+                    onBackToHome()
+                } else {
+                    destination = DeliveryDestination.Cart
+                }
+            }
+            is DeliveryDestination.AddEditAddress -> destination = DeliveryDestination.AddressList
+            is DeliveryDestination.OrderSummary -> destination = DeliveryDestination.Catalog
+            is DeliveryDestination.Tracking -> {
+                if (initialDestination is DeliveryDestination.Tracking) {
+                    onBackToHome()
+                } else {
+                    destination = DeliveryDestination.Catalog
+                }
+            }
+        }
+    }
+
+    PlatformBackHandler(
+        enabled = true,
+        onBack = ::handleBack,
+    )
 
     LaunchedEffect(catalogViewModel.effects) {
         catalogViewModel.effects.collect { effect ->

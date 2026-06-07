@@ -10,6 +10,7 @@ import androidx.compose.ui.viewinterop.UIKitView
 import habitgoldmobile.composeapp.generated.resources.Res
 import habitgoldmobile.composeapp.generated.resources.rewards_qr_unavailable
 import org.jetbrains.compose.resources.stringResource
+import platform.Foundation.NSBundle
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageView
 import platform.UIKit.UIColor
@@ -63,11 +64,21 @@ private fun generateRewardsQrCodeImage(referralCode: String): UIImage? {
             .render()
         val nativeImage = qrGraphics.nativeImage()
         nativeImage as? UIImage ?: run {
-            println("Rewards QR generation failed: native image type=${nativeImage::class}")
+            if (shouldLogQrDiagnostics()) {
+                println("Rewards QR generation failed: native image type=${nativeImage::class}")
+            }
             null
         }
     }.getOrElse { throwable ->
-        println("Rewards QR generation failed: ${throwable::class} ${throwable.message ?: "unknown"}")
+        if (shouldLogQrDiagnostics()) {
+            println("Rewards QR generation failed: ${throwable::class} ${throwable.message ?: "unknown"}")
+        }
         null
     }
+}
+
+private fun shouldLogQrDiagnostics(): Boolean {
+    return ((NSBundle.mainBundle.objectForInfoDictionaryKey("APP_ENV") as? String) ?: "prod")
+        .trim()
+        .lowercase() != "prod"
 }

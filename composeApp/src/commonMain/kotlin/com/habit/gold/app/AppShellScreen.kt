@@ -145,10 +145,15 @@ fun AppMainShellScreen(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var shouldShowBottomBar by rememberSaveable { mutableStateOf(true) }
-    var rewardsEntryPoint by rememberSaveable { mutableStateOf(RewardsEntryPoint.Home) }
-    var lastHomeDestination by remember { mutableStateOf<HomeDestination>(HomeDestination.Dashboard) }
-    var activeOverlayDestination by remember { mutableStateOf<MainShellOverlayDestination?>(null) }
+    val sessionResetKey = remember(session.user?.id, session.accessToken) {
+        session.user?.id
+            ?: session.accessToken?.takeIf { it.isNotBlank() }
+            ?: "logged_out"
+    }
+    var shouldShowBottomBar by rememberSaveable(sessionResetKey) { mutableStateOf(true) }
+    var rewardsEntryPoint by rememberSaveable(sessionResetKey) { mutableStateOf(RewardsEntryPoint.Home) }
+    var lastHomeDestination by remember(sessionResetKey) { mutableStateOf<HomeDestination>(HomeDestination.Dashboard) }
+    var activeOverlayDestination by remember(sessionResetKey) { mutableStateOf<MainShellOverlayDestination?>(null) }
     val biometricAuthenticator = rememberProfileBiometricAuthenticator()
     val biometricSecurityStore = remember(appKoin) { ProfileSecurityStore(appKoin.get<SecureStorage>()) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -421,6 +426,7 @@ fun AppMainShellScreen(
                         savingsDependencies = savingsDependencies,
                         tradeDependencies = tradeDependencies,
                         session = session,
+                        sessionResetKey = sessionResetKey,
                         initialDestination = lastHomeDestination,
                         onSelectTab = onSelectTab,
                         onOpenReferEarn = { openRewards(RewardsEntryPoint.ReferDetail) },
@@ -446,6 +452,7 @@ fun AppMainShellScreen(
                     )
                     MainTab.Rewards -> RewardsRoute(
                         dependencies = rewardsDependencies,
+                        sessionResetKey = sessionResetKey,
                         onBottomBarVisibilityChange = { visible ->
                             shouldShowBottomBar = visible
                         },
@@ -457,6 +464,7 @@ fun AppMainShellScreen(
                     )
                     MainTab.History -> HistoryRoute(
                         dependencies = historyDependencies,
+                        sessionResetKey = sessionResetKey,
                         onOpenTransactionDetails = { transactionId ->
                             activeOverlayDestination =
                                 MainShellOverlayDestination.TransactionDetails(transactionId)

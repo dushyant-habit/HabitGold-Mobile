@@ -4,18 +4,35 @@ import com.habit.gold.feature.alerts.domain.model.AlertItem
 import com.habit.gold.feature.alerts.domain.repository.AlertsRepository
 import com.habit.gold.feature.alerts.domain.usecase.GetAlertsUseCase
 import com.habit.gold.feature.alerts.domain.usecase.MarkAllAlertsReadUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AlertsViewModelTest {
+    private val dispatcher = StandardTestDispatcher()
+
+    @BeforeTest
+    fun setUp() {
+        Dispatchers.setMain(dispatcher)
+    }
+
+    @AfterTest
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
-    fun `load maps alerts and marks them read`() = runTest(StandardTestDispatcher()) {
+    fun `load maps alerts and marks them read`() = runTest(dispatcher) {
         val repository = FakeAlertsRepository(
             alerts = listOf(
                 AlertItem(

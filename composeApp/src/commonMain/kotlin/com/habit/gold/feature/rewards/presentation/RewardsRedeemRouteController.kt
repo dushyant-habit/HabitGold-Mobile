@@ -101,13 +101,14 @@ private const val MinRedeemToGoldInr = 10.0
 
 @Composable
 fun RewardsRedeemRouteController(
+    sessionResetKey: String,
     rewardsState: RewardsHomeState,
     tradeDependencies: TradeRouteDependencies,
     onBackClick: () -> Unit,
     onRefreshRewards: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val buyTradeViewModel = viewModel {
+    val buyTradeViewModel = viewModel(key = "rewards-redeem-buy:$sessionResetKey") {
         BuyTradeViewModel(
             createBuyOrderUseCase = tradeDependencies.createBuyOrderUseCase,
             getTradeAvailableCouponsUseCase = tradeDependencies.getTradeAvailableCouponsUseCase,

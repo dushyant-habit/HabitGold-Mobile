@@ -165,7 +165,7 @@ fun DeliveryCartScreen(
         ) {
             CoinHeadlineCard(
                 coin = selectedCoin,
-                totalGoldAvailableGrams = catalogState.redeemableGoldGrams
+                totalGoldAvailableGrams = catalogState.totalGoldBalanceGrams
             )
             
             // Coupon Code UI
@@ -191,7 +191,7 @@ fun DeliveryCartScreen(
             )
 
             PaymentDetailsCard(
-                totalGoldAvailableGrams = catalogState.redeemableGoldGrams,
+                totalGoldAvailableGrams = catalogState.totalGoldBalanceGrams,
                 goldDebitGrams = checkoutQuote?.goldWeightGrams ?: (selectedCoin.weightGm * (catalogState.cartItems[selectedCoin.id] ?: 1)),
                 mintingChargeInr = checkoutQuote?.mintingChargeInr ?: (selectedCoin.makingCharge * (catalogState.cartItems[selectedCoin.id] ?: 1)),
                 couponDiscountInr = checkoutQuote?.let {
@@ -850,4 +850,3 @@ private fun ConfirmPaymentDialog(
         }
     }
 }
-

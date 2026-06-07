@@ -424,16 +424,16 @@ internal fun BuyTradeQuickAmounts(
     onSelectGrams: (String) -> Unit,
 ) {
     val chips = if (entryMode == BuyTradeEntryMode.Rupees) {
-        listOf("₹1000", "₹5000", "₹10000")
+        listOf("₹1000", "₹5000", "₹10000", "₹20000")
     } else {
-        listOf("0.5g", "1g", "2g")
+        listOf("0.5g", "1g", "2g", "5g")
     }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        chips.forEachIndexed { index, chip ->
+        chips.forEach { chip ->
             val isPopular = chip == "₹10000" || chip == "2g"
             val chipValue = if (entryMode == BuyTradeEntryMode.Rupees) {
                 chip.removePrefix("₹")
@@ -449,18 +449,18 @@ internal fun BuyTradeQuickAmounts(
                 }
             }
             Column(
-                modifier = Modifier.width(84.dp),
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
-
                 OutlinedButton(
                     onClick = {
                         if (entryMode == BuyTradeEntryMode.Rupees) {
                             val target = when (chip) {
                                 "₹1000" -> "1000"
                                 "₹5000" -> "5000"
-                                else -> "10000"
+                                "₹10000" -> "10000"
+                                else -> "20000"
                             }
                             onSelectRupees(target)
                         } else {
@@ -468,17 +468,17 @@ internal fun BuyTradeQuickAmounts(
                                 "0.5g" -> 0.5
                                 "1g" -> 1.0
                                 "2g" -> 2.0
+                                "5g" -> 5.0
                                 else -> maxSelectableGrams
                             }
                             onSelectGrams(formatGramsPlain(parseOneTimeGrams(targetGrams.toString(), maxSelectableGrams)))
                         }
                     },
-                    modifier = Modifier
-                        .width(84.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = if (!isPopular) RoundedCornerShape(8.dp) else
                         RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 0.dp, bottomStart = 0.dp),
                     border = androidx.compose.foundation.BorderStroke(
-                        if (isSelected) 1.5.dp else 0.5.dp,
+                        if (isSelected) 1.5.dp else 1.dp,
                         if (isSelected) BuyPrimary else BuySlate200,
                     ),
                     contentPadding = PaddingValues(0.dp),
@@ -495,7 +495,7 @@ internal fun BuyTradeQuickAmounts(
                 if (isPopular) {
                     Surface(
                         modifier = Modifier
-                            .width(84.dp)
+                            .fillMaxWidth()
                             .offset(y = (-6).dp)
                             .height(20.dp),
                         shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 8.dp, bottomStart = 8.dp),
@@ -516,10 +516,6 @@ internal fun BuyTradeQuickAmounts(
                 } else {
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-            }
-
-            if (index < chips.lastIndex) {
-                Spacer(modifier = Modifier.width(12.dp))
             }
         }
     }

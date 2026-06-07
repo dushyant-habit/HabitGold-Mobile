@@ -86,20 +86,23 @@ internal fun EmptyAddressState(onAddNewAddress: () -> Unit) {
 internal fun DeliveryAddressCard(
     address: SavedAddress,
     isSelected: Boolean,
+    showSelectionControl: Boolean,
     onSelect: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCheckServiceability: () -> Unit,
 ) {
     val isServiceable = address.isPincodeServiceable()
-    val borderColor = if (isSelected) AppColors.Purple700 else AppColors.Divider
+    val borderColor = if (showSelectionControl && isSelected) AppColors.Purple700 else AppColors.Divider
+    val contentStartPadding = if (showSelectionControl) 48.dp else 0.dp
+    val serviceRowStartPadding = if (showSelectionControl) 40.dp else 0.dp
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSelect() },
+            .clickable(enabled = showSelectionControl) { onSelect() },
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+        border = BorderStroke(if (showSelectionControl && isSelected) 2.dp else 1.dp, borderColor),
         colors = CardDefaults.cardColors(containerColor = AppColors.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -108,12 +111,14 @@ internal fun DeliveryAddressCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                RadioButton(
-                    selected = isSelected,
-                    onClick = onSelect,
-                    colors = RadioButtonDefaults.colors(selectedColor = AppColors.Purple700),
-                )
-                Spacer(Modifier.width(8.dp))
+                if (showSelectionControl) {
+                    RadioButton(
+                        selected = isSelected,
+                        onClick = onSelect,
+                        colors = RadioButtonDefaults.colors(selectedColor = AppColors.Purple700),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = address.name,
@@ -153,7 +158,7 @@ internal fun DeliveryAddressCard(
                 text = address.compactAddressLine(),
                 fontSize = 13.sp,
                 color = AppColors.Slate600,
-                modifier = Modifier.padding(start = 48.dp),
+                modifier = Modifier.padding(start = contentStartPadding),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -163,7 +168,7 @@ internal fun DeliveryAddressCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 40.dp),
+                    .padding(start = serviceRowStartPadding),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {

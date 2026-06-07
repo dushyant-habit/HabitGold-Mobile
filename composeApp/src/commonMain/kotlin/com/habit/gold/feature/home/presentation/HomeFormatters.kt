@@ -34,14 +34,14 @@ internal fun formatLiveRate(value: Double): String = "₹${formatInr(value)}/g"
 
 internal fun formatCreatedAt(raw: String): String {
     return runCatching {
-        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.currentSystemDefault())
         "${local.day.toString().padStart(2, '0')} ${monthAbbreviation(local.month.name)}"
     }.getOrElse { raw.take(10) }
 }
 
 internal fun formatCreatedAtWithTime(raw: String): String {
     return runCatching {
-        val local = Instant.parse(raw).toLocalDateTime(TimeZone.UTC)
+        val local = Instant.parse(raw).toLocalDateTime(TimeZone.currentSystemDefault())
         val hour24 = local.hour
         val hour12 = when {
             hour24 == 0 -> 12

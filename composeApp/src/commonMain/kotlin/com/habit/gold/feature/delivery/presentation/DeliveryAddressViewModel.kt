@@ -48,6 +48,14 @@ class DeliveryAddressViewModel(
 ) : MviViewModel<DeliveryAddressState, DeliveryAddressIntent, DeliveryAddressEffect>(DeliveryAddressState()) {
 
     init {
+        updateState {
+            it.copy(
+                defaultRecipientName = sessionStore.state.value.user?.name.orEmpty(),
+                defaultRecipientPhone = sessionStore.state.value.user?.phoneNumber.orEmpty()
+                    .filter(Char::isDigit)
+                    .takeLast(10),
+            )
+        }
         onIntent(DeliveryAddressIntent.RefreshAddresses)
     }
 
@@ -239,7 +247,16 @@ class DeliveryAddressViewModel(
 
     private fun loadAddressForEdit(id: String) {
         val address = state.value.savedAddresses.find { it.id == id }
-        updateState { it.copy(addressBeingEdited = address) }
+        updateState {
+            it.copy(
+                addressBeingEdited = address,
+                postalLookupCity = null,
+                postalLookupState = null,
+                deliveryPincodeVerified = false,
+                isVerifyingPincode = false,
+                pincodeVerifyError = null,
+            )
+        }
     }
 
     private fun sendAddressOtp(id: String) {

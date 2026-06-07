@@ -3,7 +3,6 @@ package com.habit.gold.app
 import androidx.lifecycle.viewModelScope
 import com.habit.gold.core.navigation.AppRoute
 import com.habit.gold.core.navigation.MainTab
-import com.habit.gold.core.platform.notifications.DeviceTokenSyncManager
 import com.habit.gold.core.presentation.mvi.MviViewModel
 import com.habit.gold.core.session.AppStartupState
 import com.habit.gold.core.session.AuthSession
@@ -15,7 +14,7 @@ import kotlinx.coroutines.launch
 class AppRootViewModel(
     private val sessionStore: SessionStore,
     private val startupCoordinator: AppStartupCoordinator,
-    private val deviceTokenSyncManager: DeviceTokenSyncManager,
+    private val sessionResetManager: AuthenticatedSessionResetManager,
 ) : MviViewModel<AppRootState, AppRootIntent, AppRootEffect>(AppRootState()) {
 
     private var hasStarted = false
@@ -57,8 +56,7 @@ class AppRootViewModel(
 
     private fun logout() {
         viewModelScope.launch {
-            deviceTokenSyncManager.unregisterCurrentTokenBeforeLogout()
-            sessionStore.clear()
+            sessionResetManager.reset()
         }
     }
 

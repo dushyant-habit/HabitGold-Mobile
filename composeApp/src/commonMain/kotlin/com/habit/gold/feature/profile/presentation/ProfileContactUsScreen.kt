@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.HabitGoldPalette
 import com.habit.gold.core.network.skipAuthentication
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.presentation.clearFocusOnTapOutside
 import com.habit.gold.feature.home.presentation.ChildPrimaryText
 import io.ktor.client.HttpClient
@@ -120,6 +121,11 @@ internal fun ProfileContactUsScreen(
     val sendFailureMessage = stringResource(Res.string.profile_contact_send_failure)
     val dialerUnavailableMessage = stringResource(Res.string.profile_contact_dialer_unavailable)
     val whatsAppUnavailableMessage = stringResource(Res.string.profile_contact_whatsapp_unavailable)
+
+    PlatformBackHandler(
+        enabled = true,
+        onBack = onBackClick,
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

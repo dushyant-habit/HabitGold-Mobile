@@ -7,7 +7,9 @@ interface DeliveryCheckoutTelemetry {
     fun finalOrderState(orderId: String?, paymentStatus: String?, orderStatus: String?)
 }
 
-class PrintDeliveryCheckoutTelemetry : DeliveryCheckoutTelemetry {
+class PrintDeliveryCheckoutTelemetry(
+    private val enabled: Boolean = true,
+) : DeliveryCheckoutTelemetry {
     override fun quoteCreated(quoteId: String, productId: String, addressId: String) {
         log("quote_created quoteId=$quoteId productId=$productId addressId=$addressId")
     }
@@ -28,7 +30,9 @@ class PrintDeliveryCheckoutTelemetry : DeliveryCheckoutTelemetry {
     }
 
     private fun log(message: String) {
-        println("[$TAG] $message")
+        if (enabled) {
+            println("[$TAG] $message")
+        }
     }
 
     companion object {

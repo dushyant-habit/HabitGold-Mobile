@@ -206,7 +206,6 @@ class DeliveryCatalogViewModel(
                         it.copy(
                             isRefreshingBalance = false,
                             totalGoldBalanceGrams = availability.totalGoldBalanceGrams,
-                            redeemableGoldGrams = availability.sellableGoldBalanceGrams,
                         )
                     }
                 },

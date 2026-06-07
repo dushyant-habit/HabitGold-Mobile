@@ -51,6 +51,7 @@ internal fun HomeRoute(
     savingsDependencies: SavingsRouteDependencies,
     tradeDependencies: TradeRouteDependencies,
     session: AuthSession,
+    sessionResetKey: String,
     initialDestination: HomeDestination = HomeDestination.Dashboard,
     onSelectTab: (MainTab) -> Unit,
     onOpenReferEarn: () -> Unit,
@@ -61,15 +62,15 @@ internal fun HomeRoute(
     onBiometricStateChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val homeViewModel = viewModel {
+    val homeViewModel = viewModel(key = "home:$sessionResetKey") {
         HomeViewModel(
             loadHomeSummaryUseCase = dependencies.loadHomeSummaryUseCase,
             appPreferencesStorage = dependencies.appPreferencesStorage,
         )
     }
     val uiState = homeViewModel.state.collectAsStateWithLifecycle()
-    var destination by remember { mutableStateOf<HomeDestination>(initialDestination) }
-    var hasPendingMutationRefresh by remember { mutableStateOf(false) }
+    var destination by remember(sessionResetKey, initialDestination) { mutableStateOf<HomeDestination>(initialDestination) }
+    var hasPendingMutationRefresh by remember(sessionResetKey) { mutableStateOf(false) }
 
     fun returnToDestination(next: HomeDestination) {
         destination = next
@@ -157,6 +158,7 @@ internal fun HomeRoute(
         )
         HomeDestination.Alerts -> AlertsRoute(
             dependencies = alertsDependencies,
+            sessionResetKey = sessionResetKey,
             onBackClick = { destination = HomeDestination.Dashboard },
             modifier = modifier,
         )
@@ -180,6 +182,7 @@ internal fun HomeRoute(
             dependencies = profileDependencies,
             destination = activeDestination.destination,
             session = session,
+            sessionResetKey = sessionResetKey,
             onBackToHome = { returnToDestination(activeDestination.returnDestination) },
             onNavigate = { nextProfileDestination ->
                 destination = HomeDestination.Profile(
@@ -201,13 +204,14 @@ internal fun HomeRoute(
             onOpenDelivery = { deliveryDestination ->
                 destination = HomeDestination.Delivery(
                     destination = deliveryDestination,
-                    returnDestination = HomeDestination.Profile(ProfileDestination.Hub),
+                    returnDestination = activeDestination,
                 )
             },
             modifier = modifier,
         )
         is HomeDestination.Savings -> SavingsRoute(
             dependencies = savingsDependencies,
+            sessionResetKey = sessionResetKey,
             destination = activeDestination.destination,
             onBackToHome = { returnToDestination(activeDestination.returnDestination) },
             onSavingsMutation = { hasPendingMutationRefresh = true },
@@ -221,6 +225,7 @@ internal fun HomeRoute(
         )
         is HomeDestination.Trade -> TradeRoute(
             dependencies = tradeDependencies,
+            sessionResetKey = sessionResetKey,
             destination = activeDestination.destination,
             onBackToHome = { returnToDestination(activeDestination.returnDestination) },
             onTradeMutation = { hasPendingMutationRefresh = true },
@@ -244,10 +249,11 @@ internal fun HomeRoute(
             modifier = modifier,
         )
         is HomeDestination.Delivery -> {
-            val catalogViewModel = remember { dependencies.deliveryCatalogViewModelFactory() }
-            val trackingViewModel = remember { dependencies.deliveryTrackingViewModelFactory() }
+            val catalogViewModel = remember(sessionResetKey) { dependencies.deliveryCatalogViewModelFactory() }
+            val trackingViewModel = remember(sessionResetKey) { dependencies.deliveryTrackingViewModelFactory() }
             DeliveryRoute(
                 dependencies = dependencies.deliveryRouteDependencies,
+                sessionResetKey = sessionResetKey,
                 catalogViewModel = catalogViewModel,
                 trackingViewModel = trackingViewModel,
                 initialDestination = activeDestination.destination,

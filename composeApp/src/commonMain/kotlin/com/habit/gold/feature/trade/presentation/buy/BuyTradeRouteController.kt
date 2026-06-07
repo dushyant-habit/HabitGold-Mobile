@@ -14,6 +14,7 @@ import com.habit.gold.feature.trade.presentation.TradeRouteDependencies
 @Composable
 internal fun BuyTradeRouteController(
     dependencies: TradeRouteDependencies,
+    sessionResetKey: String,
     destination: TradeDestination.Buy,
     onBackToHome: () -> Unit,
     onTradeMutation: () -> Unit,
@@ -21,7 +22,7 @@ internal fun BuyTradeRouteController(
     onOpenHelp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val buyTradeViewModel = viewModel {
+    val buyTradeViewModel = viewModel(key = "trade-buy:$sessionResetKey") {
         BuyTradeViewModel(
             createBuyOrderUseCase = dependencies.createBuyOrderUseCase,
             getTradeAvailableCouponsUseCase = dependencies.getTradeAvailableCouponsUseCase,

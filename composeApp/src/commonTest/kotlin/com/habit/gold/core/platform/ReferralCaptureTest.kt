@@ -25,6 +25,10 @@ class ReferralCaptureTest {
             extractReferralCodeFromUrl("habitgold-staging://refer/savegold20"),
         )
         assertEquals(
+            "SAVEGOLD20",
+            extractReferralCodeFromUrl("https://habitgold.com/refer/savegold20"),
+        )
+        assertEquals(
             "FRIEND123",
             extractReferralCodeFromUrl("https://habitgold.com/invite/Friend123"),
         )

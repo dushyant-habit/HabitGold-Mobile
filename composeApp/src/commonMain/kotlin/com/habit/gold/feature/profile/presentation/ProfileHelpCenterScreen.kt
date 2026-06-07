@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habit.gold.core.designsystem.HabitGoldPalette
+import com.habit.gold.core.presentation.PlatformBackHandler
 import com.habit.gold.core.presentation.clearFocusOnTapOutside
 import com.habit.gold.feature.home.presentation.ChildMutedText
 import com.habit.gold.feature.home.presentation.ChildPrimaryText
@@ -74,6 +75,11 @@ internal fun ProfileHelpCenterScreen(
 ) {
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val filteredSections = profileFaqSections().filterForQuery(searchQuery)
+
+    PlatformBackHandler(
+        enabled = true,
+        onBack = onBackClick,
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

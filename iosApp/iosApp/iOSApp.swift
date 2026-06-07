@@ -8,6 +8,10 @@ import HyperSDK
 import UserNotifications
 
 final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+    private var shouldLogPushTokens: Bool {
+        IosRuntimeBootstrap.currentAppEnv() != "prod"
+    }
+
     func application(
         _ application: UIApplication,
         supportedInterfaceOrientationsFor window: UIWindow?
@@ -106,9 +110,13 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
                 return
             }
             IosPlatformRuntimeBridge.shared.registerCurrentFcmToken(token: token)
-            NSLog("FCM token fetched successfully after APNs registration: %@", token)
+            if self.shouldLogPushTokens {
+                NSLog("FCM token fetched successfully after APNs registration: \(token)")
+            }
         }
-        NSLog("APNs token registered successfully: %@", apnsToken)
+        if shouldLogPushTokens {
+            NSLog("APNs token registered successfully: \(apnsToken)")
+        }
     }
 
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
@@ -117,7 +125,9 @@ final class JuspayAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificati
             return
         }
         IosPlatformRuntimeBridge.shared.registerCurrentFcmToken(token: fcmToken)
-        NSLog("Firebase Messaging registration token received successfully: %@", fcmToken)
+        if shouldLogPushTokens {
+            NSLog("Firebase Messaging registration token received successfully: \(fcmToken)")
+        }
     }
 
     func application(

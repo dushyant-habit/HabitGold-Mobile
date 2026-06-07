@@ -54,17 +54,23 @@ fun AddEditAddressScreen(
     val focusManager = LocalFocusManager.current
     val isEditing = state.addressBeingEdited != null
     val existing: SavedAddress? = state.addressBeingEdited
+    val defaultName = state.defaultRecipientName
+    val defaultPhone = state.defaultRecipientPhone
 
     // Form fields
-    var name by remember { mutableStateOf(existing?.name.orEmpty()) }
-    var phone by remember { mutableStateOf(existing?.phoneNo.orEmpty()) }
-    var pincode by remember { mutableStateOf(existing?.pincode.orEmpty()) }
-    var line1 by remember { mutableStateOf(existing?.addressLine1.orEmpty()) }
-    var line2 by remember { mutableStateOf(existing?.addressLine2.orEmpty()) }
-    var city by remember { mutableStateOf(existing?.city.orEmpty()) }
-    var stateField by remember { mutableStateOf(existing?.state.orEmpty()) }
-    var landmark by remember { mutableStateOf(existing?.landmark.orEmpty()) }
-    var selectedType by remember { mutableStateOf(existing?.type ?: AddressType.HOME) }
+    var name by remember(existing?.id, defaultName) {
+        mutableStateOf(existing?.name.orEmpty().ifBlank { defaultName })
+    }
+    var phone by remember(existing?.id, defaultPhone) {
+        mutableStateOf(existing?.phoneNo.orEmpty().ifBlank { defaultPhone })
+    }
+    var pincode by remember(existing?.id) { mutableStateOf(existing?.pincode.orEmpty()) }
+    var line1 by remember(existing?.id) { mutableStateOf(existing?.addressLine1.orEmpty()) }
+    var line2 by remember(existing?.id) { mutableStateOf(existing?.addressLine2.orEmpty()) }
+    var city by remember(existing?.id) { mutableStateOf(existing?.city.orEmpty()) }
+    var stateField by remember(existing?.id) { mutableStateOf(existing?.state.orEmpty()) }
+    var landmark by remember(existing?.id) { mutableStateOf(existing?.landmark.orEmpty()) }
+    var selectedType by remember(existing?.id) { mutableStateOf(existing?.type ?: AddressType.HOME) }
 
     // Track the pincode that was last verified so we know when it changes
     var lastVerifiedPincode by remember {
@@ -79,16 +85,19 @@ fun AddEditAddressScreen(
 
     // Auto-fill city/state from postal lookup when state updates
     LaunchedEffect(state.postalLookupCity, state.postalLookupState) {
-        state.postalLookupCity?.let { if (city.isBlank()) city = it }
-        state.postalLookupState?.let { if (stateField.isBlank()) stateField = it }
+        state.postalLookupCity?.let { city = it }
+        state.postalLookupState?.let { stateField = it }
     }
 
     // When pincode changes, reset verification status and trigger postal lookup
     LaunchedEffect(pincode) {
         if (pincode != lastVerifiedPincode) {
-            // Reset verification when pincode changes
+            if (pincode.length < 6 || pincode != existing?.pincode.orEmpty()) {
+                city = ""
+                stateField = ""
+            }
         }
-        if (pincode.length == 6 && city.isBlank() && stateField.isBlank()) {
+        if (pincode.length == 6) {
             onIntent(DeliveryAddressIntent.LookupPostalPincode(pincode))
         }
     }
@@ -102,6 +111,7 @@ fun AddEditAddressScreen(
 
     val isPincodeVerifiedForCurrent = (state.deliveryPincodeVerified && pincode == lastVerifiedPincode && pincode.length == 6) ||
             (isEditing && existing?.isPincodeServiceable() == true && pincode == existing.pincode)
+    val cityStateLocked = isPincodeVerifiedForCurrent && city.isNotBlank() && stateField.isNotBlank()
 
     val canSave = name.isNotBlank() && phone.length >= 10 &&
             pincode.length == 6 && line1.isNotBlank() &&
@@ -277,9 +287,12 @@ fun AddEditAddressScreen(
                         )
                     } else {
                         Button(
-                            onClick = { onIntent(DeliveryAddressIntent.VerifyDeliveryPincode(pincode)) },
+                            onClick = {
+                                onIntent(DeliveryAddressIntent.LookupPostalPincode(pincode))
+                                onIntent(DeliveryAddressIntent.VerifyDeliveryPincode(pincode))
+                            },
                             enabled = pincode.length == 6,
-                            modifier = Modifier.height(48.dp),
+                            modifier = Modifier.height(56.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppColors.Purple700,
@@ -316,6 +329,7 @@ fun AddEditAddressScreen(
                     value = city,
                     onValueChange = { city = it },
                     capitalization = KeyboardCapitalization.Words,
+                    enabled = !cityStateLocked,
                 )
                 AddressFormField(
                     modifier = Modifier.weight(1f),
@@ -323,6 +337,7 @@ fun AddEditAddressScreen(
                     value = stateField,
                     onValueChange = { stateField = it },
                     capitalization = KeyboardCapitalization.Words,
+                    enabled = !cityStateLocked,
                 )
             }
 
@@ -387,6 +402,7 @@ private fun AddressFormField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    enabled: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     imeAction: ImeAction = ImeAction.Next,
@@ -395,6 +411,7 @@ private fun AddressFormField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         modifier = modifier.fillMaxWidth(),
         label = { Text(label, fontSize = 13.sp) },
         prefix = prefix,
